@@ -24,7 +24,27 @@ source for technical organization and responsibility conventions.
 - Write TSDoc and explanatory code comments in Brazilian Portuguese (`pt-BR`).
 - Do not add comments for trivial callbacks or self-explanatory code.
 
-## 3. Directory structure
+## 3. Naming conventions
+
+Apply these conventions consistently. Do not mix naming styles within the same
+category.
+
+### Files
+
+- Class files use `PascalCase` matching the exported class name, such as
+  `BaseService.ts`, `UserService.ts`, and `HttpClient.ts`.
+- React component files use `PascalCase` matching the component name, such as
+  `UsersView.tsx` and `UserTable.tsx`.
+- Hook files use `camelCase` with the `use` prefix, such as `useUsers.ts`.
+- Utility modules and files without classes use `kebab-case`, such as
+  `format-date.ts`.
+
+### Identifiers
+
+- Classes, types, and interfaces use `PascalCase`.
+- Variables and functions use `camelCase`.
+
+## 4. Directory structure
 
 Use feature-oriented organization for code specific to a domain:
 
@@ -79,7 +99,7 @@ If routing is introduced, its location must follow the configuration adopted by
 the project; do not assume React Router without a corresponding dependency and
 configuration.
 
-## 4. Models
+## 5. Models
 
 Models define data types, interfaces, and contracts. Whenever possible, they
 should be independent of React and should not contain rendering or interface
@@ -98,7 +118,7 @@ Do not create DTOs, mappers, or transformation layers by default. Introduce them
 only when there is a concrete format difference, validation need, or maintenance
 benefit.
 
-## 5. Services and data access
+## 6. Services and data access
 
 Services centralize access to APIs and endpoints. A feature service may
 encapsulate related operations such as `getAll`, `getById`, `create`, `update`,
@@ -121,7 +141,7 @@ Services may be classes when a class helps encapsulate related operations.
 Functions or simple modules are preferable when they are sufficient. Do not
 create repositories, use cases, or other layers by obligation.
 
-## 6. Components and views
+## 7. Components and views
 
 ### Components
 
@@ -159,7 +179,7 @@ Avoid unnecessarily concentrating all of the following in one view:
 
 There is no need to create a view for every component or small markup variation.
 
-## 7. Hooks and state
+## 8. Hooks and state
 
 - Feature-specific hooks belong inside their owning feature.
 - Hooks reused by multiple features belong in `src/hooks/`.
@@ -178,7 +198,7 @@ There is no need to create a view for every component or small markup variation.
 - Clean up subscriptions, timers, and other external resources at the appropriate
   lifecycle boundary.
 
-## 8. Modules and dependencies
+## 9. Modules and dependencies
 
 - Keep each module focused on a clear responsibility.
 - Avoid circular dependencies and unnecessary coupling between features.
@@ -192,7 +212,7 @@ There is no need to create a view for every component or small markup variation.
 - Do not introduce additional layers without a concrete benefit to clarity,
   testability, or maintenance.
 
-## 9. TypeScript, accessibility, and internationalization
+## 10. TypeScript, accessibility, and internationalization
 
 ### TypeScript
 
@@ -227,7 +247,7 @@ When i18n is configured:
 Do not add languages, libraries, or a complete translation structure without a
 concrete requirement.
 
-## 10. Performance and dependencies
+## 11. Performance and dependencies
 
 - Do not use `useMemo`, `useCallback`, or `React.memo` indiscriminately.
 - Consider memoization, lazy loading, and code splitting when there is a clear
@@ -239,7 +259,7 @@ concrete requirement.
   or abstraction.
 - Do not optimize prematurely at the expense of readability.
 
-## 11. Documentation and testing
+## 12. Documentation and testing
 
 ### Code documentation
 
@@ -267,7 +287,7 @@ When testing tools are configured:
 - prefer deterministic tests and avoid implementation-detail assertions;
 - add regression coverage for bug fixes when appropriate.
 
-## 12. Checks and dependencies
+## 13. Checks and dependencies
 
 Use the scripts in `package.json`. The currently available scripts are:
 
