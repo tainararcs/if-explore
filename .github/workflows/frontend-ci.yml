@@ -6,8 +6,8 @@ name: Frontend CI
 on:
   push:
     paths:
-      - 'frontend/'
-      - '.github/workflows/'
+      - 'frontend/**'
+      - '.github/workflows/**'
 
 permissions:
   contents: read
