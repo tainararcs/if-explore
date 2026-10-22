@@ -1,139 +1,92 @@
 # AGENTS.md
 
-## 1. Project Overview
+## 1. Scope and source of guidance
 
-This project uses React, TypeScript, Vite, Tailwind CSS, and Node.js 24.22.0.
+These instructions apply to the current frontend project directory. The project uses React,
+TypeScript, Vite, and Node.js 24.22.0. The current styling is CSS; do not assume
+adoption of other libraries without checking the repository configuration.
 
-The codebase must prioritize type safety, modularity, maintainability, documentation, accessibility, and simplicity.
+Use [docs/project-guidelines.md](docs/project-guidelines.md) as the source for
+organization and architecture conventions. This file summarizes the operational
+rules to follow while working.
 
-Detailed architectural and implementation conventions are defined in `docs/project-guidelines.md`.
+## 2. Mandatory rules
 
-## 2. Mandatory Rules
+1. Preserve the existing TypeScript, lint, build, and security configuration.
+2. Do not use `any`, `@ts-ignore`, or unsafe assertions to bypass errors.
+3. Keep functions, components, and modules cohesive, with clear responsibilities.
+4. Prefer feature-oriented organization and do not create directories, layers, or
+   abstractions without a concrete need.
+5. Keep business logic and presentation separate when this improves clarity or
+   testability.
+6. Do not duplicate code between a feature and shared directories.
+7. Do not introduce dependencies without a clear technical justification that
+   fits the current configuration.
+8. Do not assume a library mentioned in documentation is installed or configured;
+   check `package.json`, scripts, and configuration files.
+9. Preserve existing behavior unless a change is requested.
+10. Treat external data as untrusted and do not expose secrets.
 
-The following rules are mandatory for all implementations:
+## 3. Working in the repository
 
-1. **Type safety:** Use strict TypeScript. Do not use `any`, `@ts-ignore`, or unsafe type assertions to bypass compiler errors.
-2. **Documentation:** Every function, method, custom hook, and React component must have TSDoc documentation in Brazilian Portuguese (`pt-BR`), following the project's documentation conventions.
-3. **Single responsibility:** Every function, method, component, and module must have a clear, well-defined purpose.
-4. **SOLID principles:** Consider and apply SOLID principles where relevant, without introducing unnecessary abstractions or complexity.
-5. **Modularity:** Keep related functionality together and maintain clear module boundaries.
-6. **Internationalization:** All user-facing text must use the project's internationalization mechanism. Only `pt-BR` is implemented initially.
-7. **Code quality:** Follow existing conventions, avoid duplication, and prefer readable, maintainable solutions.
-8. **Security:** Treat external data as untrusted and never expose secrets or sensitive information.
-9. **Verification:** Run applicable type checks, lint, tests, and production builds before considering a task complete.
-10. **Documentation consistency:** Update project documentation whenever an established architectural convention or implementation rule changes.
+Before implementing:
 
-## 3. Architecture and Implementation
-
-- Follow the modular architecture described in `docs/project-guidelines.md`.
-- Keep business logic separate from presentation when doing so improves clarity and testability.
-- Prefer small, cohesive functions and components with explicit responsibilities.
-- Avoid unnecessary coupling, circular dependencies, duplicated state, and premature abstractions.
-- Reuse existing components, utilities, hooks, and dependencies when appropriate.
-- Do not introduce new dependencies without a clear technical justification.
-- Do not create abstractions solely to comply superficially with SOLID principles.
-- Preserve existing behavior unless a change is explicitly requested.
-
-## 4. TypeScript and React
-
-- Preserve strict compiler settings and existing quality checks.
-- Define explicit types for public module contracts, component props, function parameters, and return values when required for clarity and safety.
-- Use `unknown` and runtime validation when handling untrusted data.
-- Prefer type inference for straightforward local variables.
-- Use function components and React hooks.
-- Avoid unnecessary effects, redundant state, and premature memoization.
-- Use semantic HTML and accessible interaction patterns.
-- Never suppress type or lint errors without a documented, justified reason.
-
-## 5. Componentization and Reusability
-
-- Build reusable React components when UI patterns, behavior, or responsibilities are shared across the application.
-- Before creating a new component, inspect existing components and determine whether they can be reused or extended without compromising their responsibilities.
-- Keep components focused on a single, well-defined purpose, following the Single Responsibility Principle.
-- Separate reusable, business-agnostic UI components from feature-specific components.
-- Place shared UI components under `src/components/ui/` and feature-specific components within their respective feature modules.
-- Prefer composition and explicit props over duplicated markup or components with excessive configuration options.
-- Extract repeated UI patterns into reusable components when doing so improves consistency, maintainability, or testability.
-- Avoid premature componentization: do not create abstractions for isolated, trivial markup without a concrete reuse or clarity benefit.
-- Define and document component props using TypeScript, ensuring that their contracts are explicit and type-safe.
-- Keep styling consistent with the project's Tailwind CSS conventions and shared design tokens.
-- When modifying a shared component, evaluate the impact on all its consumers and update relevant tests.
-- Every React component must include TSDoc documentation describing its purpose and intended use.
-
-## 6. Documentation Requirements
-
-All functions, methods, custom hooks, and React components must include TSDoc documentation written in Brazilian Portuguese.
-
-Documentation must:
-
-- Explain the purpose and responsibilities of the documented unit.
-- Describe parameters using `@param`.
-- Describe return values using `@returns` when applicable.
-- Describe relevant exceptions or failure conditions when applicable.
-- Document component props and custom hook return contracts when needed.
-- Remain consistent with the actual implementation.
-
-Keep documentation concise and proportional to complexity. Do not add redundant inline comments that merely repeat the code.
-
-Types and interfaces must also be documented when they represent meaningful domain concepts or non-obvious contracts.
-
-## 7. Internationalization
-
-- Use the project's configured internationalization library and conventions.
-- Implement only Brazilian Portuguese (`pt-BR`) initially.
-- Do not hardcode user-facing text in components, hooks, or business logic.
-- Keep translation resources organized and typed whenever supported by the chosen library.
-- Avoid duplicating translations and keep translation keys descriptive and consistent.
-- Do not introduce additional implemented languages unless explicitly requested.
-
-## 8. Security and Configuration
-
-- Never commit secrets, credentials, tokens, or private environment files.
-- Remember that Vite variables prefixed with `VITE_` are exposed to client-side code.
-- Validate external data at appropriate boundaries.
-- Avoid unsafe HTML rendering and other unnecessary security risks.
-- Do not weaken compiler, lint, or security settings to make an implementation pass.
-
-## 9. Agent Workflow
-
-Before implementing a task:
-
-1. Read this file and consult `docs/project-guidelines.md` when available.
-2. Inspect the relevant code, existing conventions, dependencies, and package scripts.
-3. Identify the smallest complete change that satisfies the requirement.
+1. Read this file and `docs/project-guidelines.md`.
+2. Inspect the structure, relevant files, dependencies, and scripts.
+3. Look for existing components, hooks, services, and utilities that can be
+   reused.
+4. Choose the smallest complete change that satisfies the requirement.
 
 During implementation:
 
-- Make focused, incremental changes.
-- Preserve unrelated code and user modifications.
-- Prefer existing project conventions over introducing new ones.
-- Add or update tests for meaningful behavior changes.
-- Update documentation when necessary.
+- Make focused changes and preserve unrelated work.
+- Follow patterns already used in the repository.
+- Use ordinary TypeScript functions for logic that does not need React.
+- Use hooks only for state, effects, context, subscriptions, or other cohesive
+  behavior tied to the React lifecycle.
+- Avoid unnecessary effects, synchronized derived state, and premature
+  memoization.
+- Use semantic HTML and accessible patterns.
+- Use English for code identifiers, variable names, function names, class names,
+  and file names.
+- Document public contracts, exported components, exported hooks, and
+  non-obvious logic with TSDoc in Brazilian Portuguese (`pt-BR`). Write
+  explanatory code comments in Brazilian Portuguese as well. Do not add
+  comments for trivial callbacks or self-explanatory code.
 
-Before completing a task:
+Before completing:
 
-1. Review the diff for correctness, unnecessary complexity, and unrelated changes.
-2. Run applicable type checks, lint, tests, and production builds.
-3. Report which checks passed, failed, or could not be executed.
-4. Explicitly disclose relevant limitations and unverified behavior.
+1. Review the diff for unnecessary complexity or out-of-scope changes.
+2. Run applicable checks, such as `npm run lint`, `npm run typecheck`, and
+   `npm run build`.
+3. Clearly report checks that ran, failed, do not exist, or could not be run.
+4. Update documentation when an established convention changes.
 
-Never claim that a command, test, or verification succeeded unless it actually ran and passed.
+Never claim that a command, test, or verification passed unless it was run.
 
-## 10. Definition of Done
+## 4. Internationalization, security, and dependencies
 
-A task is complete only when:
+- Use the internationalization solution configured in the project when one exists.
+- Do not introduce hardcoded text in new interfaces when a translation solution
+  is configured.
+- Validate external data at appropriate boundaries.
+- Do not use unsafe HTML without a specific justification.
+- Remember that Vite variables prefixed with `VITE_` are exposed to the client.
+- Do not weaken compiler, lint, or security settings to make an implementation
+  pass.
 
-- The requested behavior is implemented.
-- TypeScript and project conventions are respected.
-- Required TSDoc documentation is present and accurate.
-- Relevant tests and quality checks pass, or execution limitations are reported.
-- No unrelated changes, accidental secrets, or unjustified suppressions are introduced.
-- Relevant documentation is updated.
+## 5. Definition of done
 
-## 11. Source of Truth
+An implementation is complete when it:
 
-`docs/project-guidelines.md` defines the detailed architecture, module organization, coding conventions, documentation examples, testing strategy, and internationalization implementation.
+- satisfies the requested requirement;
+- preserves types, module boundaries, and project conventions;
+- introduces no unjustified abstractions or dependencies;
+- includes proportional documentation when needed;
+- passes applicable checks, or reports their limitations;
+- contains no unrelated changes.
 
-When a task conflicts with an established convention, identify the conflict and resolve it explicitly rather than silently weakening the project's rules.
-
-Follow tool-specific instruction files only as entry points or adapters to these shared rules. Avoid maintaining conflicting copies of project conventions.
+Detailed conventions for directories, models, services, components, views, hooks,
+and `lib` are defined in `docs/project-guidelines.md`. Avoid duplicating rules
+between the two files: this file governs agent procedure, while the guidelines
+define detailed technical conventions.
