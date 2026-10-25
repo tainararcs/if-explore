@@ -2,7 +2,7 @@
 
 ## 1. Scope and source of guidance
 
-These instructions apply to the current frontend project directory. The project uses React,
+These instructions apply to the current frontend project directory. The project uses Vue 3,
 TypeScript, Vite, and Node.js 24.22.0. The current styling is CSS; do not assume
 adoption of other libraries without checking the repository configuration.
 
@@ -14,7 +14,8 @@ rules to follow while working.
 
 1. Preserve the existing TypeScript, lint, build, and security configuration.
 2. Do not use `any`, `@ts-ignore`, or unsafe assertions to bypass errors.
-3. Keep functions, components, and modules cohesive, with clear responsibilities.
+3. Keep functions, components, composables, and modules cohesive, with clear
+   responsibilities.
 4. Prefer feature-oriented organization and do not create directories, layers, or
    abstractions without a concrete need.
 5. Keep business logic and presentation separate when this improves clarity or
@@ -33,7 +34,7 @@ Before implementing:
 
 1. Read this file and `docs/project-guidelines.md`.
 2. Inspect the structure, relevant files, dependencies, and scripts.
-3. Look for existing components, hooks, services, and utilities that can be
+3. Look for existing components, composables, services, and utilities that can be
    reused.
 4. Choose the smallest complete change that satisfies the requirement.
 
@@ -41,18 +42,21 @@ During implementation:
 
 - Make focused changes and preserve unrelated work.
 - Follow patterns already used in the repository.
-- Use ordinary TypeScript functions for logic that does not need React.
-- Use hooks only for state, effects, context, subscriptions, or other cohesive
-  behavior tied to the React lifecycle.
-- Avoid unnecessary effects, synchronized derived state, and premature
-  memoization.
+- Write components as Single-File Components (`.vue`) using the Composition API
+  with `<script setup lang="ts">`.
+- Use ordinary TypeScript functions for logic that does not need Vue reactivity.
+- Use composables only for reactive state, watchers, lifecycle hooks,
+  `provide`/`inject`, subscriptions, or other cohesive behavior tied to Vue's
+  reactivity system or component lifecycle.
+- Prefer `computed` for derived values. Avoid unnecessary watchers, synchronized
+  derived state, and premature optimization.
 - Use semantic HTML and accessible patterns.
 - Use English for code identifiers, variable names, function names, class names,
   and file names.
-- Document public contracts, exported components, exported hooks, and
-  non-obvious logic with TSDoc in Brazilian Portuguese (`pt-BR`). Write
-  explanatory code comments in Brazilian Portuguese as well. Do not add
-  comments for trivial callbacks or self-explanatory code.
+- Document public contracts, components, composables, and non-obvious logic with
+  TSDoc in Brazilian Portuguese (`pt-BR`). Write explanatory code comments in
+  Brazilian Portuguese as well. Do not add comments for trivial callbacks or
+  self-explanatory code.
 
 Before completing:
 
@@ -70,7 +74,8 @@ Never claim that a command, test, or verification passed unless it was run.
 - Do not introduce hardcoded text in new interfaces when a translation solution
   is configured.
 - Validate external data at appropriate boundaries.
-- Do not use unsafe HTML without a specific justification.
+- Do not use `v-html` or other unsafe HTML rendering without a specific
+  justification.
 - Remember that Vite variables prefixed with `VITE_` are exposed to the client.
 - Do not weaken compiler, lint, or security settings to make an implementation
   pass.
@@ -86,7 +91,7 @@ An implementation is complete when it:
 - passes applicable checks, or reports their limitations;
 - contains no unrelated changes.
 
-Detailed conventions for directories, models, services, components, views, hooks,
-and `lib` are defined in `docs/project-guidelines.md`. Avoid duplicating rules
-between the two files: this file governs agent procedure, while the guidelines
-define detailed technical conventions.
+Detailed conventions for directories, models, services, components, views,
+composables, routing, and `lib` are defined in `docs/project-guidelines.md`.
+Avoid duplicating rules between the two files: this file governs agent
+procedure, while the guidelines define detailed technical conventions.

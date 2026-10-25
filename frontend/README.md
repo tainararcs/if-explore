@@ -8,11 +8,12 @@ TODO: Adicionar descrição do projeto.
 
 Neste projeto, utilizamos as seguintes tecnologias:
 
-- [React](https://reactjs.org/) - Biblioteca JavaScript para construção de interfaces de usuário.
+- [Vue 3](https://vuejs.org/) - Framework progressivo para construção de interfaces de usuário, utilizado com a Composition API.
 - [TypeScript](https://www.typescriptlang.org/) - Superset do JavaScript que adiciona tipagem estática.
-- [Vite](https://vitejs.dev/) - Ferramenta de build rápida para projetos web.
-- [Tailwind CSS](https://tailwindcss.com/) - Framework CSS utilitário para estilização rápida.
-- [React Router](https://reactrouter.com/) - Biblioteca para roteamento em aplicações React.
+- [Vite](https://vite.dev/) - Ferramenta de build rápida para projetos web.
+- [Vue Router](https://router.vuejs.org/) - Roteador oficial do Vue.
+- [Vue I18n](https://vue-i18n.intlify.dev/) - Biblioteca de internacionalização para Vue.
+- [Axios](https://axios-http.com/) - Cliente HTTP.
 
 ## Requisitos 
 
@@ -70,12 +71,12 @@ Para validar o código do projeto utilizando o ESLint, execute o seguinte comand
 npm run lint
 ```
 
-## Executando testes
+## Verificando os tipos
 
-Para executar os testes do projeto, utilize o seguinte comando:
+Para verificar os tipos do projeto, incluindo os arquivos `.vue`, execute o seguinte comando:
 
 ```bash
-npm test
+npm run typecheck
 ```
 
 ## Estrutura de pastas
@@ -84,12 +85,17 @@ A estrutura de pastas do projeto é a seguinte:
 
 ```
 frontend/
-├── public/                 # Arquivos públicos (imagens, favicon, etc.)
+├── docs/                   # Diretrizes do projeto
+├── public/                 # Arquivos públicos (favicon, etc.)
 ├── src/                    # Código-fonte do projeto
-│   ├── assets/             # Recursos estáticos (imagens, fontes, etc.)
-│   ├── components/         # Componentes reutilizáveis da aplicação
-│   ├── pages/              # Páginas da aplicação
-
-TODO: Adicionar mais detalhes sobre a estrutura de pastas.
+│   ├── features/           # Código organizado por funcionalidade (views, components, services, etc.)
+│   ├── lib/                # Utilitários e configurações compartilhadas
+│   ├── router/             # Rotas da aplicação
+│   ├── App.vue             # Componente raiz
+│   ├── index.css           # Estilos globais
+│   └── main.ts             # Ponto de entrada da aplicação
+├── AGENTS.md               # Instruções para agentes de IA
+└── CLAUDE.md               # Importa as instruções de agentes para o Claude Code
 ```
 
+A organização completa e as convenções estão descritas em [docs/project-guidelines.md](docs/project-guidelines.md).
