@@ -83,6 +83,42 @@ export const ptBR = {
       selected: 'Nenhum gênero escolhido | 1 gênero escolhido | {n} gêneros escolhidos',
     },
   },
+  home: {
+    eyebrow: 'Para você',
+    title: 'Suas recomendações',
+    basis: 'Com base em {areas} e nos títulos que você escolheu.',
+    adjustPreferences: 'Ajustar preferências',
+    filterLegend: 'Filtrar por área',
+    allAreas: 'Todas',
+    loading: 'Carregando recomendações…',
+    error: 'Não foi possível carregar suas recomendações.',
+    retry: 'Tentar novamente',
+    emptyFilter: 'Nenhuma recomendação para esta área por enquanto.',
+    shelves: {
+      forYou: 'Escolhidos para você',
+      becauseYouChose: 'Porque você escolheu {subject}',
+      moreFromArea: 'Mais de {subject}',
+      forPleasure: 'Para ler por prazer: {subject}',
+    },
+    shelf: {
+      previous: 'Ver livros anteriores',
+      next: 'Ver próximos livros',
+    },
+    availability: {
+      available: 'Disponível',
+      borrowed: 'Emprestado',
+    },
+    search: {
+      label: 'Buscar no acervo',
+      placeholder: 'Título, autor ou assunto',
+      clear: 'Limpar busca',
+      clearAction: 'Limpar busca',
+      results:
+        'Nenhum resultado para “{query}” | 1 resultado para “{query}” | {n} resultados para “{query}”',
+      emptyTitle: 'Nenhum livro encontrado',
+      emptyText: 'Confira a grafia, tente outras palavras ou remova o filtro de área.',
+    },
+  },
 }
 
 /** Estrutura das mensagens usada para tipar a configuração do vue-i18n. */
