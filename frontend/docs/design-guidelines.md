@@ -364,8 +364,9 @@ plausible academic and literary titles.
 
 - `localStorage` key `if-explore:preferences`, JSON with a `version: 1` field.
 - Shape: `{ version, areaIds, courseIds, seedBookIds, genreIds, updatedAt }`.
-- Data read from storage is untrusted: parse as `unknown`, validate the shape and
-  ids against the catalog, and treat invalid data as "no preferences".
+- Data read from storage is untrusted: parse as `unknown`, validate the shape,
+  and treat invalid data as "no preferences". Consumers ignore ids that no
+  longer exist in the catalog.
 - Wrap every storage access in `try/catch` (private mode, blocked storage);
   the app must work in-memory if storage fails.
 - "Has preferences" means at least one area and three seed books.

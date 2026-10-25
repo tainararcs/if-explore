@@ -1,16 +1,324 @@
+/* Fontes auto-hospedadas (licença OFL em public/fonts). */
+@font-face {
+  font-family: 'Libre Caslon Text';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/libre-caslon-text-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Libre Caslon Text';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/libre-caslon-text-400-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Libre Caslon Text';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/libre-caslon-text-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+}
+
 :root {
-  font-family: system-ui, sans-serif;
-  color: #1f2937;
-  background: #ffffff;
+  /* Paleta do moodboard: use apenas nas definições de tokens semânticos. */
+  --palette-green-900: #174d3b;
+  --palette-green-700: #356b56;
+  --palette-green-300: #91a99b;
+  --palette-paper: #f6f2e9;
+  --palette-sand: #ded4c3;
+  --palette-charcoal: #242722;
+  --palette-red: #c8191e;
+
+  --color-bg: var(--palette-paper);
+  --color-surface: #fbf8f2;
+  --color-surface-muted: #eee8dc;
+  --color-border: var(--palette-sand);
+  --color-text: var(--palette-charcoal);
+  --color-text-muted: #5b6158;
+  --color-primary: var(--palette-green-900);
+  --color-primary-hover: var(--palette-green-700);
+  --color-on-primary: #fbf8f2;
+  --color-primary-soft: #dce6df;
+  --color-focus: var(--palette-green-700);
+  --color-success: #2f6b47;
+  --color-warning: #8a4b1f;
+  --color-danger: #a3262a;
+  --color-brand-accent: var(--palette-red);
+
+  --font-display: 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-display: clamp(2.25rem, 1.6rem + 3vw, 3.75rem);
+  --text-h1: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  --text-h2: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  --text-h3: 1.125rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --gutter: 16px;
+  --container-max: 1200px;
+  --header-height: 64px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --radius-cover: 3px 6px 6px 3px;
+
+  --shadow-sm: 0 1px 2px rgb(36 39 34 / 0.08);
+  --shadow-md: 0 6px 20px rgb(36 39 34 / 0.12);
+
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  color-scheme: light dark;
+  font-family: var(--font-body);
+  font-size: 100%;
+  line-height: 1.55;
+  color: var(--color-text);
+  background: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1d19;
+    --color-surface: var(--palette-charcoal);
+    --color-surface-muted: #2d312b;
+    --color-border: #3a3f37;
+    --color-text: #f0ebe0;
+    --color-text-muted: #b4b9ae;
+    --color-primary: #9cc5ae;
+    --color-primary-hover: #b5d6c3;
+    --color-on-primary: #14251d;
+    --color-primary-soft: #24382e;
+    --color-focus: #9cc5ae;
+    --color-success: #8fcba5;
+    --color-warning: #e0a878;
+    --color-danger: #f08c8c;
+    --color-brand-accent: #e0484c;
+
+    --shadow-sm: 0 0 0 1px var(--color-border);
+    --shadow-md: 0 8px 24px rgb(0 0 0 / 0.4);
+  }
+}
+
+@media (min-width: 600px) {
+  :root {
+    --gutter: 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --gutter: 32px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 #app {
-  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+h1,
+h2,
+h3,
+p,
+ol,
+ul {
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-h1);
+  line-height: 1.15;
+}
+
+h2 {
+  font-size: var(--text-h2);
+  line-height: 1.2;
+}
+
+h3 {
+  font-size: var(--text-h3);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--color-primary);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.container {
+  width: min(100% - 2 * var(--gutter), var(--container-max));
+  margin-inline: auto;
+}
+
+.eyebrow {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Botões: aplicáveis a <button>, <a> e <RouterLink>. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.button--small {
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-small);
+}
+
+.button--primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.button--primary:hover {
+  background: var(--color-primary-hover);
+  color: var(--color-on-primary);
+}
+
+.button--secondary {
+  background: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.button--secondary:hover {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.button--ghost {
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.button--ghost:hover {
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Ícone de seta em círculo usado no botão primário (referência ao wireframe). */
+.button__arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-inline-end: calc(var(--space-2) * -1);
+  border-radius: 50%;
+  background: var(--color-on-primary);
+  color: var(--color-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .button:active:not(:disabled) {
+    transform: scale(0.97);
+  }
 }
