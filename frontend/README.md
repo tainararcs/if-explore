@@ -1,19 +1,14 @@
 # IF Explore - Frontend
 
-## Descrição do projeto
+## Stack
 
-TODO: Adicionar descrição do projeto.
-
-## Stack do projeto
-
-Neste projeto, utilizamos as seguintes tecnologias:
-
-- [Vue 3](https://vuejs.org/) - Framework progressivo para construção de interfaces de usuário, utilizado com a Composition API.
-- [TypeScript](https://www.typescriptlang.org/) - Superset do JavaScript que adiciona tipagem estática.
-- [Vite](https://vite.dev/) - Ferramenta de build rápida para projetos web.
-- [Vue Router](https://router.vuejs.org/) - Roteador oficial do Vue.
-- [Vue I18n](https://vue-i18n.intlify.dev/) - Biblioteca de internacionalização para Vue.
-- [Axios](https://axios-http.com/) - Cliente HTTP.
+- [Vue 3](https://vuejs.org/): base da interface, com componentes escritos pela Composition API.
+- [TypeScript](https://www.typescriptlang.org/): linguagem de todo o código, com tipagem estática.
+- [Vite](https://vite.dev/): servidor de desenvolvimento e build de produção.
+- [Vue Router](https://router.vuejs.org/): navegação entre as telas.
+- [Vue I18n](https://vue-i18n.intlify.dev/): internacionalização dos textos.
+- [Axios](https://axios-http.com/): comunicação com a API.
+- [ESLint](https://eslint.org/) e [vue-tsc](https://github.com/vuejs/language-tools): verificação de qualidade e de tipos do código.
 
 ## Requisitos 
 
@@ -79,23 +74,21 @@ Para verificar os tipos do projeto, incluindo os arquivos `.vue`, execute o segu
 npm run typecheck
 ```
 
-## Estrutura de pastas
+## Arquitetura e organização do código
 
-A estrutura de pastas do projeto é a seguinte:
+O código é organizado por funcionalidade: cada feature agrupa suas próprias views, componentes, serviços e modelos, e apenas o que é compartilhado entre features fica nos diretórios globais de `src/`.
 
 ```
 frontend/
 ├── docs/                   # Diretrizes do projeto
 ├── public/                 # Arquivos públicos (favicon, etc.)
-├── src/                    # Código-fonte do projeto
-│   ├── features/           # Código organizado por funcionalidade (views, components, services, etc.)
-│   ├── lib/                # Utilitários e configurações compartilhadas
-│   ├── router/             # Rotas da aplicação
-│   ├── App.vue             # Componente raiz
-│   ├── index.css           # Estilos globais
-│   └── main.ts             # Ponto de entrada da aplicação
-├── AGENTS.md               # Instruções para agentes de IA
-└── CLAUDE.md               # Importa as instruções de agentes para o Claude Code
+└── src/                    # Código-fonte do projeto
+    ├── features/           # Código organizado por funcionalidade (views, components, services, etc.)
+    ├── lib/                # Utilitários e configurações compartilhadas
+    ├── router/             # Rotas da aplicação
+    ├── App.vue             # Componente raiz
+    ├── index.css           # Estilos globais
+    └── main.ts             # Ponto de entrada da aplicação
 ```
 
 A organização completa e as convenções estão descritas em [docs/project-guidelines.md](docs/project-guidelines.md).
