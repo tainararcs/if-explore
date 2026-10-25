@@ -7,8 +7,8 @@ It uses a familiar separation between features, models, services, components, an
 views without turning every feature into a layered architecture.
 
 The current configuration uses Vue 3 with the Composition API, TypeScript, Vite,
-and Vue Router. Existing styling is CSS. `vue-i18n` is a dependency, but the i18n
-configuration must be verified before use. Pinia, Tailwind CSS, and test tools
+and Vue Router. Existing styling is CSS. `vue-i18n` is configured in
+`src/lib/i18n.ts` (Composition API, pt-BR only). Pinia, Tailwind CSS, and test tools
 are not currently configured in `package.json`. Documentation must reflect the
 actual configuration; do not create files or folders merely to complete the
 example below.
@@ -271,9 +271,9 @@ There is no need to create a view for every component or small markup variation.
 
 ### Internationalization
 
-Use the i18n solution configured in the repository. The `vue-i18n` dependency is
-currently available, but do not assume an active configuration: verify the
-existing files before using `useI18n` or translation resources.
+Use the i18n solution configured in the repository: `vue-i18n` in Composition API
+mode, configured in `src/lib/i18n.ts`, with messages in `src/locales/pt-BR.ts`.
+Use `useI18n()` in components and `i18n.global` outside them.
 
 When i18n is configured:
 
