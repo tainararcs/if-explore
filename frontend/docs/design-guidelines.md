@@ -84,8 +84,12 @@ token definitions.
 | `--color-danger` | `#A3262A` | `#F08C8C` | Errors |
 | `--color-brand-accent` | `#C8191E` | `#E0484C` | Brand mark circle only |
 
-Dark mode follows `prefers-color-scheme: dark` by overriding the semantic tokens
-in a media query. There is no manual toggle at this stage. Check every new
+Each semantic token is declared once with `light-dark(<light>, <dark>)`. By
+default the theme follows `prefers-color-scheme`; the header toggle
+(`ThemeToggle.vue`, `useColorTheme()`) stores the visitor's choice in
+`localStorage` (`if-explore:theme`) and sets `data-theme="light|dark"` on
+`<html>`, which forces `color-scheme`. An inline script in `index.html` applies
+the stored choice before rendering to avoid a flash. Check every new
 token pair for at least 4.5:1 contrast (3:1 for large text and UI outlines).
 
 ### 3.3 Cover colors
@@ -260,7 +264,9 @@ Small pill with a dot plus text, `--text-caption` without uppercase:
 Single header, no bottom navigation bar. Left: brand mark + "IF Explore"
 (link to `/home` when preferences exist, otherwise `/`). Right: contextual
 actions passed through a slot (for example the ✦ "Ajustar preferências" icon
-button on the home). Height 64px, `--color-surface` with a bottom border,
+button on the home), followed by the theme toggle, present on every view. The
+toggle shows the moon in light mode and the sun in dark mode, swapping them
+with a short rotate/scale/fade transition. Height 64px, `--color-surface` with a bottom border,
 sticky on the home, static elsewhere.
 
 ### 7.8 Icons

@@ -9,6 +9,10 @@ export const ptBR = {
     brandHomeLabel: 'IF Explore, página inicial',
     opensInNewTab: '(abre em nova aba)',
     coverLabel: 'Capa de {title}, de {author}',
+    theme: {
+      useLight: 'Ativar tema claro',
+      useDark: 'Ativar tema escuro',
+    },
   },
   routes: {
     welcome: 'Boas-vindas',

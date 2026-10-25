@@ -13,11 +13,9 @@
         <BrandMark />
         <span class="app-header__name">{{ t('common.appName') }}</span>
       </RouterLink>
-      <div
-        v-if="$slots.actions"
-        class="app-header__actions"
-      >
+      <div class="app-header__actions">
         <slot name="actions" />
+        <ThemeToggle />
       </div>
     </div>
   </header>
@@ -27,6 +25,7 @@
 import { useI18n } from 'vue-i18n'
 import { useReadingPreferences } from '../composables/useReadingPreferences'
 import BrandMark from './BrandMark.vue'
+import ThemeToggle from './ThemeToggle.vue'
 
 interface Props {
   /** Mantém o cabeçalho fixo no topo durante a rolagem. */
