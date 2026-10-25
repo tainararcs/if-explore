@@ -65,7 +65,8 @@ Two choices in the action bar:
 Focus mode: no app navigation, minimal header.
 
 ```
-[←] (ghost back / "Voltar")    [progress]          [BrandMark]
+AppHeader: [BrandMark] IF Explore                 [theme toggle]
+[← Voltar]  [progress bar]  "Passo 1 de 2"
 Step title (serif, h1 — focus moves here on step change)
 Helper text
 Step content (chips / grid)            ← scrolls

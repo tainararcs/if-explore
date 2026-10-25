@@ -21,6 +21,11 @@ export const router = createRouter({
       meta: { titleKey: 'routes.welcome' },
     },
     {
+      path: '/onboarding',
+      component: () => import('../features/onboarding/views/TasteOnboardingView.vue'),
+      meta: { titleKey: 'routes.onboarding' },
+    },
+    {
       path: '/home',
       component: () => import('../features/home/views/HomeView.vue'),
       meta: { titleKey: 'routes.home' },

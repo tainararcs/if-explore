@@ -16,6 +16,7 @@ export const ptBR = {
   },
   routes: {
     welcome: 'Boas-vindas',
+    onboarding: 'Descobrir minhas leituras',
     home: 'Suas recomendações',
     forbidden: 'Acesso negado',
     serverError: 'Erro interno',
@@ -46,6 +47,41 @@ export const ptBR = {
       },
     },
     officialSite: 'Acessar o site oficial da biblioteca',
+  },
+  onboarding: {
+    back: 'Voltar',
+    loading: 'Carregando opções…',
+    error: 'Não foi possível carregar as opções do acervo.',
+    retry: 'Tentar novamente',
+    recommend: 'Me recomende',
+    progress: {
+      step: 'Passo {current} de {total}',
+      refine: 'Etapa extra',
+    },
+    areas: {
+      title: 'O que você estuda ou quer estudar?',
+      helper: 'Escolha uma ou mais áreas. Se fizer um curso do campus, marque-o também.',
+      legend: 'Áreas do conhecimento',
+      coursesQuestion: 'Faz algum destes cursos? (opcional)',
+      hint: 'Escolha pelo menos uma área para continuar.',
+      selected: 'Nenhuma área escolhida | 1 área escolhida | {n} áreas escolhidas',
+      continue: 'Continuar',
+    },
+    books: {
+      title: 'Escolha três títulos que chamam sua atenção.',
+      helper: 'Eles serão o ponto de partida das suas recomendações.',
+      filterLegend: 'Filtrar títulos por área',
+      allAreas: 'Todas',
+      missing: 'Escolha mais títulos | Falta 1 título | Faltam {n} títulos',
+      complete: 'Pronto! Peça suas recomendações ou refine seus gostos.',
+      refine: 'Refinar com gêneros literários',
+    },
+    genres: {
+      title: 'E fora da sala de aula, o que você gosta de ler?',
+      helper: 'Opcional: escolha quantos gêneros quiser.',
+      legend: 'Gêneros literários',
+      selected: 'Nenhum gênero escolhido | 1 gênero escolhido | {n} gêneros escolhidos',
+    },
   },
 }
 
