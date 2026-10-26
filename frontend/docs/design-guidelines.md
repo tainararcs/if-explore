@@ -333,13 +333,19 @@ directories (see `docs/project-guidelines.md`):
 - **Knowledge areas (mandatory choice):** Ciências Exatas e da Terra, Ciências
   Biológicas, Ciências Agrárias, Ciências da Saúde, Ciências Humanas, Ciências
   Sociais Aplicadas, Tecnologia e Computação, Linguagens, Letras e Artes.
-- **Campus courses (optional refinement inside an area):** each course belongs to
-  one area. Provisional list, pending confirmation against the campus site:
-  Agronomia, Zootecnia (Agrárias); Nutrição (Saúde); Educação Física (Saúde);
-  Sistemas de Informação, Tecnologia em Sistemas para Internet (Tecnologia);
-  Tecnologia em Gestão Ambiental (Biológicas); Tecnologia em Gestão de Turismo,
-  Administração (Sociais Aplicadas); Licenciaturas em Ciências Biológicas
-  (Biológicas), Física, Matemática, Química (Exatas).
+- **Campus courses (optional refinement):** each course belongs to one area and
+  one level (`integrated`, `technical`, `undergraduate`, `graduate`). The list
+  mirrors ifsudestemg.edu.br/barbacena/cursos (checked October 2026) and keeps
+  courses with suspended intakes, since they still have enrolled students:
+  - Técnico integrado: Agroindústria, Agropecuária, Alimentos, Hospedagem, Química.
+  - Técnico concomitante/subsequente: Enfermagem, Eventos, Informática, Meio
+    Ambiente, Segurança do Trabalho, Agropecuária (EaD).
+  - Graduação: Bacharelados em Administração, Agronomia, Educação Física, Gestão
+    Ambiental, Nutrição, Sistemas de Informação; Licenciaturas em Ciências
+    Biológicas, Educação Física, Química; Tecnologias em Alimentos, Gestão de
+    Turismo (presencial e EaD), Sistemas para Internet.
+  - Pós-graduação: Especialização em Planejamento e Gestão de Áreas Naturais
+    Protegidas.
 - **Literary genres (refine step):** Romance, Aventura, Suspense e mistério,
   Fantasia, Ficção científica, Terror, Poesia, Clássicos brasileiros, Biografias e
   memórias, Quadrinhos, Humor, Crônicas e contos.

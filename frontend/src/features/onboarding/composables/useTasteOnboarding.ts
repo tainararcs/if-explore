@@ -2,7 +2,12 @@ import { computed, ref } from 'vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
 import type { Book } from '../../../models/book'
 import { REQUIRED_SEED_BOOKS } from '../../../models/reading-preferences'
-import type { Course, KnowledgeArea, LiteraryGenre } from '../../../models/taxonomy'
+import {
+  COURSE_LEVELS,
+  type Course,
+  type KnowledgeArea,
+  type LiteraryGenre,
+} from '../../../models/taxonomy'
 import {
   getBooks,
   getCourses,
@@ -49,15 +54,12 @@ export function useTasteOnboarding() {
   const furthestStep = computed(() => furthestReachableStep(draft.value))
   const missingBooks = computed(() => REQUIRED_SEED_BOOKS - draft.value.seedBookIds.length)
 
-  /** Cursos agrupados pelas áreas escolhidas, na ordem das áreas. */
-  const coursesBySelectedArea = computed(() =>
-    areas.value
-      .filter((area) => draft.value.areaIds.includes(area.id))
-      .map((area) => ({
-        area,
-        courses: courses.value.filter((course) => course.areaId === area.id),
-      }))
-      .filter((group) => group.courses.length > 0),
+  /** Todos os cursos do campus agrupados por nível de ensino, sem níveis vazios. */
+  const coursesByLevel = computed(() =>
+    COURSE_LEVELS.map((level) => ({
+      level,
+      courses: courses.value.filter((course) => course.level === level),
+    })).filter((group) => group.courses.length > 0),
   )
 
   // Pré-preenche com as preferências salvas, ignorando ids que saíram do acervo.
@@ -111,8 +113,15 @@ export function useTasteOnboarding() {
     draft.value = { ...draft.value, areaIds, courseIds, seedBookIds }
   }
 
+  /** Alterna um curso; ao marcá-lo, também marca a área a que ele pertence. */
   function toggleCourse(courseId: string): void {
-    draft.value = { ...draft.value, courseIds: toggleValue(draft.value.courseIds, courseId) }
+    const courseIds = toggleValue(draft.value.courseIds, courseId)
+    const areaId = courses.value.find((course) => course.id === courseId)?.areaId
+    const areaIds =
+      areaId && courseIds.includes(courseId) && !draft.value.areaIds.includes(areaId)
+        ? [...draft.value.areaIds, areaId]
+        : draft.value.areaIds
+    draft.value = { ...draft.value, areaIds, courseIds }
   }
 
   /** Alterna um título; ignora novas escolhas quando o limite já foi atingido. */
@@ -143,7 +152,7 @@ export function useTasteOnboarding() {
     genres,
     draft,
     candidateBooks,
-    coursesBySelectedArea,
+    coursesByLevel,
     canLeaveAreas,
     isBooksComplete,
     furthestStep,

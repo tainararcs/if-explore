@@ -27,9 +27,11 @@ without an area) redirect to the first incomplete step with `router.replace`.
 - Helper: "Escolha uma ou mais áreas."
 - `fieldset` of `SelectableChip`s with the knowledge areas (multi-select, min 1).
   Each area chip can carry a small line icon.
-- When an area is selected, its campus courses appear right below it (animated
-  reveal) as smaller chips under a caption "Faz algum destes cursos? (opcional)".
-  Deselecting an area removes its selected courses.
+- Below the areas, all campus courses are always listed as smaller chips,
+  grouped by level (técnico integrado, técnico concomitante/subsequente,
+  graduação, pós-graduação) under "Cursos do Campus Barbacena (opcional)".
+  Selecting a course also selects its area; deselecting an area removes its
+  selected courses.
 - Continue enabled only with ≥ 1 area; otherwise show the reason next to the
   button.
 

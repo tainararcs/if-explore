@@ -79,7 +79,7 @@
           <AreaStep
             v-if="currentStep === 'areas'"
             :areas="areas"
-            :courses-by-selected-area="coursesBySelectedArea"
+            :courses-by-level="coursesByLevel"
             :selected-area-ids="draft.areaIds"
             :selected-course-ids="draft.courseIds"
             @toggle-area="toggleArea"
@@ -211,7 +211,7 @@ const {
   genres,
   draft,
   candidateBooks,
-  coursesBySelectedArea,
+  coursesByLevel,
   canLeaveAreas,
   isBooksComplete,
   furthestStep,
