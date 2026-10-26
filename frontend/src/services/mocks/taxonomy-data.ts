@@ -11,29 +11,39 @@ export const knowledgeAreas: KnowledgeArea[] = [
   { id: 'languages-arts', name: 'Linguagens, Letras e Artes' },
 ]
 
-// Lista provisória: confirmar com a página de cursos do campus.
+// Cursos listados em ifsudestemg.edu.br/barbacena/cursos (outubro de 2026), incluindo
+// os que estão com novas turmas suspensas, pois ainda têm alunos matriculados.
 export const courses: Course[] = [
-  { id: 'agronomy', name: 'Agronomia', areaId: 'agricultural-sciences' },
-  { id: 'animal-science', name: 'Zootecnia', areaId: 'agricultural-sciences' },
-  { id: 'nutrition', name: 'Nutrição', areaId: 'health-sciences' },
-  { id: 'physical-education', name: 'Educação Física', areaId: 'health-sciences' },
-  { id: 'information-systems', name: 'Sistemas de Informação', areaId: 'technology' },
-  { id: 'internet-systems', name: 'Tecnologia em Sistemas para Internet', areaId: 'technology' },
+  { id: 'agroindustry-integrated', name: 'Agroindústria', areaId: 'agricultural-sciences', level: 'integrated' },
+  { id: 'agriculture-integrated', name: 'Agropecuária', areaId: 'agricultural-sciences', level: 'integrated' },
+  { id: 'food-integrated', name: 'Alimentos', areaId: 'agricultural-sciences', level: 'integrated' },
+  { id: 'hospitality-integrated', name: 'Hospedagem', areaId: 'applied-social-sciences', level: 'integrated' },
+  { id: 'chemistry-integrated', name: 'Química', areaId: 'exact-sciences', level: 'integrated' },
+  { id: 'nursing-technician', name: 'Enfermagem', areaId: 'health-sciences', level: 'technical' },
+  { id: 'events-technician', name: 'Eventos', areaId: 'applied-social-sciences', level: 'technical' },
+  { id: 'it-technician', name: 'Informática', areaId: 'technology', level: 'technical' },
+  { id: 'environment-technician', name: 'Meio Ambiente', areaId: 'biological-sciences', level: 'technical' },
+  { id: 'workplace-safety-technician', name: 'Segurança do Trabalho', areaId: 'health-sciences', level: 'technical' },
+  { id: 'agriculture-distance', name: 'Agropecuária (EaD)', areaId: 'agricultural-sciences', level: 'technical' },
+  { id: 'administration', name: 'Bacharelado em Administração', areaId: 'applied-social-sciences', level: 'undergraduate' },
+  { id: 'agronomy', name: 'Bacharelado em Agronomia', areaId: 'agricultural-sciences', level: 'undergraduate' },
+  { id: 'food-technology', name: 'Tecnologia em Alimentos', areaId: 'agricultural-sciences', level: 'undergraduate' },
+  { id: 'biology-teaching', name: 'Licenciatura em Ciências Biológicas', areaId: 'biological-sciences', level: 'undergraduate' },
+  { id: 'physical-education-teaching', name: 'Licenciatura em Educação Física', areaId: 'health-sciences', level: 'undergraduate' },
+  { id: 'physical-education', name: 'Bacharelado em Educação Física', areaId: 'health-sciences', level: 'undergraduate' },
+  { id: 'environmental-management', name: 'Bacharelado em Gestão Ambiental', areaId: 'biological-sciences', level: 'undergraduate' },
+  { id: 'tourism-management', name: 'Tecnologia em Gestão de Turismo', areaId: 'applied-social-sciences', level: 'undergraduate' },
+  { id: 'tourism-management-distance', name: 'Tecnologia em Gestão de Turismo (EaD)', areaId: 'applied-social-sciences', level: 'undergraduate' },
+  { id: 'nutrition', name: 'Bacharelado em Nutrição', areaId: 'health-sciences', level: 'undergraduate' },
+  { id: 'chemistry-teaching', name: 'Licenciatura em Química', areaId: 'exact-sciences', level: 'undergraduate' },
+  { id: 'internet-systems', name: 'Tecnologia em Sistemas para Internet', areaId: 'technology', level: 'undergraduate' },
+  { id: 'information-systems', name: 'Bacharelado em Sistemas de Informação', areaId: 'technology', level: 'undergraduate' },
   {
-    id: 'environmental-management',
-    name: 'Tecnologia em Gestão Ambiental',
+    id: 'protected-areas-specialization',
+    name: 'Especialização em Planejamento e Gestão de Áreas Naturais Protegidas',
     areaId: 'biological-sciences',
+    level: 'graduate',
   },
-  { id: 'biology-teaching', name: 'Licenciatura em Ciências Biológicas', areaId: 'biological-sciences' },
-  {
-    id: 'tourism-management',
-    name: 'Tecnologia em Gestão de Turismo',
-    areaId: 'applied-social-sciences',
-  },
-  { id: 'administration', name: 'Administração', areaId: 'applied-social-sciences' },
-  { id: 'physics-teaching', name: 'Licenciatura em Física', areaId: 'exact-sciences' },
-  { id: 'mathematics-teaching', name: 'Licenciatura em Matemática', areaId: 'exact-sciences' },
-  { id: 'chemistry-teaching', name: 'Licenciatura em Química', areaId: 'exact-sciences' },
 ]
 
 export const literaryGenres: LiteraryGenre[] = [

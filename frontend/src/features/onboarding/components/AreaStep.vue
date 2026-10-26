@@ -17,19 +17,29 @@
       </div>
     </fieldset>
 
-    <TransitionGroup
-      tag="div"
-      name="course-group"
+    <section
       class="area-step__courses"
+      aria-labelledby="area-step-courses-title"
     >
+      <header class="area-step__courses-header">
+        <h2
+          id="area-step-courses-title"
+          class="area-step__courses-title"
+        >
+          {{ t('onboarding.areas.coursesTitle') }}
+        </h2>
+        <p class="area-step__courses-helper">
+          {{ t('onboarding.areas.coursesHelper') }}
+        </p>
+      </header>
+
       <fieldset
-        v-for="group in coursesBySelectedArea"
-        :key="group.area.id"
+        v-for="group in coursesByLevel"
+        :key="group.level"
         class="area-step__group area-step__course-group"
       >
-        <legend class="area-step__course-legend">
-          <span class="eyebrow">{{ group.area.name }}</span>
-          <span class="area-step__course-question">{{ t('onboarding.areas.coursesQuestion') }}</span>
+        <legend class="area-step__course-legend eyebrow">
+          {{ t(`onboarding.areas.levels.${group.level}`) }}
         </legend>
         <div class="area-step__chips">
           <SelectableChip
@@ -43,19 +53,19 @@
           </SelectableChip>
         </div>
       </fieldset>
-    </TransitionGroup>
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import SelectableChip from '../../../components/SelectableChip.vue'
-import type { Course, KnowledgeArea } from '../../../models/taxonomy'
+import type { Course, CourseLevel, KnowledgeArea } from '../../../models/taxonomy'
 
 interface Props {
   areas: KnowledgeArea[]
-  /** Cursos do campus agrupados apenas pelas áreas já escolhidas. */
-  coursesBySelectedArea: { area: KnowledgeArea; courses: Course[] }[]
+  /** Todos os cursos do campus agrupados por nível de ensino. */
+  coursesByLevel: { level: CourseLevel; courses: Course[] }[]
   selectedAreaIds: string[]
   selectedCourseIds: string[]
 }
@@ -86,8 +96,25 @@ const { t } = useI18n()
 
 .area-step__courses {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-4);
   margin-top: var(--space-6);
+}
+
+.area-step__courses-header {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.area-step__courses-title {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.area-step__courses-helper {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--color-text-muted);
 }
 
 .area-step__course-group {
@@ -98,9 +125,6 @@ const { t } = useI18n()
 }
 
 .area-step__course-legend {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
   float: left;
   width: 100%;
   margin-bottom: var(--space-3);
@@ -109,30 +133,5 @@ const { t } = useI18n()
 
 .area-step__course-legend + .area-step__chips {
   clear: both;
-}
-
-.area-step__course-question {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .course-group-enter-active,
-  .course-group-leave-active {
-    transition:
-      opacity var(--duration-base) var(--ease-standard),
-      transform var(--duration-base) var(--ease-standard);
-  }
-
-  .course-group-enter-from,
-  .course-group-leave-to {
-    opacity: 0;
-    transform: translateY(calc(var(--space-2) * -1));
-  }
-
-  .course-group-leave-active {
-    position: absolute;
-    visibility: hidden;
-  }
 }
 </style>
