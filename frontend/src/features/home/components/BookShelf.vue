@@ -42,10 +42,13 @@
     <div
       ref="track"
       class="shelf__track"
+      :class="{ 'shelf__track--animating': isAnimating }"
       role="region"
       tabindex="0"
       :aria-labelledby="headingId"
       @scroll.passive="updatePosition"
+      @wheel.passive="stopAnimation"
+      @pointerdown="stopAnimation"
     >
       <ul
         ref="list"
@@ -54,9 +57,10 @@
         :style="{ '--per-page': perPage }"
       >
         <li
-          v-for="book in books"
+          v-for="(book, index) in books"
           :key="book.id"
           class="shelf__item"
+          :class="{ 'shelf__item--page-start': isPaged && index % perPage === 0 }"
         >
           <BookCard
             :book="book"
@@ -90,6 +94,7 @@ import { computed, onMounted, onUnmounted, ref, useId, useTemplateRef, watch } f
 import { useI18n } from 'vue-i18n'
 import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
 import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
+import { animateScrollLeft } from '../../../lib/animate-scroll'
 import type { Book } from '../../../models/book'
 import BookCard from './BookCard.vue'
 
@@ -108,6 +113,7 @@ const props = withDefaults(defineProps<Props>(), {
 const MIN_ITEM_WIDTH = 150
 const MIN_PER_PAGE = 2
 const PAGED_QUERY = '(min-width: 900px)'
+const PAGE_TRANSITION_MS = 450
 
 const { t } = useI18n()
 const headingId = useId()
@@ -118,6 +124,7 @@ const isPaged = ref(false)
 const perPage = ref(MIN_PER_PAGE)
 const gap = ref(0)
 const currentPage = ref(0)
+const isAnimating = ref(false)
 
 const pageCount = computed(() =>
   isPaged.value ? Math.max(1, Math.ceil(props.books.length / perPage.value)) : 1,
@@ -156,16 +163,33 @@ function updatePosition(): void {
     : Math.round(element.scrollLeft / pageStride(element))
 }
 
+let cancelAnimation: (() => void) | undefined
+
+// Interrompe a troca de página animada, por exemplo quando o visitante rola por conta própria.
+function stopAnimation(): void {
+  cancelAnimation?.()
+}
+
 function goToPage(page: number): void {
   const element = track.value
   if (!element) {
     return
   }
   const target = Math.min(Math.max(page, 0), pageCount.value - 1)
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  element.scrollTo({
-    left: target * pageStride(element),
-    behavior: reduceMotion ? 'auto' : 'smooth',
+  // Limita ao fim da faixa: a última página pode ter menos livros que as demais.
+  const left = Math.min(target * pageStride(element), element.scrollWidth - element.clientWidth)
+
+  stopAnimation()
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    element.scrollLeft = left
+    return
+  }
+  // O snap fica desligado durante a animação para não puxar a rolagem a cada quadro.
+  isAnimating.value = true
+  cancelAnimation = animateScrollLeft(element, left, PAGE_TRANSITION_MS, () => {
+    isAnimating.value = false
+    cancelAnimation = undefined
+    updatePosition()
   })
 }
 
@@ -181,7 +205,10 @@ onMounted(() => {
   measure()
 })
 
-onUnmounted(() => resizeObserver.disconnect())
+onUnmounted(() => {
+  resizeObserver.disconnect()
+  stopAnimation()
+})
 </script>
 
 <style scoped>
@@ -325,8 +352,19 @@ onUnmounted(() => resizeObserver.disconnect())
     justify-content: center;
   }
 
+  /* O snap só vale no início de cada página: gestos de rolagem param sempre numa página inteira. */
   .shelf__item {
     flex-basis: calc((100% - var(--space-5) * (var(--per-page) - 1)) / var(--per-page));
+    scroll-snap-align: none;
+  }
+
+  .shelf__item--page-start {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .shelf__track--animating {
+    scroll-snap-type: none;
   }
 }
 </style>
