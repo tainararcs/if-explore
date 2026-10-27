@@ -1,10 +1,10 @@
 <!-- Passo opcional do onboarding: gêneros literários para leitura fora da sala de aula. -->
 <template>
-  <fieldset class="genre-step">
-    <legend class="visually-hidden">
+  <fieldset class="m-0 min-w-0 border-0 p-0">
+    <legend class="sr-only">
       {{ t('onboarding.genres.legend') }}
     </legend>
-    <div class="genre-step__chips">
+    <div class="flex flex-wrap gap-2">
       <SelectableChip
         v-for="genre in genres"
         :key="genre.id"
@@ -35,18 +35,3 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 </script>
-
-<style scoped>
-.genre-step {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
-
-.genre-step__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-</style>

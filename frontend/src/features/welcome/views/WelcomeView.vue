@@ -1,35 +1,37 @@
 <!-- Tela de boas-vindas: apresenta o projeto e inicia a descoberta de leituras ou leva às recomendações salvas. -->
 <template>
-  <div class="welcome">
+  <div class="flex min-h-dvh flex-col">
     <AppHeader />
 
-    <main>
+    <!-- As capas giradas do leque não podem gerar rolagem horizontal. -->
+    <main class="flex-1 overflow-x-clip">
       <section
-        class="welcome__hero container"
+        class="container grid gap-12 pt-8 pb-12 md:min-h-[min(100dvh-var(--header-height),720px)] md:grid-cols-[minmax(0,560px)_minmax(0,1fr)] md:items-center md:py-16"
         aria-labelledby="welcome-title"
       >
-        <div class="welcome__intro">
-          <p class="eyebrow welcome__eyebrow">
+        <div class="welcome__intro flex flex-col items-start">
+          <!-- Filete abaixo do sobretítulo, como no moodboard. -->
+          <p class="eyebrow after:mt-4 after:block after:h-px after:w-12 after:bg-primary after:content-['']">
             {{ t('welcome.eyebrow') }}
           </p>
           <h1
             id="welcome-title"
-            class="welcome__title"
+            class="mt-4 text-display leading-[1.05]"
           >
             <Translation
               keypath="welcome.title"
               scope="global"
             >
               <template #emphasis>
-                <em>{{ t('welcome.titleEmphasis') }}</em>
+                <em class="text-primary">{{ t('welcome.titleEmphasis') }}</em>
               </template>
             </Translation>
           </h1>
-          <p class="welcome__lead">
+          <p class="mt-6 max-w-[52ch] text-[1.0625rem] text-text-muted">
             {{ t('welcome.lead') }}
           </p>
 
-          <div class="welcome__actions">
+          <div class="mt-8 flex flex-col gap-3 self-stretch sm:flex-row sm:flex-wrap sm:self-start">
             <template v-if="hasPreferences">
               <RouterLink
                 class="button button--primary"
@@ -55,13 +57,12 @@
             </RouterLink>
           </div>
 
-          <p class="welcome__privacy">
+          <p class="mt-4 text-small text-text-muted">
             {{ t('welcome.privacy') }}
           </p>
         </div>
 
         <WelcomeCoverFan
-          class="welcome__fan"
           :books="fanBooks"
         />
       </section>
@@ -69,18 +70,18 @@
       <WelcomeHowItWorks />
     </main>
 
-    <footer class="welcome__footer">
-      <div class="welcome__footer-inner container">
+    <footer class="border-t border-border py-6 text-small text-text-muted">
+      <div class="container flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <p>{{ t('common.libraryName') }} · {{ t('common.institution') }}</p>
         <a
           :href="LIBRARY_SITE_URL"
           target="_blank"
           rel="noopener noreferrer"
-          class="welcome__external"
+          class="inline-flex min-h-11 items-center gap-1 font-semibold"
         >
           {{ t('welcome.officialSite') }}
-          <IconExternalLink class="welcome__external-icon" />
-          <span class="visually-hidden">{{ t('common.opensInNewTab') }}</span>
+          <IconExternalLink class="size-4" />
+          <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
         </a>
       </div>
     </footer>
@@ -127,120 +128,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.welcome {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-}
-
-.welcome main {
-  flex: 1;
-  /* As capas giradas do leque não podem gerar rolagem horizontal. */
-  overflow-x: clip;
-}
-
-.welcome__hero {
-  display: grid;
-  gap: var(--space-7);
-  padding-block: var(--space-6) var(--space-7);
-}
-
-.welcome__intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-/* Filete abaixo do sobretítulo, como no moodboard. */
-.welcome__eyebrow::after {
-  content: '';
-  display: block;
-  width: 48px;
-  height: 1px;
-  margin-top: var(--space-4);
-  background: var(--color-primary);
-}
-
-.welcome__title {
-  margin-top: var(--space-4);
-  font-size: var(--text-display);
-  line-height: 1.05;
-}
-
-.welcome__title em {
-  color: var(--color-primary);
-}
-
-.welcome__lead {
-  max-width: 52ch;
-  margin-top: var(--space-5);
-  font-size: 1.0625rem;
-  color: var(--color-text-muted);
-}
-
-.welcome__actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  align-self: stretch;
-  margin-top: var(--space-6);
-}
-
-.welcome__privacy {
-  margin-top: var(--space-4);
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-
-.welcome__footer {
-  padding-block: var(--space-5);
-  border-top: 1px solid var(--color-border);
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-
-.welcome__footer-inner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.welcome__external {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: 44px;
-  font-weight: 600;
-}
-
-.welcome__external-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-@media (min-width: 600px) {
-  .welcome__actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-self: flex-start;
-  }
-}
-
-@media (min-width: 900px) {
-  .welcome__hero {
-    grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
-    align-items: center;
-    min-height: min(100dvh - var(--header-height), 720px);
-    padding-block: var(--space-8);
-  }
-
-  .welcome__footer-inner {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
+/* Entrada em cascata dos textos; os atrasos dependem da posição de cada filho. */
 @media (prefers-reduced-motion: no-preference) {
   .welcome__intro > * {
     animation: rise-in 400ms var(--ease-standard) both;

@@ -1,14 +1,14 @@
 <!-- Passo 2 do onboarding: escolha de exatamente três títulos entre os candidatos das áreas escolhidas. -->
 <template>
-  <div class="book-pick">
+  <div>
     <fieldset
       v-if="areas.length > 1"
-      class="book-pick__filter"
+      class="m-0 mb-6 min-w-0 border-0 p-0"
     >
-      <legend class="visually-hidden">
+      <legend class="sr-only">
         {{ t('onboarding.books.filterLegend') }}
       </legend>
-      <div class="book-pick__filter-chips">
+      <div class="flex flex-wrap gap-2">
         <SelectableChip
           size="small"
           :selected="activeAreaId === null"
@@ -28,37 +28,45 @@
       </div>
     </fieldset>
 
-    <ul class="book-pick__grid">
+    <ul class="m-0 grid list-none grid-cols-3 gap-x-3 gap-y-6 p-0 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-8 md:grid-cols-6">
       <li
         v-for="book in visibleBooks"
         :key="book.id"
       >
         <button
           type="button"
-          class="book-pick__card"
-          :class="{
-            'book-pick__card--selected': isSelected(book.id),
-            'book-pick__card--locked': isLocked(book.id),
-          }"
+          class="group flex w-full cursor-pointer flex-col gap-1 border-0 bg-transparent p-0 text-left text-text aria-disabled:cursor-not-allowed"
           :aria-pressed="isSelected(book.id)"
           :aria-disabled="isLocked(book.id) || undefined"
           @click="emit('toggleBook', book.id)"
         >
-          <span class="book-pick__cover">
+          <span
+            class="relative mb-2 block rounded-cover outline-3 outline-offset-3 transition-[outline-color,opacity,translate] duration-(--duration-fast) ease-standard"
+            :class="[
+              isSelected(book.id) ? 'outline-primary' : 'outline-transparent',
+              isLocked(book.id) ? 'opacity-45' : 'motion-safe:group-hover:-translate-y-0.5',
+            ]"
+          >
             <BookCover
               :book="book"
               decorative
             />
             <span
               v-if="isSelected(book.id)"
-              class="book-pick__badge"
+              class="absolute -top-2 -right-2 grid size-8 place-items-center rounded-[50%] border-2 border-bg bg-primary text-on-primary"
               aria-hidden="true"
             >
-              <IconCheck />
+              <IconCheck class="size-[18px] stroke-[2.5]" />
             </span>
           </span>
-          <span class="book-pick__title">{{ book.title }}</span>
-          <span class="book-pick__author">{{ book.authors.join(', ') }}</span>
+          <span
+            class="line-clamp-2 text-small leading-[1.3] font-semibold sm:text-body"
+            :class="{ 'opacity-45': isLocked(book.id) }"
+          >{{ book.title }}</span>
+          <span
+            class="truncate text-caption text-text-muted sm:text-small"
+            :class="{ 'opacity-45': isLocked(book.id) }"
+          >{{ book.authors.join(', ') }}</span>
         </button>
       </li>
     </ul>
@@ -108,132 +116,3 @@ function isLocked(bookId: string): boolean {
   return props.limitReached && !isSelected(bookId)
 }
 </script>
-
-<style scoped>
-.book-pick__filter {
-  margin: 0 0 var(--space-5);
-  padding: 0;
-  border: 0;
-  min-width: 0;
-}
-
-.book-pick__filter-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.book-pick__grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.book-pick__card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  width: 100%;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color-text);
-  text-align: left;
-  cursor: pointer;
-}
-
-.book-pick__card[aria-disabled='true'] {
-  cursor: not-allowed;
-}
-
-.book-pick__cover {
-  position: relative;
-  display: block;
-  margin-bottom: var(--space-2);
-  border-radius: var(--radius-cover);
-  outline: 3px solid transparent;
-  outline-offset: 3px;
-  transition:
-    outline-color var(--duration-fast) var(--ease-standard),
-    opacity var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-standard);
-}
-
-.book-pick__card--selected .book-pick__cover {
-  outline-color: var(--color-primary);
-}
-
-.book-pick__card--locked .book-pick__cover,
-.book-pick__card--locked .book-pick__title,
-.book-pick__card--locked .book-pick__author {
-  opacity: 0.45;
-}
-
-.book-pick__badge {
-  position: absolute;
-  top: calc(var(--space-2) * -1);
-  right: calc(var(--space-2) * -1);
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--color-bg);
-  border-radius: 50%;
-  background: var(--color-primary);
-  color: var(--color-on-primary);
-}
-
-.book-pick__badge :deep(svg) {
-  width: 18px;
-  height: 18px;
-  stroke-width: 2.5;
-}
-
-.book-pick__title {
-  font-size: var(--text-small);
-  font-weight: 600;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.book-pick__author {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (min-width: 600px) {
-  .book-pick__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-6) var(--space-4);
-  }
-
-  .book-pick__title {
-    font-size: var(--text-body);
-  }
-
-  .book-pick__author {
-    font-size: var(--text-small);
-  }
-}
-
-@media (min-width: 900px) {
-  .book-pick__grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .book-pick__card:not([aria-disabled='true']):hover .book-pick__cover {
-    transform: translateY(-2px);
-  }
-}
-</style>

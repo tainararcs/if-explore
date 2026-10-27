@@ -2,14 +2,14 @@
 <template>
   <button
     type="button"
-    class="theme-toggle"
-    :class="`theme-toggle--${theme}`"
+    class="relative grid size-11 cursor-pointer place-items-center rounded-[50%] border-0 bg-transparent p-0 text-text hover:bg-surface-muted"
     :aria-label="isDark ? t('common.theme.useLight') : t('common.theme.useDark')"
     :title="isDark ? t('common.theme.useLight') : t('common.theme.useDark')"
     @click="toggleTheme"
   >
-    <IconSun class="theme-toggle__icon theme-toggle__icon--sun" />
-    <IconMoon class="theme-toggle__icon theme-toggle__icon--moon" />
+    <!-- No tema claro mostra a lua (ação: escurecer); no escuro, o sol. -->
+    <IconSun :class="[iconClass, { [hiddenIconClass]: !isDark }]" />
+    <IconMoon :class="[iconClass, { [hiddenIconClass]: isDark }]" />
   </button>
 </template>
 
@@ -24,46 +24,10 @@ const { t } = useI18n()
 const { theme, toggleTheme } = useColorTheme()
 
 const isDark = computed(() => theme.value === 'dark')
+
+// Os dois ícones ocupam a mesma célula. O esmaecimento vale sempre; o giro só
+// quando o sistema permite movimento.
+const iconClass =
+  'col-start-1 row-start-1 transition-opacity duration-(--duration-base) ease-standard motion-safe:transition-[opacity,rotate,scale]'
+const hiddenIconClass = '-rotate-90 scale-50 opacity-0'
 </script>
-
-<style scoped>
-.theme-toggle {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.theme-toggle:hover {
-  background: var(--color-surface-muted);
-}
-
-/* Os dois ícones ocupam a mesma célula; o inativo fica girado e reduzido.
-   O esmaecimento vale sempre; o giro só quando o sistema permite movimento. */
-.theme-toggle__icon {
-  grid-area: 1 / 1;
-  transition: opacity var(--duration-base) var(--ease-standard);
-}
-
-/* No tema claro mostra a lua (ação: escurecer); no escuro, o sol. */
-.theme-toggle--light .theme-toggle__icon--sun,
-.theme-toggle--dark .theme-toggle__icon--moon {
-  opacity: 0;
-  transform: rotate(-90deg) scale(0.5);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .theme-toggle__icon {
-    transition:
-      opacity var(--duration-base) var(--ease-standard),
-      transform var(--duration-base) var(--ease-standard);
-  }
-}
-</style>

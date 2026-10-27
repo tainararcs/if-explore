@@ -1,19 +1,19 @@
 <!-- Cabeçalho da aplicação com a marca e um espaço para ações contextuais da tela. -->
 <template>
   <header
-    class="app-header"
-    :class="{ 'app-header--sticky': sticky }"
+    class="border-b border-border bg-surface"
+    :class="{ 'sticky top-0 z-10': sticky }"
   >
-    <div class="app-header__inner container">
+    <div class="container flex min-h-(--header-height) items-center justify-between gap-4">
       <RouterLink
-        class="app-header__brand"
+        class="inline-flex min-h-11 items-center gap-3 text-text no-underline"
         :to="hasPreferences ? '/home' : '/'"
         :aria-label="t('common.brandHomeLabel')"
       >
         <BrandMark />
-        <span class="app-header__name">{{ t('common.appName') }}</span>
+        <span class="font-display text-[1.25rem] leading-none">{{ t('common.appName') }}</span>
       </RouterLink>
-      <div class="app-header__actions">
+      <div class="flex items-center gap-2">
         <slot name="actions" />
         <ThemeToggle />
       </div>
@@ -43,45 +43,3 @@ defineSlots<{
 const { t } = useI18n()
 const { hasPreferences } = useReadingPreferences()
 </script>
-
-<style scoped>
-.app-header {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.app-header--sticky {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.app-header__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  min-height: var(--header-height);
-}
-
-.app-header__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: 44px;
-  color: var(--color-text);
-  text-decoration: none;
-}
-
-.app-header__name {
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.app-header__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-</style>

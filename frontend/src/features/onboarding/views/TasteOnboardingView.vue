@@ -1,16 +1,16 @@
 <!-- Onboarding "Descobrir minhas leituras": áreas, três títulos e refinamento opcional por gêneros. -->
 <template>
-  <div class="onboarding">
+  <div class="flex min-h-dvh flex-col">
     <AppHeader />
 
-    <main class="onboarding__main">
-      <div class="onboarding__topbar container">
+    <main class="flex-1 overflow-x-clip pb-12">
+      <div class="container flex items-center gap-3 py-3 sm:py-4">
         <button
           type="button"
-          class="button button--ghost button--small onboarding__back"
+          class="button button--ghost button--small -ms-3 shrink-0 px-3"
           @click="goBack"
         >
-          <IconArrowLeft />
+          <IconArrowLeft class="size-5" />
           {{ t('onboarding.back') }}
         </button>
         <OnboardingProgress :step="currentStep" />
@@ -18,29 +18,29 @@
 
       <div
         v-if="status === 'loading'"
-        class="onboarding__step onboarding__step--narrow container"
+        class="container max-w-[720px] pt-6 sm:pt-8"
         role="status"
       >
-        <span class="visually-hidden">{{ t('onboarding.loading') }}</span>
+        <span class="sr-only">{{ t('onboarding.loading') }}</span>
         <div
-          class="onboarding__skeleton"
+          class="onboarding__skeleton flex flex-wrap gap-2"
           aria-hidden="true"
         >
-          <span class="onboarding__skeleton-title" />
+          <span class="mb-6 h-10 basis-full rounded-sm bg-surface-muted" />
           <span
             v-for="index in 8"
             :key="index"
-            class="onboarding__skeleton-chip"
+            class="h-11 w-32 rounded-pill bg-surface-muted nth-[3n]:w-[180px]"
           />
         </div>
       </div>
 
       <div
         v-else-if="status === 'error'"
-        class="onboarding__step onboarding__step--narrow container"
+        class="container max-w-[720px] pt-6 sm:pt-8"
         role="alert"
       >
-        <p class="onboarding__error">
+        <p class="mb-4 text-danger">
           {{ t('onboarding.error') }}
         </p>
         <button
@@ -60,19 +60,19 @@
       >
         <section
           :key="currentStep"
-          class="onboarding__step container"
-          :class="{ 'onboarding__step--narrow': currentStep !== 'books' }"
+          class="container pt-6 sm:pt-8"
+          :class="{ 'max-w-[720px]': currentStep !== 'books' }"
           aria-labelledby="onboarding-title"
         >
           <h1
             id="onboarding-title"
             ref="heading"
-            class="onboarding__title"
+            class="outline-none"
             tabindex="-1"
           >
             {{ t(`onboarding.${currentStep}.title`) }}
           </h1>
-          <p class="onboarding__helper">
+          <p class="mt-2 mb-8 text-text-muted">
             {{ t(`onboarding.${currentStep}.helper`) }}
           </p>
 
@@ -114,17 +114,17 @@
         </template>
         <span
           v-else-if="currentStep === 'books'"
-          class="onboarding__counter"
+          class="inline-flex items-center gap-3 font-semibold text-text"
         >
           <span
-            class="onboarding__slots"
+            class="inline-flex gap-1"
             aria-hidden="true"
           >
             <span
               v-for="slot in REQUIRED_SEED_BOOKS"
               :key="slot"
-              class="onboarding__slot"
-              :class="{ 'onboarding__slot--filled': slot <= draft.seedBookIds.length }"
+              class="size-2.5 rounded-[50%] border-[1.5px] border-primary transition-[background-color] duration-(--duration-fast) ease-standard"
+              :class="{ 'bg-primary': slot <= draft.seedBookIds.length }"
             />
           </span>
           {{
@@ -287,123 +287,12 @@ onMounted(load)
 </script>
 
 <style scoped>
-.onboarding {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-}
-
-.onboarding__main {
-  flex: 1;
-  padding-bottom: var(--space-7);
-  overflow-x: clip;
-}
-
-.onboarding__topbar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding-block: var(--space-3);
-}
-
-.onboarding__back {
-  flex-shrink: 0;
-  margin-inline-start: calc(var(--space-3) * -1);
-  padding-inline: var(--space-3);
-}
-
-.onboarding__back :deep(svg) {
-  width: 20px;
-  height: 20px;
-}
-
-.onboarding__step {
-  padding-top: var(--space-5);
-}
-
-.onboarding__step--narrow {
-  max-width: 720px;
-}
-
-.onboarding__title {
-  outline: none;
-}
-
-.onboarding__helper {
-  margin: var(--space-2) 0 var(--space-6);
-  color: var(--color-text-muted);
-}
-
-.onboarding__error {
-  margin-bottom: var(--space-4);
-  color: var(--color-danger);
-}
-
-.onboarding__counter {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.onboarding__slots {
-  display: inline-flex;
-  gap: var(--space-1);
-}
-
-.onboarding__slot {
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid var(--color-primary);
-  border-radius: 50%;
-  transition: background-color var(--duration-fast) var(--ease-standard);
-}
-
-.onboarding__slot--filled {
-  background: var(--color-primary);
-}
-
-.onboarding__skeleton {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.onboarding__skeleton-title {
-  flex-basis: 100%;
-  height: 2.5rem;
-  margin-bottom: var(--space-5);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-muted);
-}
-
-.onboarding__skeleton-chip {
-  width: calc(96px + (var(--space-6) * 1));
-  height: 44px;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-muted);
-}
-
-.onboarding__skeleton-chip:nth-child(3n) {
-  width: 180px;
-}
-
-@media (min-width: 600px) {
-  .onboarding__topbar {
-    padding-block: var(--space-4);
-  }
-
-  .onboarding__step {
-    padding-top: var(--space-6);
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .onboarding__skeleton > * {
     animation: pulse 1.2s ease-in-out infinite alternate;
   }
 
+  /* Troca de passo: desliza na direção da navegação. */
   .step-forward-enter-active,
   .step-forward-leave-active,
   .step-back-enter-active,
