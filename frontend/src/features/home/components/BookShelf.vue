@@ -1,4 +1,7 @@
-<!-- Prateleira horizontal de livros com rolagem por toque/teclado e setas a partir de 900px. -->
+<!--
+  Prateleira horizontal de livros. No celular, rolagem livre por toque; a partir de
+  900px, paginada de N em N livros, com setas e pontos indicando a página atual.
+-->
 <template>
   <section
     class="shelf"
@@ -11,13 +14,16 @@
       >
         {{ title }}
       </h2>
-      <div class="shelf__controls">
+      <div
+        v-if="pageCount > 1"
+        class="shelf__controls"
+      >
         <button
           type="button"
           class="shelf__arrow"
           :aria-label="t('home.shelf.previous')"
-          :disabled="atStart"
-          @click="scrollByPage(-1)"
+          :disabled="currentPage === 0"
+          @click="goToPage(currentPage - 1)"
         >
           <IconArrowLeft />
         </button>
@@ -25,8 +31,8 @@
           type="button"
           class="shelf__arrow"
           :aria-label="t('home.shelf.next')"
-          :disabled="atEnd"
-          @click="scrollByPage(1)"
+          :disabled="currentPage === pageCount - 1"
+          @click="goToPage(currentPage + 1)"
         >
           <IconArrowRight />
         </button>
@@ -39,9 +45,14 @@
       role="region"
       tabindex="0"
       :aria-labelledby="headingId"
-      @scroll.passive="updateEdges"
+      @scroll.passive="updatePosition"
     >
-      <ul class="shelf__list">
+      <ul
+        ref="list"
+        class="shelf__list"
+        :class="{ 'shelf__list--centered': pageCount === 1 }"
+        :style="{ '--per-page': perPage }"
+      >
         <li
           v-for="book in books"
           :key="book.id"
@@ -54,11 +65,28 @@
         </li>
       </ul>
     </div>
+
+    <div
+      v-if="pageCount > 1"
+      class="shelf__pagination"
+      role="group"
+      :aria-label="t('home.shelf.pages')"
+    >
+      <button
+        v-for="page in pageCount"
+        :key="page"
+        type="button"
+        class="shelf__dot"
+        :aria-label="t('home.shelf.page', { current: page, total: pageCount })"
+        :aria-current="page - 1 === currentPage ? 'true' : undefined"
+        @click="goToPage(page - 1)"
+      />
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, useId, useTemplateRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useId, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
 import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
@@ -72,46 +100,85 @@ interface Props {
   showQuotes?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   showQuotes: false,
 })
+
+// Largura mínima de um card na versão paginada; define quantos cabem por página.
+const MIN_ITEM_WIDTH = 150
+const MIN_PER_PAGE = 2
+const PAGED_QUERY = '(min-width: 900px)'
 
 const { t } = useI18n()
 const headingId = useId()
 const track = useTemplateRef<HTMLDivElement>('track')
+const list = useTemplateRef<HTMLUListElement>('list')
 
-const atStart = ref(true)
-const atEnd = ref(false)
+const isPaged = ref(false)
+const perPage = ref(MIN_PER_PAGE)
+const gap = ref(0)
+const currentPage = ref(0)
 
-// Habilita/desabilita as setas conforme a posição da rolagem.
-function updateEdges(): void {
-  const element = track.value
-  if (!element) {
-    return
-  }
-  atStart.value = element.scrollLeft <= 1
-  atEnd.value = element.scrollLeft + element.clientWidth >= element.scrollWidth - 1
+const pageCount = computed(() =>
+  isPaged.value ? Math.max(1, Math.ceil(props.books.length / perPage.value)) : 1,
+)
+
+// Distância entre o início de uma página e o da seguinte: a largura visível mais um gap.
+function pageStride(element: HTMLElement): number {
+  return element.clientWidth + gap.value
 }
 
-function scrollByPage(direction: 1 | -1): void {
+// Recalcula quantos livros cabem por página conforme a largura disponível.
+function measure(): void {
+  const element = track.value
+  if (!element || !list.value) {
+    return
+  }
+  isPaged.value = window.matchMedia(PAGED_QUERY).matches
+  gap.value = Number.parseFloat(getComputedStyle(list.value).columnGap) || 0
+  perPage.value = Math.max(
+    MIN_PER_PAGE,
+    Math.floor((element.clientWidth + gap.value) / (MIN_ITEM_WIDTH + gap.value)),
+  )
+  updatePosition()
+}
+
+// Deriva a página atual da rolagem; no fim da faixa, a última página fica ativa.
+function updatePosition(): void {
+  const element = track.value
+  if (!element || !isPaged.value) {
+    currentPage.value = 0
+    return
+  }
+  const atEnd = element.scrollLeft + element.clientWidth >= element.scrollWidth - 1
+  currentPage.value = atEnd
+    ? pageCount.value - 1
+    : Math.round(element.scrollLeft / pageStride(element))
+}
+
+function goToPage(page: number): void {
   const element = track.value
   if (!element) {
     return
   }
+  const target = Math.min(Math.max(page, 0), pageCount.value - 1)
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  element.scrollBy({
-    left: direction * element.clientWidth * 0.8,
+  element.scrollTo({
+    left: target * pageStride(element),
     behavior: reduceMotion ? 'auto' : 'smooth',
   })
 }
 
-const resizeObserver = new ResizeObserver(updateEdges)
+// Filtrar a prateleira muda a quantidade de livros; a rolagem pode ter sido ajustada.
+watch(() => props.books.length, updatePosition, { flush: 'post' })
+
+const resizeObserver = new ResizeObserver(measure)
 
 onMounted(() => {
   if (track.value) {
     resizeObserver.observe(track.value)
   }
-  updateEdges()
+  measure()
 })
 
 onUnmounted(() => resizeObserver.disconnect())
@@ -189,8 +256,58 @@ onUnmounted(() => resizeObserver.disconnect())
   scroll-snap-align: start;
 }
 
+.shelf__pagination {
+  display: none;
+  justify-content: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+/* Área de toque de 24px com o ponto visível menor no centro. */
+.shelf__dot {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.shelf__dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+
+.shelf__dot:hover::before {
+  background: var(--color-text-muted);
+}
+
+.shelf__dot[aria-current='true']::before {
+  width: 20px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shelf__dot::before {
+    transition:
+      width var(--duration-base) var(--ease-standard),
+      background-color var(--duration-base) var(--ease-standard);
+  }
+}
+
+/*
+  Versão paginada: cada página ocupa exatamente a largura visível, com
+  `--per-page` livros (definido no script a partir da largura disponível).
+*/
 @media (min-width: 900px) {
-  .shelf__controls {
+  .shelf__controls,
+  .shelf__pagination {
     display: flex;
   }
 
@@ -198,19 +315,18 @@ onUnmounted(() => resizeObserver.disconnect())
     margin-inline: 0;
     padding-inline: 0;
     scroll-padding-inline: 0;
-    scrollbar-width: thin;
-  }
-
-  .shelf__track::-webkit-scrollbar {
-    display: initial;
   }
 
   .shelf__list {
     gap: var(--space-5);
   }
 
+  .shelf__list--centered {
+    justify-content: center;
+  }
+
   .shelf__item {
-    flex-basis: 160px;
+    flex-basis: calc((100% - var(--space-5) * (var(--per-page) - 1)) / var(--per-page));
   }
 }
 </style>
