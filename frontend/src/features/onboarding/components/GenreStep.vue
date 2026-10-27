@@ -1,7 +1,7 @@
 <!-- Passo opcional do onboarding: gêneros literários para leitura fora da sala de aula. -->
 <template>
   <fieldset class="genre-step">
-    <legend class="visually-hidden">
+    <legend class="sr-only">
       {{ t('onboarding.genres.legend') }}
     </legend>
     <div class="genre-step__chips">

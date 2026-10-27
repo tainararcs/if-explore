@@ -80,7 +80,7 @@
         >
           {{ t('welcome.officialSite') }}
           <IconExternalLink class="welcome__external-icon" />
-          <span class="visually-hidden">{{ t('common.opensInNewTab') }}</span>
+          <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
         </a>
       </div>
     </footer>

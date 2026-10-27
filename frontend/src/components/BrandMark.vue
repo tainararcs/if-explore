@@ -1,13 +1,13 @@
 <!-- Marca do IF Explore: grade de quadrados com um círculo, em referência à marca do Instituto Federal. -->
 <template>
   <svg
-    class="brand-mark"
+    class="block h-7 w-auto shrink-0"
     viewBox="0 0 34 46"
     aria-hidden="true"
     focusable="false"
   >
     <circle
-      class="brand-mark__accent"
+      class="fill-brand-accent"
       cx="5"
       cy="5"
       r="5"
@@ -15,7 +15,7 @@
     <rect
       v-for="cell in cells"
       :key="`${cell.x}-${cell.y}`"
-      class="brand-mark__cell"
+      class="fill-primary"
       :x="cell.x"
       :y="cell.y"
       width="10"
@@ -39,20 +39,3 @@ const cells = [
   { x: 12, y: 36 },
 ]
 </script>
-
-<style scoped>
-.brand-mark {
-  display: block;
-  height: 1.75rem;
-  width: auto;
-  flex-shrink: 0;
-}
-
-.brand-mark__accent {
-  fill: var(--color-brand-accent);
-}
-
-.brand-mark__cell {
-  fill: var(--color-primary);
-}
-</style>

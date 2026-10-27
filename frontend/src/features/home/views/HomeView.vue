@@ -40,7 +40,7 @@
         v-if="areas.length > 1"
         class="home__filter"
       >
-        <legend class="visually-hidden">
+        <legend class="sr-only">
           {{ t('home.filterLegend') }}
         </legend>
         <div class="home__filter-chips">
@@ -85,7 +85,7 @@
         class="home__skeleton"
         role="status"
       >
-        <span class="visually-hidden">{{ t('home.loading') }}</span>
+        <span class="sr-only">{{ t('home.loading') }}</span>
         <div
           v-for="shelf in 2"
           :key="shelf"

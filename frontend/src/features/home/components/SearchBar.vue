@@ -6,7 +6,7 @@
   >
     <label
       :for="inputId"
-      class="visually-hidden"
+      class="sr-only"
     >
       {{ t('home.search.label') }}
     </label>

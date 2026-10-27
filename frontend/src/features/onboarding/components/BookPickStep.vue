@@ -5,7 +5,7 @@
       v-if="areas.length > 1"
       class="book-pick__filter"
     >
-      <legend class="visually-hidden">
+      <legend class="sr-only">
         {{ t('onboarding.books.filterLegend') }}
       </legend>
       <div class="book-pick__filter-chips">

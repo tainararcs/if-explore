@@ -2,16 +2,23 @@
 <template>
   <button
     type="button"
-    class="chip"
-    :class="[`chip--${size}`, { 'chip--selected': selected }]"
+    class="inline-flex cursor-pointer items-center gap-1 rounded-pill border-[1.5px] font-body leading-[1.2] text-left transition-[background-color,border-color,color] duration-(--duration-fast) ease-standard"
+    :class="[
+      size === 'small' ? 'min-h-10 px-3 py-0 text-small' : 'min-h-11 px-4 py-0 text-body',
+      selected
+        ? 'border-primary bg-primary-soft font-semibold text-primary'
+        : 'border-transparent bg-surface-muted font-medium text-text hover:border-border',
+    ]"
     :aria-pressed="selected"
     @click="emit('toggle')"
   >
+    <!-- O ícone de check reforça o estado selecionado além da cor. -->
     <span
-      class="chip__check"
+      class="-ms-1"
+      :class="selected ? 'inline-flex' : 'hidden'"
       aria-hidden="true"
     >
-      <IconCheck />
+      <IconCheck class="size-[18px]" />
     </span>
     <slot />
   </button>
@@ -33,60 +40,3 @@ const emit = defineEmits<{
   toggle: []
 }>()
 </script>
-
-<style scoped>
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: 44px;
-  padding: 0 var(--space-4);
-  border: 1.5px solid transparent;
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-muted);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: var(--text-body);
-  font-weight: 500;
-  line-height: 1.2;
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color var(--duration-fast) var(--ease-standard),
-    border-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
-}
-
-.chip--small {
-  min-height: 40px;
-  padding: 0 var(--space-3);
-  font-size: var(--text-small);
-}
-
-.chip:hover {
-  border-color: var(--color-border);
-}
-
-.chip--selected,
-.chip--selected:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-/* O ícone de check reforça o estado selecionado além da cor. */
-.chip__check {
-  display: none;
-  margin-inline-start: calc(var(--space-1) * -1);
-}
-
-.chip__check :deep(svg) {
-  width: 18px;
-  height: 18px;
-}
-
-.chip--selected .chip__check {
-  display: inline-flex;
-}
-</style>

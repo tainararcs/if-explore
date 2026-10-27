@@ -21,7 +21,7 @@
         class="onboarding__step onboarding__step--narrow container"
         role="status"
       >
-        <span class="visually-hidden">{{ t('onboarding.loading') }}</span>
+        <span class="sr-only">{{ t('onboarding.loading') }}</span>
         <div
           class="onboarding__skeleton"
           aria-hidden="true"

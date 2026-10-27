@@ -2,7 +2,7 @@
 <template>
   <div class="area-step">
     <fieldset class="area-step__group">
-      <legend class="visually-hidden">
+      <legend class="sr-only">
         {{ t('onboarding.areas.legend') }}
       </legend>
       <div class="area-step__chips">
