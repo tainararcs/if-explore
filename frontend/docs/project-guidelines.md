@@ -206,6 +206,9 @@ used, and the project base styles stay in `src/index.css`.
   CSS: unlayered scoped styles always win over Tailwind's layered utilities.
 - Dark mode comes from the semantic tokens (`light-dark()`); `dark:` variants
   are not needed.
+- `hover:` variants only apply on devices that support hover
+  (`@media (hover: hover)`), so touch screens do not keep a hover state after a
+  tap. Never rely on hover alone to reveal content or actions.
 - Migration is gradual: existing components keep their scoped CSS until they
   are changed for another reason.
 
