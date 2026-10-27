@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, useId, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useId, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
 import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
@@ -224,9 +224,6 @@ function goToPage(page: number): void {
     updatePosition()
   })
 }
-
-// Filtrar a prateleira muda a quantidade de livros; a rolagem pode ter sido ajustada.
-watch(() => props.books.length, updatePosition, { flush: 'post' })
 
 const resizeObserver = new ResizeObserver(measure)
 
@@ -396,16 +393,20 @@ onUnmounted(() => {
   }
 
   /*
-    Destaque estático: vale em qualquer navegador e também com movimento
-    reduzido, pois não há animação, só a diferença de tamanho. A capa dos
-    vizinhos esmaece; o texto não, para manter o contraste.
+    `--shelf-focus` vai de 0 (vizinho) a 1 (livro no centro) e define a escala do
+    card e a opacidade da capa; o texto não esmaece, para manter o contraste.
+    O destaque estático vale em qualquer navegador e com movimento reduzido.
   */
-  .shelf--featured .shelf__item:not(.shelf__item--current) {
-    transform: scale(0.88);
+  .shelf--featured .shelf__item {
+    transform: scale(calc(0.88 + 0.12 * var(--shelf-focus)));
   }
 
-  .shelf--featured .shelf__item:not(.shelf__item--current) :deep(.book-cover) {
-    opacity: 0.55;
+  .shelf--featured .shelf__item :deep(.book-cover) {
+    opacity: calc(0.55 + 0.45 * var(--shelf-focus));
+  }
+
+  .shelf--featured .shelf__item:not(.shelf__item--current) {
+    --shelf-focus: 0;
   }
 
   /* 24px por ponto sem espaço extra: até 12 pontos cabem em 360px. */
@@ -415,30 +416,25 @@ onUnmounted(() => {
   }
 }
 
-/* Sem animações guiadas pela rolagem, o destaque troca com uma transição curta. */
-@media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
-  .shelf--featured .shelf__item {
-    transition: transform var(--duration-base) var(--ease-standard);
-  }
-
-  .shelf--featured .shelf__item :deep(.book-cover) {
-    transition: opacity var(--duration-base) var(--ease-standard);
-  }
+/* Registrada para poder ser interpolada por transições e animações. */
+@property --shelf-focus {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 1;
 }
 
 /*
-  Com suporte, a escala e o esmaecimento da capa acompanham o dedo de forma
-  contínua, sobrepondo o destaque estático.
+  Com movimento permitido, o destaque troca com uma transição curta e, onde há
+  suporte a animações guiadas pela rolagem, acompanha o dedo de forma contínua.
 */
-@supports (animation-timeline: view()) {
-  @media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+@media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+  .shelf--featured .shelf__item {
+    transition: --shelf-focus var(--duration-base) var(--ease-standard);
+  }
+
+  @supports (animation-timeline: view()) {
     .shelf--featured .shelf__item {
       animation: shelf-focus linear both;
-      animation-timeline: view(inline);
-    }
-
-    .shelf--featured .shelf__item :deep(.book-cover) {
-      animation: shelf-focus-cover linear both;
       animation-timeline: view(inline);
     }
   }
@@ -447,22 +443,11 @@ onUnmounted(() => {
 @keyframes shelf-focus {
   0%,
   100% {
-    transform: scale(0.88);
+    --shelf-focus: 0;
   }
 
   50% {
-    transform: scale(1);
-  }
-}
-
-@keyframes shelf-focus-cover {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-
-  50% {
-    opacity: 1;
+    --shelf-focus: 1;
   }
 }
 
