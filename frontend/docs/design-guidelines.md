@@ -48,7 +48,9 @@ phrasing ("Boas-vindas", not "Bem-vindo").
 
 ## 3. Color
 
-All colors are CSS custom properties defined in `src/index.css` on `:root`.
+All colors are CSS custom properties defined in `src/index.css`: the palette on
+`:root` and the semantic tokens in the Tailwind `@theme static` block, which also
+exposes them as utilities (`bg-surface`, `text-primary`, `border-border`).
 Components use **semantic tokens only**; raw palette values appear only in the
 token definitions.
 
@@ -149,7 +151,10 @@ Rules:
 4px base scale: `--space-1` 4px, `--space-2` 8px, `--space-3` 12px,
 `--space-4` 16px, `--space-5` 24px, `--space-6` 32px, `--space-7` 48px,
 `--space-8` 64px, `--space-9` 96px. Use only these values for margins, paddings,
-and gaps.
+and gaps. Tailwind spacing utilities use the same 4px base, so the step names
+differ: `--space-1` to `--space-4` are `1` to `4`, `--space-5` is `6`,
+`--space-6` is `8`, `--space-7` is `12`, `--space-8` is `16`, and `--space-9` is
+`24` (for example, `gap-6` equals `var(--space-5)`).
 
 ### 5.2 Breakpoints (mobile first, `min-width`)
 
@@ -161,7 +166,9 @@ and gaps.
 | `lg` | 1200px | Max content width reached, 32px gutter |
 
 CSS custom properties cannot be used inside media queries; write the literal
-widths above and keep this table as the single source.
+widths above and keep this table as the single source. The Tailwind `sm:`,
+`md:`, and `lg:` variants use these same widths (`--breakpoint-*` in
+`src/index.css`).
 
 ### 5.3 Containers
 

@@ -1,3 +1,75 @@
+/*
+  Tailwind CSS: apenas tema e utilitários. O preflight (reset) fica de fora; a base
+  do projeto continua neste arquivo. Estilos sem camada, como os `<style scoped>`,
+  têm prioridade sobre os utilitários.
+*/
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+  Tokens de design expostos ao Tailwind. `static` gera todas as variáveis, mesmo as
+  não usadas em utilitários, porque os `<style scoped>` também as consomem. Os
+  valores padrão do Tailwind para cores, fontes, tamanhos, raios, sombras, curvas
+  e breakpoints são removidos para que só existam os do projeto.
+*/
+@theme static {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --ease-*: initial;
+  --breakpoint-*: initial;
+
+  /* Tokens semânticos: light-dark() escolhe o valor conforme o color-scheme ativo. */
+  --color-bg: light-dark(var(--palette-paper), #1a1d19);
+  --color-surface: light-dark(#fbf8f2, var(--palette-charcoal));
+  --color-surface-muted: light-dark(#eee8dc, #2d312b);
+  --color-border: light-dark(var(--palette-sand), #3a3f37);
+  --color-text: light-dark(var(--palette-charcoal), #f0ebe0);
+  --color-text-muted: light-dark(#5b6158, #b4b9ae);
+  --color-primary: light-dark(var(--palette-green-900), #9cc5ae);
+  --color-primary-hover: light-dark(var(--palette-green-700), #b5d6c3);
+  --color-on-primary: light-dark(#fbf8f2, #14251d);
+  --color-primary-soft: light-dark(#dce6df, #24382e);
+  --color-focus: light-dark(var(--palette-green-700), #9cc5ae);
+  --color-success: light-dark(#2f6b47, #8fcba5);
+  --color-warning: light-dark(#8a4b1f, #e0a878);
+  --color-danger: light-dark(#a3262a, #f08c8c);
+  --color-brand-accent: light-dark(var(--palette-red), #e0484c);
+
+  --font-display: 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-display: clamp(2.25rem, 1.6rem + 3vw, 3.75rem);
+  --text-h1: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  --text-h2: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  --text-h3: 1.125rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-caption: 0.75rem;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --radius-cover: 3px 6px 6px 3px;
+
+  /* No escuro, a sombra leve vira contorno para manter a separação das superfícies. */
+  --shadow-sm:
+    0 1px 2px light-dark(rgb(36 39 34 / 0.08), transparent),
+    0 0 0 1px light-dark(transparent, #3a3f37);
+  --shadow-md: 0 6px 20px light-dark(rgb(36 39 34 / 0.12), rgb(0 0 0 / 0.4));
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Mesmos breakpoints de design-guidelines.md: sm 600px, md 900px, lg 1200px. */
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 900px;
+  --breakpoint-lg: 1200px;
+}
+
 /* Fontes auto-hospedadas (licença OFL em public/fonts). */
 @font-face {
   font-family: 'Libre Caslon Text';
@@ -41,34 +113,10 @@
   --palette-charcoal: #242722;
   --palette-red: #c8191e;
 
-  /* Tokens semânticos: light-dark() escolhe o valor conforme o color-scheme ativo. */
-  --color-bg: light-dark(var(--palette-paper), #1a1d19);
-  --color-surface: light-dark(#fbf8f2, var(--palette-charcoal));
-  --color-surface-muted: light-dark(#eee8dc, #2d312b);
-  --color-border: light-dark(var(--palette-sand), #3a3f37);
-  --color-text: light-dark(var(--palette-charcoal), #f0ebe0);
-  --color-text-muted: light-dark(#5b6158, #b4b9ae);
-  --color-primary: light-dark(var(--palette-green-900), #9cc5ae);
-  --color-primary-hover: light-dark(var(--palette-green-700), #b5d6c3);
-  --color-on-primary: light-dark(#fbf8f2, #14251d);
-  --color-primary-soft: light-dark(#dce6df, #24382e);
-  --color-focus: light-dark(var(--palette-green-700), #9cc5ae);
-  --color-success: light-dark(#2f6b47, #8fcba5);
-  --color-warning: light-dark(#8a4b1f, #e0a878);
-  --color-danger: light-dark(#a3262a, #f08c8c);
-  --color-brand-accent: light-dark(var(--palette-red), #e0484c);
-
-  --font-display: 'Libre Caslon Text', Georgia, 'Times New Roman', serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-
-  --text-display: clamp(2.25rem, 1.6rem + 3vw, 3.75rem);
-  --text-h1: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
-  --text-h2: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
-  --text-h3: 1.125rem;
-  --text-body: 1rem;
-  --text-small: 0.875rem;
-  --text-caption: 0.75rem;
-
+  /*
+    Espaçamento em múltiplos de 4px, igual à escala do Tailwind (`--spacing`):
+    --space-5 (24px) equivale a `p-6`, --space-6 (32px) a `p-8`.
+  */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -83,21 +131,8 @@
   --container-max: 1200px;
   --header-height: 64px;
 
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
-  --radius-pill: 999px;
-  --radius-cover: 3px 6px 6px 3px;
-
-  /* No escuro, a sombra leve vira contorno para manter a separação das superfícies. */
-  --shadow-sm:
-    0 1px 2px light-dark(rgb(36 39 34 / 0.08), transparent),
-    0 0 0 1px light-dark(transparent, #3a3f37);
-  --shadow-md: 0 6px 20px light-dark(rgb(36 39 34 / 0.12), rgb(0 0 0 / 0.4));
-
   --duration-fast: 150ms;
   --duration-base: 250ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
 
   color-scheme: light dark;
   font-family: var(--font-body);

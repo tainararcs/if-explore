@@ -3,8 +3,10 @@
 ## 1. Scope and source of guidance
 
 These instructions apply to the current frontend project directory. The project uses Vue 3,
-TypeScript, Vite, and Node.js 24.22.0. The current styling is CSS; do not assume
-adoption of other libraries without checking the repository configuration.
+TypeScript, Vite, and Node.js 24.22.0. Styling uses Tailwind CSS v4 utilities on
+top of the design tokens in `src/index.css`, plus `<style scoped>` where utilities
+fall short; do not assume adoption of other libraries without checking the
+repository configuration.
 
 Use [docs/project-guidelines.md](docs/project-guidelines.md) as the source for
 organization and architecture conventions. This file summarizes the operational

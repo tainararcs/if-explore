@@ -7,9 +7,10 @@ It uses a familiar separation between features, models, services, components, an
 views without turning every feature into a layered architecture.
 
 The current configuration uses Vue 3 with the Composition API, TypeScript, Vite,
-and Vue Router. Existing styling is CSS. `vue-i18n` is configured in
-`src/lib/i18n.ts` (Composition API, pt-BR only). Pinia, Tailwind CSS, and test tools
-are not currently configured in `package.json`. Documentation must reflect the
+and Vue Router. Styling uses Tailwind CSS v4 on top of the project tokens (see
+§7). `vue-i18n` is configured in `src/lib/i18n.ts` (Composition API, pt-BR
+only). Pinia and test tools are not currently configured in `package.json`.
+Documentation must reflect the
 actual configuration; do not create files or folders merely to complete the
 example below.
 
@@ -188,10 +189,25 @@ Components represent observable interface and interaction.
   concrete benefit.
 - Evaluate consumers when changing a shared component.
 
-Use the styling solution configured in the repository. Do not assume Tailwind or
-another library without checking dependencies and configuration. Component
-styles use `<style scoped>`; global styles remain in `src/index.css`. Omit the
-`<style>` block when the component has no styles.
+Styling uses Tailwind CSS v4 (`tailwindcss` and `@tailwindcss/vite`), imported
+in `src/index.css` with only its theme and utilities; the preflight reset is not
+used, and the project base styles stay in `src/index.css`.
+
+- Design tokens live in the `@theme static` block of `src/index.css`. Tailwind
+  defaults for colors, fonts, text sizes, radii, shadows, easing, and
+  breakpoints are removed, so only project values exist (`bg-surface`,
+  `text-text-muted`, `font-display`, `text-small`, `rounded-pill`, `md:`).
+- Prefer utilities for layout, spacing, color, and typography in templates. Do
+  not use arbitrary values such as `p-[13px]` when a token exists.
+- Keep `<style scoped>` for what utilities express poorly: pseudo-elements,
+  keyframes, scroll snapping, scroll-driven effects, and complex selectors or
+  states. Omit the `<style>` block when the component has no styles.
+- Do not style the same property of an element with both a utility and scoped
+  CSS: unlayered scoped styles always win over Tailwind's layered utilities.
+- Dark mode comes from the semantic tokens (`light-dark()`); `dark:` variants
+  are not needed.
+- Migration is gradual: existing components keep their scoped CSS until they
+  are changed for another reason.
 
 ### Views
 
