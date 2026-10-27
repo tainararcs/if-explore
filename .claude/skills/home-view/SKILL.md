@@ -54,9 +54,16 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
   one page, and dot pagination below shows and selects the current page
   (`aria-current`, accessible "Página X de Y" labels). A shelf that fits in one
   page is centered and shows no arrows or dots.
+- "Escolhidos para você" on mobile only (below 900px): one featured book at a
+  time, centered (`scroll-snap-align: center`, ~62vw wide), with the previous
+  and next books peeking at the edges, plus one dot per book. Neighbors are always
+  scaled to ~0.88 with faded covers only (text keeps its contrast), including
+  with reduced motion. With motion allowed, the change transitions, and where
+  supported a scroll-driven animation (`animation-timeline: view(inline)`)
+  makes it follow the finger. Other shelves keep the free scroll on mobile.
 - Each item is a non-interactive book card: cover, title, author, availability
-  badge. The "Escolhidos para você" shelf may show the book's `quote` in italic
-  serif under the card at `md`+ (wireframe idea), clamped to 3 lines.
+  badge. The "Escolhidos para você" shelf shows the book's `quote` in italic
+  serif under the card, clamped to 3 lines.
 
 ## 5. Search
 

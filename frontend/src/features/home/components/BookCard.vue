@@ -35,7 +35,7 @@ import type { Book } from '../../../models/book'
 
 interface Props {
   book: Book
-  /** Exibe a citação do livro (a partir de 900px), quando houver. */
+  /** Exibe a citação do livro, quando houver. */
   showQuote?: boolean
 }
 
@@ -107,7 +107,16 @@ const { t } = useI18n()
 }
 
 .book-card__quote {
-  display: none;
+  display: -webkit-box;
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-small);
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 @media (min-width: 600px) {
@@ -117,21 +126,6 @@ const { t } = useI18n()
 
   .book-card__author {
     font-size: var(--text-small);
-  }
-}
-
-@media (min-width: 900px) {
-  .book-card__quote {
-    display: -webkit-box;
-    margin: var(--space-2) 0 0;
-    font-family: var(--font-display);
-    font-size: var(--text-small);
-    font-style: italic;
-    line-height: 1.4;
-    color: var(--color-text-muted);
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 }
 </style>

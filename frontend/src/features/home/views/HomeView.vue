@@ -120,6 +120,7 @@
           :title="shelfTitle(shelf)"
           :books="shelf.books"
           :show-quotes="shelf.kind === 'forYou'"
+          :featured="shelf.kind === 'forYou'"
         />
         <p
           v-if="visibleShelves.length === 0"
