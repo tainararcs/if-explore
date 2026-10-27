@@ -1,26 +1,27 @@
 <!-- Card informativo de livro (não clicável nesta etapa): capa, título, autoria e disponibilidade. -->
 <template>
-  <article class="book-card">
+  <article class="flex flex-col gap-3">
     <BookCover
       :book="book"
       decorative
     />
-    <div class="book-card__body">
-      <h3 class="book-card__title">
+    <div class="flex min-w-0 flex-col gap-1">
+      <h3 class="line-clamp-2 text-small sm:text-h3">
         {{ book.title }}
       </h3>
-      <p class="book-card__author">
+      <p class="truncate text-caption text-text-muted sm:text-small">
         {{ book.authors.join(', ') }}
       </p>
+      <!-- Selo com ponto + texto: o estado não depende só da cor. -->
       <p
-        class="book-card__status"
-        :class="`book-card__status--${book.availability}`"
+        class="mt-1 inline-flex items-center gap-1 self-start rounded-pill bg-surface-muted px-2 py-0.5 text-caption font-semibold before:size-1.5 before:rounded-[50%] before:bg-current before:content-['']"
+        :class="book.availability === 'available' ? 'text-success' : 'text-warning'"
       >
         {{ t(`home.availability.${book.availability}`) }}
       </p>
       <blockquote
         v-if="showQuote && book.quote"
-        class="book-card__quote"
+        class="m-0 mt-2 line-clamp-3 font-display text-small leading-[1.4] text-text-muted italic"
       >
         “{{ book.quote }}”
       </blockquote>
@@ -45,87 +46,3 @@ withDefaults(defineProps<Props>(), {
 
 const { t } = useI18n()
 </script>
-
-<style scoped>
-.book-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.book-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.book-card__title {
-  font-size: var(--text-small);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.book-card__author {
-  font-size: var(--text-caption);
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Selo com ponto + texto: o estado não depende só da cor. */
-.book-card__status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  align-self: flex-start;
-  margin-top: var(--space-1);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-pill);
-  background: var(--color-surface-muted);
-  font-size: var(--text-caption);
-  font-weight: 600;
-}
-
-.book-card__status::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.book-card__status--available {
-  color: var(--color-success);
-}
-
-.book-card__status--borrowed {
-  color: var(--color-warning);
-}
-
-.book-card__quote {
-  display: -webkit-box;
-  margin: var(--space-2) 0 0;
-  font-family: var(--font-display);
-  font-size: var(--text-small);
-  font-style: italic;
-  line-height: 1.4;
-  color: var(--color-text-muted);
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-@media (min-width: 600px) {
-  .book-card__title {
-    font-size: var(--text-h3);
-  }
-
-  .book-card__author {
-    font-size: var(--text-small);
-  }
-}
-</style>

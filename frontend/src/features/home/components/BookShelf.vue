@@ -9,34 +9,33 @@
     :class="{ 'shelf--featured': featured }"
     :aria-labelledby="headingId"
   >
-    <div class="shelf__header">
+    <div class="mb-4 flex items-end justify-between gap-4">
       <h2
         :id="headingId"
-        class="shelf__title"
       >
         {{ title }}
       </h2>
       <div
         v-if="pageCount > 1"
-        class="shelf__controls"
+        class="hidden gap-2 md:flex"
       >
         <button
           type="button"
-          class="shelf__arrow"
+          class="grid size-11 cursor-pointer place-items-center rounded-[50%] border border-border bg-surface p-0 text-text enabled:hover:border-primary enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
           :aria-label="t('home.shelf.previous')"
           :disabled="currentPage === 0"
           @click="goToPage(currentPage - 1)"
         >
-          <IconArrowLeft />
+          <IconArrowLeft class="size-5" />
         </button>
         <button
           type="button"
-          class="shelf__arrow"
+          class="grid size-11 cursor-pointer place-items-center rounded-[50%] border border-border bg-surface p-0 text-text enabled:hover:border-primary enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
           :aria-label="t('home.shelf.next')"
           :disabled="currentPage === pageCount - 1"
           @click="goToPage(currentPage + 1)"
         >
-          <IconArrowRight />
+          <IconArrowRight class="size-5" />
         </button>
       </div>
     </div>
@@ -241,47 +240,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.shelf__header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-.shelf__controls {
-  display: none;
-  gap: var(--space-2);
-}
-
-.shelf__arrow {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  background: var(--color-surface);
-  color: var(--color-text);
-  cursor: pointer;
-}
-
-.shelf__arrow:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.shelf__arrow:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.shelf__arrow :deep(svg) {
-  width: 20px;
-  height: 20px;
-}
-
 /* No celular a faixa encosta nas bordas da tela para a próxima capa aparecer. */
 .shelf__track {
   margin-inline: calc(var(--gutter) * -1);
@@ -456,7 +414,6 @@ onUnmounted(() => {
   `--per-page` livros (definido no script a partir da largura disponível).
 */
 @media (min-width: 900px) {
-  .shelf__controls,
   .shelf__pagination {
     display: flex;
   }

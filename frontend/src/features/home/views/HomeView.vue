@@ -1,10 +1,10 @@
 <!-- Homepage: busca no acervo e prateleiras de recomendações personalizadas. -->
 <template>
-  <div class="home">
+  <div>
     <AppHeader sticky>
       <template #actions>
         <RouterLink
-          class="home__adjust"
+          class="grid size-11 place-items-center rounded-[50%] text-primary hover:bg-surface-muted hover:text-primary"
           :to="{ path: '/onboarding', query: { step: 'areas' } }"
           :aria-label="t('home.adjustPreferences')"
           :title="t('home.adjustPreferences')"
@@ -14,17 +14,17 @@
       </template>
     </AppHeader>
 
-    <main class="home__main container">
-      <div class="home__intro">
+    <main class="container pt-8 pb-16 md:pt-12">
+      <div>
         <p class="eyebrow">
           {{ t('home.eyebrow') }}
         </p>
-        <h1 class="home__title">
+        <h1 class="mt-2">
           {{ t('home.title') }}
         </h1>
         <p
           v-if="areaList"
-          class="home__basis"
+          class="mt-2 max-w-[60ch] text-text-muted"
         >
           {{ t('home.basis', { areas: areaList }) }}
         </p>
@@ -32,18 +32,19 @@
 
       <SearchBar
         v-model="input"
-        class="home__search"
+        class="mt-6 max-w-[640px]"
         @clear="clear"
       />
 
       <fieldset
         v-if="areas.length > 1"
-        class="home__filter"
+        class="m-0 mt-4 min-w-0 border-0 p-0"
       >
         <legend class="sr-only">
           {{ t('home.filterLegend') }}
         </legend>
-        <div class="home__filter-chips">
+        <!-- No celular os filtros rolam na horizontal em vez de quebrar linha. -->
+        <div class="-mx-(--gutter) flex gap-2 overflow-x-auto px-(--gutter) py-1 [scrollbar-width:none] *:shrink-0 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
           <SelectableChip
             size="small"
             :selected="activeAreaId === null"
@@ -65,10 +66,10 @@
 
       <div
         v-if="hasError"
-        class="home__state"
+        class="mt-12"
         role="alert"
       >
-        <p class="home__error">
+        <p class="mb-4 text-danger">
           {{ t('home.error') }}
         </p>
         <button
@@ -82,22 +83,21 @@
 
       <div
         v-else-if="isLoading"
-        class="home__skeleton"
+        class="mt-12 grid gap-12"
         role="status"
       >
         <span class="sr-only">{{ t('home.loading') }}</span>
         <div
           v-for="shelf in 2"
           :key="shelf"
-          class="home__skeleton-shelf"
           aria-hidden="true"
         >
-          <span class="home__skeleton-title" />
-          <div class="home__skeleton-row">
+          <span class="home__pulse mb-4 block h-7 w-[min(280px,70%)] rounded-sm bg-surface-muted" />
+          <div class="flex gap-4 overflow-hidden">
             <span
               v-for="item in 6"
               :key="item"
-              class="home__skeleton-cover"
+              class="home__pulse aspect-[2/3] flex-[0_0_132px] rounded-cover bg-surface-muted md:basis-[160px]"
             />
           </div>
         </div>
@@ -105,6 +105,7 @@
 
       <SearchResults
         v-else-if="isSearching"
+        class="mt-12"
         :query="query"
         :books="filteredResults"
         @clear="clear"
@@ -112,7 +113,7 @@
 
       <div
         v-else
-        class="home__shelves"
+        class="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 md:gap-16"
       >
         <BookShelf
           v-for="shelf in visibleShelves"
@@ -124,7 +125,7 @@
         />
         <p
           v-if="visibleShelves.length === 0"
-          class="home__empty"
+          class="text-text-muted"
         >
           {{ t('home.emptyFilter') }}
         </p>
@@ -207,134 +208,8 @@ function retry(): void {
 </script>
 
 <style scoped>
-.home__main {
-  padding-block: var(--space-6) var(--space-8);
-}
-
-.home__adjust {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  color: var(--color-primary);
-}
-
-.home__adjust:hover {
-  background: var(--color-surface-muted);
-  color: var(--color-primary);
-}
-
-.home__title {
-  margin-top: var(--space-2);
-}
-
-.home__basis {
-  max-width: 60ch;
-  margin-top: var(--space-2);
-  color: var(--color-text-muted);
-}
-
-.home__search {
-  max-width: 640px;
-  margin-top: var(--space-5);
-}
-
-.home__filter {
-  min-width: 0;
-  margin: var(--space-4) 0 0;
-  padding: 0;
-  border: 0;
-}
-
-/* No celular os filtros rolam na horizontal em vez de quebrar linha. */
-.home__filter-chips {
-  display: flex;
-  gap: var(--space-2);
-  margin-inline: calc(var(--gutter) * -1);
-  padding: var(--space-1) var(--gutter);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.home__filter-chips > * {
-  flex-shrink: 0;
-}
-
-.home__shelves,
-.home__skeleton,
-.home__state,
-:deep(.search-results) {
-  margin-top: var(--space-7);
-}
-
-/* minmax(0, 1fr) impede que a largura das prateleiras roláveis estique a página. */
-.home__shelves {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-7);
-}
-
-.home__error {
-  margin-bottom: var(--space-4);
-  color: var(--color-danger);
-}
-
-.home__empty {
-  color: var(--color-text-muted);
-}
-
-.home__skeleton {
-  display: grid;
-  gap: var(--space-7);
-}
-
-.home__skeleton-title {
-  display: block;
-  width: min(280px, 70%);
-  height: 1.75rem;
-  margin-bottom: var(--space-4);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-muted);
-}
-
-.home__skeleton-row {
-  display: flex;
-  gap: var(--space-4);
-  overflow: hidden;
-}
-
-.home__skeleton-cover {
-  flex: 0 0 132px;
-  aspect-ratio: 2 / 3;
-  border-radius: var(--radius-cover);
-  background: var(--color-surface-muted);
-}
-
-@media (min-width: 900px) {
-  .home__main {
-    padding-top: var(--space-7);
-  }
-
-  .home__filter-chips {
-    flex-wrap: wrap;
-    margin-inline: 0;
-    padding-inline: 0;
-    overflow: visible;
-  }
-
-  .home__shelves {
-    gap: var(--space-8);
-  }
-
-  .home__skeleton-cover {
-    flex-basis: 160px;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  .home__skeleton-title,
-  .home__skeleton-cover {
+  .home__pulse {
     animation: pulse 1.2s ease-in-out infinite alternate;
   }
 }
