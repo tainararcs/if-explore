@@ -44,16 +44,26 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
 
 ## 4. Shelves
 
-- Section with a serif `h2` and, at `md`+, previous/next icon buttons that scroll
-  by ~80% of the visible width.
-- Horizontal list (`<ul>`) with `overflow-x: auto`, `scroll-snap-type: x
-  mandatory`, hidden scrollbar only where it stays usable, item width ~132px at
-  base, ~160px at `md`+, gap `--space-4`.
-- The scroll region bleeds to the viewport edge on mobile (padding equals the
-  gutter) so the next card peeks, signaling scroll.
+- Section with a serif `h2`. Horizontal list (`<ul>`) with `overflow-x: auto`,
+  `scroll-snap-type: x mandatory`, and the scrollbar always hidden.
+- Base: free touch scroll, item width ~132px, gap `--space-4`. The scroll region
+  bleeds to the viewport edge (padding equals the gutter) so the next card
+  peeks, signaling scroll.
+- From 900px: paged carousel. Each page fills the visible width with N books
+  (at least 2, cards ≥ 150px, gap `--space-5`); previous/next icon buttons move
+  one page, and dot pagination below shows and selects the current page
+  (`aria-current`, accessible "Página X de Y" labels). A shelf that fits in one
+  page is centered and shows no arrows or dots.
+- "Escolhidos para você" on mobile only (below 900px): one featured book at a
+  time, centered (`scroll-snap-align: center`, ~62vw wide), with the previous
+  and next books peeking at the edges, plus one dot per book. Neighbors are always
+  scaled to ~0.88 with faded covers only (text keeps its contrast), including
+  with reduced motion. With motion allowed, the change transitions, and where
+  supported a scroll-driven animation (`animation-timeline: view(inline)`)
+  makes it follow the finger. Other shelves keep the free scroll on mobile.
 - Each item is a non-interactive book card: cover, title, author, availability
-  badge. The "Escolhidos para você" shelf may show the book's `quote` in italic
-  serif under the card at `md`+ (wireframe idea), clamped to 3 lines.
+  badge. The "Escolhidos para você" shelf shows the book's `quote` in italic
+  serif under the card, clamped to 3 lines.
 
 ## 5. Search
 

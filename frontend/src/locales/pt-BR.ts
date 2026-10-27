@@ -110,6 +110,8 @@ export const ptBR = {
     shelf: {
       previous: 'Ver livros anteriores',
       next: 'Ver próximos livros',
+      pages: 'Páginas da prateleira',
+      page: 'Página {current} de {total}',
     },
     availability: {
       available: 'Disponível',
