@@ -5,7 +5,13 @@
 */
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme.css' layer(theme);
-@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tailwindcss/utilities.css' layer(utilities) source('.');
+
+/*
+  O utilitário `container` do Tailwind limita a largura em cada breakpoint e
+  conflitaria com a classe `.container` do projeto, definida abaixo.
+*/
+@source not inline('container');
 
 /*
   Tokens de design expostos ao Tailwind. `static` gera todas as variáveis, mesmo as
