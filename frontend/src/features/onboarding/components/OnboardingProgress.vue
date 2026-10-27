@@ -1,21 +1,18 @@
 <!-- Progresso do onboarding: dois segmentos obrigatórios e um tracejado quando o refinamento está aberto. -->
 <template>
-  <div class="onboarding-progress">
+  <div class="flex min-w-0 flex-1 items-center gap-3">
     <div
-      class="onboarding-progress__bar"
+      class="flex max-w-60 flex-1 gap-1"
       aria-hidden="true"
     >
       <span
         v-for="segment in segments"
         :key="segment.step"
-        class="onboarding-progress__segment"
-        :class="{
-          'onboarding-progress__segment--done': segment.done,
-          'onboarding-progress__segment--optional': segment.step === 'genres',
-        }"
+        class="h-1 flex-1 rounded-pill transition-[background-color] duration-(--duration-base) ease-standard"
+        :class="segmentClass(segment)"
       />
     </div>
-    <p class="onboarding-progress__label">
+    <p class="shrink-0 text-small text-text-muted">
       {{
         step === 'genres'
           ? t('onboarding.progress.refine')
@@ -46,47 +43,12 @@ const segments = computed(() => {
     done: stepIndex(step) <= stepIndex(props.step),
   }))
 })
+
+// O segmento opcional (refinamento) é tracejado; os demais ficam cheios quando concluídos.
+function segmentClass(segment: { step: OnboardingStep; done: boolean }): string {
+  if (segment.step === 'genres') {
+    return 'bg-[repeating-linear-gradient(90deg,var(--color-primary)_0_6px,transparent_6px_10px)]'
+  }
+  return segment.done ? 'bg-primary' : 'bg-border'
+}
 </script>
-
-<style scoped>
-.onboarding-progress {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.onboarding-progress__bar {
-  display: flex;
-  flex: 1;
-  gap: var(--space-1);
-  max-width: 240px;
-}
-
-.onboarding-progress__segment {
-  flex: 1;
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: var(--color-border);
-  transition: background-color var(--duration-base) var(--ease-standard);
-}
-
-.onboarding-progress__segment--done {
-  background: var(--color-primary);
-}
-
-.onboarding-progress__segment--optional {
-  background: repeating-linear-gradient(
-    90deg,
-    var(--color-primary) 0 6px,
-    transparent 6px 10px
-  );
-}
-
-.onboarding-progress__label {
-  flex-shrink: 0;
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-</style>

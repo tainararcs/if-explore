@@ -1,14 +1,14 @@
 <!-- Barra de ações fixa no rodapé do onboarding, com dica/contador e botões do passo. -->
 <template>
-  <div class="action-bar">
-    <div class="action-bar__inner container">
+  <div class="sticky bottom-0 z-5 border-t border-border bg-surface pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom))] shadow-[0_-6px_20px_light-dark(rgb(36_39_34/0.06),rgb(0_0_0/0.3))]">
+    <div class="container flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div
-        class="action-bar__hint"
+        class="text-small text-text-muted empty:hidden"
         aria-live="polite"
       >
         <slot name="hint" />
       </div>
-      <div class="action-bar__actions">
+      <div class="flex flex-col-reverse gap-2 sm:flex-row">
         <slot />
       </div>
     </div>
@@ -21,48 +21,3 @@ defineSlots<{
   default: () => unknown
 }>()
 </script>
-
-<style scoped>
-.action-bar {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  padding-block: var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-  box-shadow: 0 -6px 20px light-dark(rgb(36 39 34 / 0.06), rgb(0 0 0 / 0.3));
-}
-
-.action-bar__inner {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.action-bar__hint {
-  font-size: var(--text-small);
-  color: var(--color-text-muted);
-}
-
-.action-bar__hint:empty {
-  display: none;
-}
-
-.action-bar__actions {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: var(--space-2);
-}
-
-@media (min-width: 600px) {
-  .action-bar__inner {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .action-bar__actions {
-    flex-direction: row;
-  }
-}
-</style>
