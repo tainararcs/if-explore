@@ -255,9 +255,10 @@ There are no cover images. Generate a typographic cover:
 ### 7.5 Book card
 
 Cover on top, then title (`--text-h3`, two-line clamp), author (`--text-small`,
-muted, one line), and an availability badge. Cards are **not interactive** at
-this stage (no detail view): do not render them as buttons or links, and do not
-show hover affordances that suggest a click. In selection contexts (onboarding)
+muted, one line), and an availability badge (`AvailabilityBadge.vue`). The
+shared `BookCard.vue` is a link to the book page (`/books/:id`): the whole card is
+the link, its accessible name is the title, hover lifts the cover slightly and
+underlines the title (hover-capable devices only). In selection contexts (onboarding)
 the whole card becomes a toggle button with `aria-pressed`, a selected outline
 (3px `--color-primary`), and a check badge on the cover.
 
@@ -398,7 +399,9 @@ plausible academic and literary titles.
 | `/` | `features/welcome/views/WelcomeView.vue` | Entry point |
 | `/onboarding` | `features/onboarding/views/TasteOnboardingView.vue` | `?step=areas\|books\|genres` |
 | `/home` | `features/home/views/HomeView.vue` | Guard: redirect to `/` without preferences |
+| `/books/:id` | `features/book-detail/views/BookDetailView.vue` | No guard; unknown ids show a not-found state |
 
 Flow: welcome → onboarding (areas → books → [optional genres]) → home. Returning
 visitors with saved preferences can go straight from the welcome to the home or
-restart the flow, with previous answers pre-filled.
+restart the flow, with previous answers pre-filled. From any book card, the
+visitor opens the book page, whose related shelf leads to other books.

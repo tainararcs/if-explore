@@ -51,7 +51,7 @@
 import { useI18n } from 'vue-i18n'
 import IconSearch from '../../../components/icons/IconSearch.vue'
 import type { Book } from '../../../models/book'
-import BookCard from './BookCard.vue'
+import BookCard from '../../../components/BookCard.vue'
 
 interface Props {
   query: string

@@ -13,7 +13,7 @@ reuse them, never duplicate them.
 ## 1. Goal
 
 Simple, intuitive discovery: search the (mock) catalog and browse personalized
-shelves, Play Books/Netflix style. Book cards are **not clickable** at this stage.
+shelves, Play Books/Netflix style. Book cards open the book page (`/books/:id`).
 
 ## 2. Access
 
@@ -61,7 +61,7 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
   with reduced motion. With motion allowed, the change transitions, and where
   supported a scroll-driven animation (`animation-timeline: view(inline)`)
   makes it follow the finger. Other shelves keep the free scroll on mobile.
-- Each item is a non-interactive book card: cover, title, author, availability
+- Each item is a book card linking to the book page: cover, title, author, availability
   badge. The "Escolhidos para você" shelf shows the book's `quote` in italic
   serif under the card, clamped to 3 lines.
 
@@ -94,9 +94,7 @@ src/features/home/
 ├── services/recommendation-service.ts
 ├── composables/useHomeRecommendations.ts
 ├── composables/useCatalogSearch.ts
-└── components/
-    ├── BookShelf.vue
-    ├── BookCard.vue          (move to src/components/ only if reused)
+└── components/            (BookShelf and BookCard are shared, in src/components/)
     ├── SearchBar.vue
     └── SearchResults.vue
 ```
