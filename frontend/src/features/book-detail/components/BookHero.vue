@@ -67,7 +67,8 @@ defineExpose({
 <style scoped>
 /*
   Faixa de fundo na cor da capa, misturada ao papel para manter o contraste do
-  texto; no escuro a mistura é mais forte para a cor continuar perceptível.
+  texto; no escuro a mistura é mais forte e o tom recebe uma luminosidade
+  mínima, para que capas escuras (carvão, índigo) não se confundam com o fundo.
   Ela se dissolve no fundo da página na parte de baixo.
 */
 .book-hero {
@@ -87,7 +88,7 @@ defineExpose({
     to bottom,
     light-dark(
         color-mix(in srgb, var(--band-tone) 20%, var(--color-bg)),
-        color-mix(in srgb, var(--band-tone) 45%, var(--color-bg))
+        color-mix(in srgb, oklch(from var(--band-tone) max(l, 0.5) c h) 40%, var(--color-bg))
       )
       55%,
     var(--color-bg)

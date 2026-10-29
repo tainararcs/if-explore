@@ -3,7 +3,7 @@
   <div class="flex min-h-dvh flex-col">
     <AppHeader sticky />
 
-    <main class="flex-1 pb-16">
+    <main class="flex-1 pb-28 md:pb-16">
       <div class="container pt-3 md:pt-4">
         <button
           type="button"
@@ -75,13 +75,21 @@
         </RouterLink>
       </div>
 
-      <template v-else>
+      <div
+        v-else
+        class="motion-safe:transition-opacity motion-safe:duration-(--duration-base)"
+        :class="{ 'opacity-60': isRefreshing }"
+        :aria-busy="isRefreshing"
+      >
         <BookHero
           ref="hero"
           :book="book"
           :eyebrow="eyebrow"
         >
-          <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center md:justify-start">
+          <div
+            ref="actions"
+            class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center md:justify-start"
+          >
             <a
               class="button button--primary"
               :href="LIBRARY_CATALOG_URL"
@@ -92,6 +100,7 @@
               <IconExternalLink class="size-5" />
               <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
             </a>
+            <BookShareButton :title="book.title" />
           </div>
 
           <section
@@ -152,8 +161,28 @@
             :books="shelves.related"
           />
         </div>
-      </template>
+      </div>
     </main>
+
+    <Transition name="catalog-bar">
+      <div
+        v-if="showCatalogBar"
+        class="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom))] md:hidden"
+      >
+        <div class="container">
+          <a
+            class="button button--primary w-full"
+            :href="LIBRARY_CATALOG_URL"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ t('bookDetail.openCatalog') }}
+            <IconExternalLink class="size-5" />
+            <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
+          </a>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -170,7 +199,9 @@ import { useReadingPreferences } from '../../../composables/useReadingPreference
 import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
 import BookHero from '../components/BookHero.vue'
 import BookRecord from '../components/BookRecord.vue'
+import BookShareButton from '../components/BookShareButton.vue'
 import { useBookDetail } from '../composables/useBookDetail'
+import { useScrolledPast } from '../composables/useScrolledPast'
 
 const MIN_RELATED = 3
 
@@ -184,10 +215,15 @@ const bookId = computed(() => {
   return typeof id === 'string' ? id : ''
 })
 
-const { status, book, areaName, courseNames, genreNames, shelves, reload } =
+const { status, isRefreshing, book, areaName, courseNames, genreNames, shelves, reload } =
   useBookDetail(bookId)
 
 const hero = useTemplateRef<InstanceType<typeof BookHero>>('hero')
+const actions = useTemplateRef<HTMLDivElement>('actions')
+
+// No celular, o botão do acervo fica fixo embaixo depois que o original sai da tela.
+const scrolledPastActions = useScrolledPast(actions)
+const showCatalogBar = computed(() => status.value === 'ready' && scrolledPastActions.value)
 
 const fallbackPath = computed(() => (hasPreferences.value ? '/home' : '/'))
 
@@ -220,17 +256,15 @@ watch([status, book], ([currentStatus, currentBook]) => {
   }
 })
 
-// Ao trocar de livro pela prateleira, o foco vai para o novo título.
-let focusPending = false
-watch(bookId, () => {
-  focusPending = true
-})
-watch(status, (currentStatus) => {
-  if (currentStatus === 'ready' && focusPending) {
-    focusPending = false
-    void nextTick(() => hero.value?.focusHeading())
-  }
-})
+// Ao trocar de livro pela prateleira, o foco vai para o novo título assim que ele chega.
+watch(
+  () => book.value?.id,
+  (id, previousId) => {
+    if (id && previousId && id !== previousId) {
+      void nextTick(() => hero.value?.focusHeading())
+    }
+  },
+)
 </script>
 
 <style scoped>
@@ -242,6 +276,18 @@ watch(status, (currentStatus) => {
 @media (prefers-reduced-motion: no-preference) {
   .skeleton {
     animation: pulse 1.2s ease-in-out infinite alternate;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .catalog-bar-enter-active,
+  .catalog-bar-leave-active {
+    transition: transform var(--duration-base) var(--ease-standard);
+  }
+
+  .catalog-bar-enter-from,
+  .catalog-bar-leave-to {
+    transform: translateY(100%);
   }
 }
 

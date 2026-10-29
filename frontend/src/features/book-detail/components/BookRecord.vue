@@ -48,9 +48,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IconCheck from '../../../components/icons/IconCheck.vue'
+import { useClipboardFeedback } from '../../../composables/useClipboardFeedback'
 import type { Book } from '../../../models/book'
 
 interface Props {
@@ -64,13 +65,10 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const COPY_FEEDBACK_MS = 2000
-
 const { t } = useI18n()
 const numberFormat = new Intl.NumberFormat('pt-BR')
 
-const copyState = ref<'idle' | 'copied' | 'failed'>('idle')
-let resetTimer: number | undefined
+const { state: copyState, copy } = useClipboardFeedback()
 
 const copyLabel = computed(() => {
   if (copyState.value === 'copied') {
@@ -111,18 +109,7 @@ const items = computed(() => {
   return list
 })
 
-async function copyLocation(): Promise<void> {
-  window.clearTimeout(resetTimer)
-  try {
-    await navigator.clipboard.writeText(props.book.callNumber)
-    copyState.value = 'copied'
-  } catch {
-    copyState.value = 'failed'
-  }
-  resetTimer = window.setTimeout(() => {
-    copyState.value = 'idle'
-  }, COPY_FEEDBACK_MS)
+function copyLocation(): void {
+  void copy(props.book.callNumber)
 }
-
-onUnmounted(() => window.clearTimeout(resetTimer))
 </script>

@@ -142,6 +142,12 @@ export const ptBR = {
     yearBce: 'c. {year} a.C.',
     related: 'Leituras relacionadas',
     moreFromAuthor: 'Mais de {author}',
+    share: {
+      action: 'Compartilhar',
+      text: 'Encontrei “{title}” no acervo da Biblioteca Roberval Cardoso.',
+      copied: 'Link copiado',
+      failed: 'Não foi possível copiar o link',
+    },
     notFound: {
       title: 'Livro não encontrado',
       text: 'Este livro não está no acervo ou o link está incompleto.',

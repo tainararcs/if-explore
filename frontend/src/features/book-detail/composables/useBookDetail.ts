@@ -17,6 +17,9 @@ type LoadStatus = 'loading' | 'ready' | 'notFound' | 'error'
  * prateleiras de relacionados. Recarrega quando o id muda (navegação entre
  * livros relacionados) e ignora respostas de ids anteriores.
  *
+ * Ao trocar de livro, o anterior continua na tela com `isRefreshing` ativo
+ * até o próximo chegar, em vez de voltar ao estado de carregamento.
+ *
  * @param bookId - Id do livro vindo da rota.
  * @returns Estado de carregamento, livro, dados de apoio e `reload`.
  */
@@ -27,12 +30,17 @@ export function useBookDetail(bookId: Ref<string>) {
   const areas = ref<KnowledgeArea[]>([])
   const courses = ref<Course[]>([])
   const genres = ref<LiteraryGenre[]>([])
+  const isRefreshing = ref(false)
 
   let requestId = 0
 
   async function reload(): Promise<void> {
     const current = ++requestId
-    status.value = 'loading'
+    if (status.value === 'ready') {
+      isRefreshing.value = true
+    } else {
+      status.value = 'loading'
+    }
     try {
       const [found, allBooks, allAreas, allCourses, allGenres] = await Promise.all([
         getBookById(bookId.value),
@@ -53,6 +61,10 @@ export function useBookDetail(bookId: Ref<string>) {
     } catch {
       if (current === requestId) {
         status.value = 'error'
+      }
+    } finally {
+      if (current === requestId) {
+        isRefreshing.value = false
       }
     }
   }
@@ -78,6 +90,7 @@ export function useBookDetail(bookId: Ref<string>) {
 
   return {
     status,
+    isRefreshing,
     book,
     areaName,
     courseNames,

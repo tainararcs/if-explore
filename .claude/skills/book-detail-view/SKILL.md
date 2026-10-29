@@ -93,8 +93,9 @@ whole hero. Title left-aligned; breadcrumb-like back link above:
   `BookCover.vue` into `src/lib/cover-color.ts` (pure, stable hash) and use it in
   both places.
 - Mix the tone with the page so text keeps contrast in both themes:
-  `color-mix(in srgb, <cover tone> 18%, var(--color-bg))` (tune the percentage
-  per theme if needed). Text on the band uses the normal text tokens; check
+  `color-mix(in srgb, <cover tone> 20%, var(--color-bg))` in light; in dark,
+  give the tone a minimum lightness first (`oklch(from <tone> max(l, 0.5) c h)`)
+  so dark covers (charcoal, indigo) still read against the page. Text on the band uses the normal text tokens; check
   4.5:1 contrast in light and dark.
 - Subtle fade at the bottom edge into `--color-bg`; no photos or gradients
   beyond that.
@@ -121,6 +122,12 @@ Definition list (`<dl>`), two columns from `sm`:
   aba"). Check whether the PHL catalog accepts a search URL by title; if it
   does, build it from the title with `encodeURIComponent` in a pure function;
   otherwise link to the catalog home already used on the welcome view.
+- Secondary "Compartilhar" (`BookShareButton.vue`): native Web Share when
+  available, otherwise copies the link, with the same temporary label feedback
+  as "Copiar localização" (`useClipboardFeedback`).
+- Mobile only: once the actions scroll out of view (`useScrolledPast`), a fixed
+  bottom bar keeps "Ver no acervo da biblioteca" at hand; it slides in/out with
+  motion allowed and the main area reserves space so it never covers content.
 - Reserved secondary slot for "Prévia" (Google Books). Do **not** render it
   until that integration exists; the layout must not leave an empty gap.
 
@@ -145,8 +152,9 @@ Definition list (`<dl>`), two columns from `sm`:
   state in the main area — serif "Livro não encontrado", short explanation, and
   a "Voltar para as recomendações" action. Set the document title accordingly.
 - Error: message with retry (`role="alert"`).
-- The view must react to `:id` changes without remounting issues (watch the
-  route param, reload, reset scroll and focus).
+- The view must react to `:id` changes without remounting issues: keep the
+  current book visible (dimmed, `aria-busy`) while the next loads, then move
+  focus to the new title; the router scrolls new pages to the top.
 
 ## 6. Structure
 
