@@ -398,7 +398,9 @@ plausible academic and literary titles.
 | `/` | `features/welcome/views/WelcomeView.vue` | Entry point |
 | `/onboarding` | `features/onboarding/views/TasteOnboardingView.vue` | `?step=areas\|books\|genres` |
 | `/home` | `features/home/views/HomeView.vue` | Guard: redirect to `/` without preferences |
+| `/books/:id` | `features/book-detail/views/BookDetailView.vue` | No guard; unknown ids show a not-found state |
 
 Flow: welcome → onboarding (areas → books → [optional genres]) → home. Returning
 visitors with saved preferences can go straight from the welcome to the home or
-restart the flow, with previous answers pre-filled.
+restart the flow, with previous answers pre-filled. From any book card, the
+visitor opens the book page, whose related shelf leads to other books.
