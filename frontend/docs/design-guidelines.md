@@ -73,14 +73,17 @@ token definitions.
 | `--color-bg` | `#F6F2E9` | `#1A1D19` | Page background |
 | `--color-surface` | `#FBF8F2` | `#242722` | Cards, sheets, header |
 | `--color-surface-muted` | `#EEE8DC` | `#2D312B` | Inputs, skeletons, unselected chips |
-| `--color-border` | `#DED4C3` | `#3A3F37` | Dividers, outlines |
+| `--color-border` | `#DED4C3` | `#4D544A` | Dividers, outlines |
+| `--color-border-strong` | `#DED4C3` | `#737B6D` | Form field outlines (3:1 on surface in dark) |
+| `--color-chip-border` | transparent | `#4D544A` | Unselected chip outline |
 | `--color-text` | `#242722` | `#F0EBE0` | Primary text |
 | `--color-text-muted` | `#5B6158` | `#B4B9AE` | Secondary text, metadata |
-| `--color-primary` | `#174D3B` | `#9CC5AE` | Primary buttons, selected states, links |
-| `--color-primary-hover` | `#356B56` | `#B5D6C3` | Hover/active of primary |
-| `--color-on-primary` | `#FBF8F2` | `#14251D` | Text/icons over primary |
-| `--color-primary-soft` | `#DCE6DF` | `#24382E` | Selected chip background, highlights |
-| `--color-focus` | `#356B56` | `#9CC5AE` | Focus ring |
+| `--color-primary` | `#174D3B` | `#6CC196` | Primary buttons, selected states, links |
+| `--color-primary-hover` | `#356B56` | `#7FCCA3` | Hover/active of primary |
+| `--color-on-primary` | `#FBF8F2` | `#0F1D16` | Text/icons over primary |
+| `--color-primary-soft` | `#DCE6DF` | `#2B4A3B` | Selected chip background, highlights |
+| `--color-on-primary-soft` | `#174D3B` | `#9CDCBA` | Text/icons over primary-soft |
+| `--color-focus` | `#356B56` | `#6CC196` | Focus ring |
 | `--color-success` | `#2F6B47` | `#8FCBA5` | "Disponível" |
 | `--color-warning` | `#8A4B1F` | `#E0A878` | "Emprestado" |
 | `--color-danger` | `#A3262A` | `#F08C8C` | Errors |
@@ -221,12 +224,15 @@ Global classes in `src/index.css`, applicable to `<button>`, `<a>`, and
 - Disabled: 45% opacity, `cursor: not-allowed`, and keep it focusable only if an
   explanation is shown next to it; prefer explaining why the action is not yet
   available ("Escolha pelo menos 1 área").
+  In dark mode, disabled buttons drop the opacity and use `--color-surface-muted`
+  with `--color-text-muted` and a `--color-border` outline (6.6:1), because
+  45% opacity over the dark surface was unreadable (2.8:1).
 
 ### 7.2 Chips (`SelectableChip.vue`)
 
 Toggle chips for areas, courses, genres, and filters. Pill shape, min-height
 40px, `--color-surface-muted` background at rest; selected state uses
-`--color-primary-soft` background, `--color-primary` border and text, **and** a
+`--color-primary-soft` background, `--color-primary` border, `--color-on-primary-soft` text, **and** a
 leading check icon. Render as `<button type="button" aria-pressed>`. Group chips
 in a `<fieldset>` with a `<legend>` and wrap them with `flex-wrap` and
 `gap: var(--space-2)`.
@@ -269,13 +275,37 @@ Small pill with a dot plus text, `--text-caption` without uppercase:
 
 ### 7.7 Header (`AppHeader.vue`)
 
-Single header, no bottom navigation bar. Left: brand mark + "IF Explore"
-(link to `/home` when preferences exist, otherwise `/`). Right: contextual
-actions passed through a slot (for example the ✦ "Ajustar preferências" icon
-button on the home), followed by the theme toggle, present on every view. The
+Single header, no bottom navigation bar. Left: brand mark + "IF Explore",
+always a link to the welcome view (`/`). From `sm` (600px), center: the main navigation (`<nav>`, three-column grid so it stays centered
+on wide screens): "Recomendações" (`/home`, marked with
+`aria-current="page"`, primary color and underline when active) and "Sobre",
+rendered as a disabled link (`aria-disabled`, not focusable, "Em breve") until
+the about view exists. Below 600px the links move into a menu opened by a
+hamburger button at the far right (`aria-expanded`/`aria-controls`). The menu
+fills the screen below the header (fixed, above page content, page scroll
+locked), shows the links in larger type and a simple footer (library name,
+campus, link to the official site), and closes on navigation, Escape (focus
+returns to the button), or a tap outside the header. The header always sits
+above page content (`z-20`). Right: icon-only contextual actions passed through a slot (for
+example the ✦ "Ajustar preferências" icon button on the home), followed by the
+theme toggle, present on every view. The
 toggle shows the moon in light mode and the sun in dark mode, swapping them
 with a short rotate/scale/fade transition. Height 64px, `--color-surface` with a bottom border,
 sticky on the home, static elsewhere.
+
+### 7.7.1 Footer (`AppFooter.vue`)
+
+Shared footer on the welcome, home, and book pages (not on the onboarding,
+which stays a focus flow). Surface background, top border, small muted text,
+links without underline until hover. Columns: about the project (brand, short
+description, note that the official catalog is still where loans happen),
+library (name, hours, email, catalog link), campus (`<address>`, phone, email,
+"Fale conosco" and campus site), IF Sudeste MG social networks, and "Desenvolvido
+por". Bottom bar: copyright and a notice that catalog data is illustrative while
+mocked. Contact data lives in `src/lib/campus-info.ts` (source: the campus
+"Fale conosco" page). External links use `ExternalLink.vue` (new tab, icon,
+screen-reader hint). Layout: 1 column at base, 2 at `sm`, 3 at `md` with the
+about block on its own row, 4 at `lg`.
 
 ### 7.8 Icons
 

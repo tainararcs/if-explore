@@ -131,12 +131,15 @@
         </p>
       </div>
     </main>
+
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
 import IconSparkle from '../../../components/icons/IconSparkle.vue'
 import SelectableChip from '../../../components/SelectableChip.vue'

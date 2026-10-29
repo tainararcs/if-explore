@@ -14,7 +14,7 @@
     <input
       :id="inputId"
       v-model="model"
-      class="min-h-13 w-full appearance-none rounded-pill border-[1.5px] border-border bg-surface py-0 pr-13 pl-12 text-text [font:inherit] transition-[border-color] duration-(--duration-fast) ease-standard placeholder:text-text-muted hover:border-primary-hover focus-visible:border-primary focus-visible:outline-offset-1 [&::-webkit-search-cancel-button]:hidden"
+      class="min-h-13 w-full appearance-none rounded-pill border-[1.5px] border-border-strong bg-surface py-0 pr-13 pl-12 text-text [font:inherit] transition-[border-color] duration-(--duration-fast) ease-standard placeholder:text-text-muted hover:border-primary-hover focus-visible:border-primary focus-visible:outline-offset-1 [&::-webkit-search-cancel-button]:hidden"
       type="search"
       enterkeyhint="search"
       autocomplete="off"

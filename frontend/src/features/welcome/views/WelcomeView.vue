@@ -70,32 +70,17 @@
       <WelcomeHowItWorks />
     </main>
 
-    <footer class="border-t border-border py-6 text-small text-text-muted">
-      <div class="container flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <p>{{ t('common.libraryName') }} · {{ t('common.institution') }}</p>
-        <a
-          :href="LIBRARY_CATALOG_URL"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex min-h-11 items-center gap-1 font-semibold"
-        >
-          {{ t('welcome.officialSite') }}
-          <IconExternalLink class="size-4" />
-          <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
-        </a>
-      </div>
-    </footer>
+    <AppFooter />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { Translation, useI18n } from 'vue-i18n'
+import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
 import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
-import IconExternalLink from '../../../components/icons/IconExternalLink.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
-import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
 import type { Book } from '../../../models/book'
 import { getBooksByIds } from '../../../services/catalog-service'
 import WelcomeCoverFan from '../components/WelcomeCoverFan.vue'

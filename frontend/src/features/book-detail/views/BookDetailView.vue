@@ -1,10 +1,10 @@
 <!-- Página do livro: destaque com capa e dados, ficha técnica e leituras relacionadas. -->
 <template>
-  <div class="flex min-h-dvh flex-col">
+  <div class="flex min-h-dvh flex-col max-md:pb-20">
     <AppHeader sticky />
 
     <main
-      class="book-page flex-1 pb-28 md:pb-16"
+      class="book-page flex-1 pb-16"
       :class="{ 'book-page--tinted': bandTone }"
       :style="bandTone ? { '--band-tone': bandTone } : undefined"
     >
@@ -62,7 +62,7 @@
         v-else-if="status === 'notFound' || !book"
         class="container flex max-w-[420px] flex-col items-center gap-3 py-12 text-center"
       >
-        <span class="grid size-14 place-items-center rounded-[50%] bg-primary-soft text-primary">
+        <span class="grid size-14 place-items-center rounded-[50%] bg-primary-soft text-on-primary-soft">
           <IconLibrary />
         </span>
         <h1 class="text-h2">
@@ -168,6 +168,8 @@
       </div>
     </main>
 
+    <AppFooter />
+
     <Transition name="catalog-bar">
       <div
         v-if="showCatalogBar"
@@ -194,6 +196,7 @@
 import { computed, nextTick, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
 import BookShelf from '../../../components/BookShelf.vue'
 import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
