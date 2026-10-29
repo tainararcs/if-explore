@@ -287,6 +287,20 @@ toggle shows the moon in light mode and the sun in dark mode, swapping them
 with a short rotate/scale/fade transition. Height 64px, `--color-surface` with a bottom border,
 sticky on the home, static elsewhere.
 
+### 7.7.1 Footer (`AppFooter.vue`)
+
+Shared footer on the welcome, home, and book pages (not on the onboarding,
+which stays a focus flow). Surface background, top border, small muted text,
+links without underline until hover. Columns: about the project (brand, short
+description, note that the official catalog is still where loans happen),
+library (name, hours, email, catalog link), campus (`<address>`, phone, email,
+"Fale conosco" and campus site), IF Sudeste MG social networks, and "Desenvolvido
+por". Bottom bar: copyright and a notice that catalog data is illustrative while
+mocked. Contact data lives in `src/lib/campus-info.ts` (source: the campus
+"Fale conosco" page). External links use `ExternalLink.vue` (new tab, icon,
+screen-reader hint). Layout: 1 column at base, 2 at `sm`, 3 at `md` with the
+about block on its own row, 4 at `lg`.
+
 ### 7.8 Icons
 
 Line icons, 24px grid, 1.5px stroke, round caps and joins, `currentColor`, in the
