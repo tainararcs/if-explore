@@ -6,8 +6,8 @@
     :class="[
       size === 'small' ? 'min-h-10 px-3 py-0 text-small' : 'min-h-11 px-4 py-0 text-body',
       selected
-        ? 'border-primary bg-primary-soft font-semibold text-primary'
-        : 'border-transparent bg-surface-muted font-medium text-text hover:border-border',
+        ? 'border-primary bg-primary-soft font-semibold text-on-primary-soft'
+        : 'border-chip-border bg-surface-muted font-medium text-text hover:border-border-strong',
     ]"
     :aria-pressed="selected"
     @click="emit('toggle')"

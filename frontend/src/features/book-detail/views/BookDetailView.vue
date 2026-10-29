@@ -62,7 +62,7 @@
         v-else-if="status === 'notFound' || !book"
         class="container flex max-w-[420px] flex-col items-center gap-3 py-12 text-center"
       >
-        <span class="grid size-14 place-items-center rounded-[50%] bg-primary-soft text-primary">
+        <span class="grid size-14 place-items-center rounded-[50%] bg-primary-soft text-on-primary-soft">
           <IconLibrary />
         </span>
         <h1 class="text-h2">

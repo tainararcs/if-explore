@@ -32,14 +32,20 @@
   --color-bg: light-dark(var(--palette-paper), #1a1d19);
   --color-surface: light-dark(#fbf8f2, var(--palette-charcoal));
   --color-surface-muted: light-dark(#eee8dc, #2d312b);
-  --color-border: light-dark(var(--palette-sand), #3a3f37);
+  --color-border: light-dark(var(--palette-sand), #4d544a);
+  /* Contorno de campos, que precisa de 3:1 contra a superfície no escuro. */
+  --color-border-strong: light-dark(var(--palette-sand), #737b6d);
+  /* Contorno do chip não selecionado; no claro o fundo já o separa da página. */
+  --color-chip-border: light-dark(transparent, #4d544a);
   --color-text: light-dark(var(--palette-charcoal), #f0ebe0);
   --color-text-muted: light-dark(#5b6158, #b4b9ae);
-  --color-primary: light-dark(var(--palette-green-900), #9cc5ae);
-  --color-primary-hover: light-dark(var(--palette-green-700), #b5d6c3);
-  --color-on-primary: light-dark(#fbf8f2, #14251d);
-  --color-primary-soft: light-dark(#dce6df, #24382e);
-  --color-focus: light-dark(var(--palette-green-700), #9cc5ae);
+  --color-primary: light-dark(var(--palette-green-900), #6cc196);
+  --color-primary-hover: light-dark(var(--palette-green-700), #7fcca3);
+  --color-on-primary: light-dark(#fbf8f2, #0f1d16);
+  --color-primary-soft: light-dark(#dce6df, #2b4a3b);
+  /* Texto e ícones sobre --color-primary-soft (chips selecionados, ícones em círculo). */
+  --color-on-primary-soft: light-dark(var(--palette-green-900), #9cdcba);
+  --color-focus: light-dark(var(--palette-green-700), #6cc196);
   --color-success: light-dark(#2f6b47, #8fcba5);
   --color-warning: light-dark(#8a4b1f, #e0a878);
   --color-danger: light-dark(#a3262a, #f08c8c);
@@ -327,6 +333,26 @@
   .button[aria-disabled='true'] {
     opacity: 0.45;
     cursor: not-allowed;
+  }
+
+  /*
+    No escuro, a opacidade deixava o botão ilegível (2,8:1). Desabilitado vira
+    cinza da superfície com texto secundário (6,6:1): perde o verde, mas é lido.
+  */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .button:is(:disabled, [aria-disabled='true']) {
+      opacity: 1;
+      border-color: var(--color-border);
+      background: var(--color-surface-muted);
+      color: var(--color-text-muted);
+    }
+  }
+
+  :root[data-theme='dark'] .button:is(:disabled, [aria-disabled='true']) {
+    opacity: 1;
+    border-color: var(--color-border);
+    background: var(--color-surface-muted);
+    color: var(--color-text-muted);
   }
 
   /* Ícone de seta em círculo usado no botão primário (referência ao wireframe). */

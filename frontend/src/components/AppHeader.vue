@@ -51,11 +51,11 @@
             <a
               role="link"
               aria-disabled="true"
-              class="flex min-h-12 cursor-not-allowed items-center gap-2 rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline sm:inline-flex sm:min-h-11 sm:text-small sm:opacity-60"
+              class="flex min-h-12 cursor-not-allowed items-center gap-2 rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline sm:inline-flex sm:min-h-11 sm:text-small"
               :title="t('common.nav.comingSoon')"
             >
-              <span class="max-sm:opacity-60">{{ t('common.nav.about') }}</span>
-              <span class="rounded-pill bg-surface-muted px-2 py-0.5 text-caption sm:sr-only">{{ t('common.nav.comingSoon') }}</span>
+              <span>{{ t('common.nav.about') }}</span>
+              <span class="rounded-pill bg-surface-muted px-2 py-0.5 text-caption">{{ t('common.nav.comingSoon') }}</span>
             </a>
           </li>
         </ul>

@@ -14,7 +14,7 @@
           :key="step.key"
           class="flex items-start gap-4"
         >
-          <span class="grid size-12 shrink-0 place-items-center rounded-[50%] bg-primary-soft text-primary">
+          <span class="grid size-12 shrink-0 place-items-center rounded-[50%] bg-primary-soft text-on-primary-soft">
             <component :is="step.icon" />
           </span>
           <div>
