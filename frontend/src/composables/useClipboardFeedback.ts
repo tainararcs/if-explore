@@ -1,4 +1,5 @@
 import { onUnmounted, ref } from 'vue'
+import { copyText } from '../lib/copy-text'
 
 /** Resultado da última cópia; volta a `idle` após alguns segundos. */
 export type CopyState = 'idle' | 'copied' | 'failed'
@@ -18,7 +19,7 @@ export function useClipboardFeedback() {
   async function copy(text: string): Promise<void> {
     window.clearTimeout(resetTimer)
     try {
-      await navigator.clipboard.writeText(text)
+      await copyText(text)
       state.value = 'copied'
     } catch {
       state.value = 'failed'
