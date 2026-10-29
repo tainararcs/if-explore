@@ -22,7 +22,7 @@
         <button
           type="button"
           class="grid size-11 cursor-pointer place-items-center rounded-[50%] border border-border bg-surface p-0 text-text enabled:hover:border-primary enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
-          :aria-label="t('home.shelf.previous')"
+          :aria-label="t('common.shelf.previous')"
           :disabled="currentPage === 0"
           @click="goToPage(currentPage - 1)"
         >
@@ -31,7 +31,7 @@
         <button
           type="button"
           class="grid size-11 cursor-pointer place-items-center rounded-[50%] border border-border bg-surface p-0 text-text enabled:hover:border-primary enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-40"
-          :aria-label="t('home.shelf.next')"
+          :aria-label="t('common.shelf.next')"
           :disabled="currentPage === pageCount - 1"
           @click="goToPage(currentPage + 1)"
         >
@@ -78,14 +78,14 @@
       v-if="pageCount > 1"
       class="shelf__pagination"
       role="group"
-      :aria-label="t('home.shelf.pages')"
+      :aria-label="t('common.shelf.pages')"
     >
       <button
         v-for="page in pageCount"
         :key="page"
         type="button"
         class="shelf__dot"
-        :aria-label="t('home.shelf.page', { current: page, total: pageCount })"
+        :aria-label="t('common.shelf.page', { current: page, total: pageCount })"
         :aria-current="page - 1 === currentPage ? 'true' : undefined"
         @click="goToPage(page - 1)"
       />
@@ -96,10 +96,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, useId, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
-import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
-import { animateScrollLeft } from '../../../lib/animate-scroll'
-import type { Book } from '../../../models/book'
+import IconArrowLeft from './icons/IconArrowLeft.vue'
+import IconArrowRight from './icons/IconArrowRight.vue'
+import { animateScrollLeft } from '../lib/animate-scroll'
+import type { Book } from '../models/book'
 import BookCard from './BookCard.vue'
 
 interface Props {

@@ -33,6 +33,16 @@ export function getBooks(): Promise<Book[]> {
 }
 
 /**
+ * Busca um livro pelo identificador.
+ *
+ * @param id - Identificador do livro.
+ * @returns O livro, ou `null` quando não existe no acervo.
+ */
+export function getBookById(id: string): Promise<Book | null> {
+  return respond(books.find((book) => book.id === id) ?? null)
+}
+
+/**
  * Busca livros pelos identificadores, preservando a ordem recebida.
  *
  * @param ids - Identificadores dos livros.

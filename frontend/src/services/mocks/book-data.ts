@@ -1,11 +1,11 @@
 import type { Book } from '../../models/book'
 
-type BookSeed = Omit<Book, 'courseIds' | 'genreIds' | 'availability'> &
-  Partial<Pick<Book, 'courseIds' | 'genreIds' | 'availability'>>
+type BookSeed = Omit<Book, 'courseIds' | 'genreIds'> &
+  Partial<Pick<Book, 'courseIds' | 'genreIds'>>
 
 // Preenche os campos opcionais para manter a lista de dados enxuta.
 function defineBook(seed: BookSeed): Book {
-  return { courseIds: [], genreIds: [], availability: 'available', ...seed }
+  return { courseIds: [], genreIds: [], ...seed }
 }
 
 const teachingCourses = [
@@ -18,7 +18,8 @@ const teachingCourses = [
 
 /**
  * Acervo fictício usado enquanto não há integração com a biblioteca.
- * Títulos reais, mas disponibilidade e classificação são ilustrativas.
+ * Títulos reais; editora, páginas, exemplares e classificação são ilustrativos.
+ * ISBNs foram omitidos até que possam ser confirmados em edições reais.
  */
 export const books: Book[] = [
   // Ciências Exatas e da Terra
@@ -32,6 +33,10 @@ export const books: Book[] = [
     subjects: ['cálculo', 'limites', 'derivadas', 'integrais'],
     synopsis: 'Referência clássica para limites, derivadas e integrais, com muitos exemplos aplicados.',
     callNumber: '515 S848c',
+    publisher: 'Cengage Learning',
+    edition: '7ª edição',
+    pages: 672,
+    copies: { total: 5, available: 5 },
   }),
   defineBook({
     id: 'halliday-fundamentos-fisica-1',
@@ -42,8 +47,11 @@ export const books: Book[] = [
     courseIds: [],
     subjects: ['física', 'mecânica', 'cinemática'],
     synopsis: 'Introdução à mecânica newtoniana com problemas que ligam teoria e cotidiano.',
-    availability: 'borrowed',
     callNumber: '530 H188f',
+    publisher: 'LTC',
+    edition: '10ª edição',
+    pages: 340,
+    copies: { total: 4, available: 0 },
   }),
   defineBook({
     id: 'nussenzveig-fisica-basica-1',
@@ -55,6 +63,10 @@ export const books: Book[] = [
     subjects: ['física', 'mecânica'],
     synopsis: 'Texto brasileiro que privilegia o raciocínio físico antes das fórmulas.',
     callNumber: '530 N975c',
+    publisher: 'Blucher',
+    edition: '5ª edição',
+    pages: 394,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'atkins-principios-quimica',
@@ -66,6 +78,10 @@ export const books: Book[] = [
     subjects: ['química', 'química geral', 'átomos'],
     synopsis: 'Da estrutura atômica às reações, com foco em compreender o porquê dos fenômenos.',
     callNumber: '540 A875p',
+    publisher: 'Bookman',
+    edition: '5ª edição',
+    pages: 1048,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'solomons-quimica-organica',
@@ -76,8 +92,11 @@ export const books: Book[] = [
     courseIds: ['chemistry-teaching', 'chemistry-integrated'],
     subjects: ['química orgânica', 'reações'],
     synopsis: 'Mecanismos de reação e síntese orgânica explicados passo a passo.',
-    availability: 'borrowed',
     callNumber: '547 S689q',
+    publisher: 'LTC',
+    edition: '10ª edição',
+    pages: 616,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'anton-algebra-linear',
@@ -89,6 +108,10 @@ export const books: Book[] = [
     subjects: ['álgebra linear', 'matrizes', 'vetores'],
     synopsis: 'Matrizes, vetores e transformações lineares com aplicações em computação e ciência.',
     callNumber: '512.5 A634a',
+    publisher: 'Bookman',
+    edition: '10ª edição',
+    pages: 768,
+    copies: { total: 4, available: 3 },
   }),
   defineBook({
     id: 'singh-ultimo-teorema-fermat',
@@ -100,6 +123,9 @@ export const books: Book[] = [
     subjects: ['matemática', 'história da ciência', 'divulgação científica'],
     synopsis: 'A história de três séculos de tentativas de provar um enigma matemático.',
     callNumber: '512.7 S617u',
+    publisher: 'Record',
+    pages: 328,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'hawking-breve-historia-tempo',
@@ -111,6 +137,9 @@ export const books: Book[] = [
     subjects: ['cosmologia', 'física', 'divulgação científica'],
     synopsis: 'Buracos negros, Big Bang e a natureza do tempo para quem não é especialista.',
     callNumber: '523.1 H392b',
+    publisher: 'Intrínseca',
+    pages: 256,
+    copies: { total: 2, available: 1 },
   }),
 
   // Ciências Biológicas
@@ -124,6 +153,9 @@ export const books: Book[] = [
     subjects: ['evolução', 'seleção natural', 'história da ciência'],
     synopsis: 'A obra que apresentou a seleção natural e mudou a forma de entender a vida.',
     callNumber: '576.8 D228o',
+    publisher: 'Martin Claret',
+    pages: 576,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'dawkins-gene-egoista',
@@ -134,8 +166,10 @@ export const books: Book[] = [
     courseIds: ['biology-teaching'],
     subjects: ['evolução', 'genética', 'divulgação científica'],
     synopsis: 'A evolução vista do ponto de vista dos genes, em linguagem acessível.',
-    availability: 'borrowed',
     callNumber: '591.5 D271g',
+    publisher: 'Companhia das Letras',
+    pages: 544,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'junqueira-biologia-celular',
@@ -147,6 +181,10 @@ export const books: Book[] = [
     subjects: ['biologia celular', 'genética', 'célula'],
     synopsis: 'Estrutura e funcionamento da célula, referência nos cursos de biologia e saúde.',
     callNumber: '571.6 J95b',
+    publisher: 'Guanabara Koogan',
+    edition: '9ª edição',
+    pages: 376,
+    copies: { total: 4, available: 4 },
   }),
   defineBook({
     id: 'begon-ecologia',
@@ -158,6 +196,10 @@ export const books: Book[] = [
     subjects: ['ecologia', 'ecossistemas', 'populações'],
     synopsis: 'Panorama completo da ecologia, das populações às comunidades e ecossistemas.',
     callNumber: '577 B419e',
+    publisher: 'Artmed',
+    edition: '4ª edição',
+    pages: 740,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'odum-fundamentos-ecologia',
@@ -169,6 +211,10 @@ export const books: Book[] = [
     subjects: ['ecologia', 'meio ambiente', 'sustentabilidade'],
     synopsis: 'Clássico que organiza a ecologia em torno do conceito de ecossistema.',
     callNumber: '577 O26f',
+    publisher: 'Cengage Learning',
+    edition: '5ª edição',
+    pages: 612,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'carson-primavera-silenciosa',
@@ -180,6 +226,9 @@ export const books: Book[] = [
     subjects: ['meio ambiente', 'agrotóxicos', 'sustentabilidade'],
     synopsis: 'O livro que alertou o mundo sobre os efeitos dos pesticidas e inspirou o ambientalismo.',
     callNumber: '363.7 C321p',
+    publisher: 'Gaia',
+    pages: 328,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'hickman-zoologia',
@@ -190,8 +239,11 @@ export const books: Book[] = [
     courseIds: ['biology-teaching', 'agriculture-integrated'],
     subjects: ['zoologia', 'animais', 'evolução'],
     synopsis: 'Diversidade animal estudada a partir da evolução, da anatomia e da ecologia.',
-    availability: 'borrowed',
     callNumber: '590 H628p',
+    publisher: 'Guanabara Koogan',
+    edition: '16ª edição',
+    pages: 952,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'raven-biologia-vegetal',
@@ -203,6 +255,10 @@ export const books: Book[] = [
     subjects: ['botânica', 'plantas', 'fisiologia vegetal'],
     synopsis: 'Botânica ilustrada, da célula vegetal à diversidade e ecologia das plantas.',
     callNumber: '580 R253b',
+    publisher: 'Guanabara Koogan',
+    edition: '8ª edição',
+    pages: 876,
+    copies: { total: 3, available: 2 },
   }),
 
   // Ciências Agrárias
@@ -216,6 +272,10 @@ export const books: Book[] = [
     subjects: ['fisiologia vegetal', 'plantas', 'fotossíntese'],
     synopsis: 'Como as plantas crescem, respiram e respondem ao ambiente.',
     callNumber: '571.2 T137f',
+    publisher: 'Artmed',
+    edition: '6ª edição',
+    pages: 888,
+    copies: { total: 4, available: 4 },
   }),
   defineBook({
     id: 'primavesi-manejo-ecologico-solo',
@@ -227,6 +287,9 @@ export const books: Book[] = [
     subjects: ['solo', 'agroecologia', 'agricultura tropical'],
     synopsis: 'Obra pioneira sobre o solo vivo e a agricultura adaptada aos trópicos.',
     callNumber: '631.4 P952m',
+    publisher: 'Nobel',
+    pages: 552,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'gliessman-agroecologia',
@@ -237,8 +300,11 @@ export const books: Book[] = [
     courseIds: ['agronomy', 'environmental-management'],
     subjects: ['agroecologia', 'sustentabilidade', 'agricultura'],
     synopsis: 'Bases ecológicas para sistemas agrícolas produtivos e sustentáveis.',
-    availability: 'borrowed',
     callNumber: '630.2 G559a',
+    publisher: 'Editora da UFRGS',
+    edition: '4ª edição',
+    pages: 658,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'lepsch-licoes-pedologia',
@@ -250,6 +316,9 @@ export const books: Book[] = [
     subjects: ['solo', 'pedologia'],
     synopsis: 'Formação, classificação e uso dos solos brasileiros em lições diretas.',
     callNumber: '631.4 L611d',
+    publisher: 'Oficina de Textos',
+    pages: 456,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'amorim-manual-fitopatologia',
@@ -261,6 +330,10 @@ export const books: Book[] = [
     subjects: ['fitopatologia', 'doenças de plantas'],
     synopsis: 'Princípios para identificar e controlar doenças em plantas cultivadas.',
     callNumber: '632.3 M294',
+    publisher: 'Agronômica Ceres',
+    edition: '4ª edição',
+    pages: 704,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'bernardo-manual-irrigacao',
@@ -272,6 +345,10 @@ export const books: Book[] = [
     subjects: ['irrigação', 'água', 'agricultura'],
     synopsis: 'Métodos de irrigação, manejo da água e dimensionamento de sistemas.',
     callNumber: '631.7 B523m',
+    publisher: 'Editora UFV',
+    edition: '8ª edição',
+    pages: 625,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'berchielli-nutricao-ruminantes',
@@ -283,6 +360,10 @@ export const books: Book[] = [
     subjects: ['nutrição animal', 'ruminantes', 'pecuária'],
     synopsis: 'Digestão, metabolismo e formulação de dietas para bovinos, ovinos e caprinos.',
     callNumber: '636.2 N976',
+    publisher: 'Funep',
+    edition: '2ª edição',
+    pages: 616,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'reece-fisiologia-animais-domesticos',
@@ -293,8 +374,11 @@ export const books: Book[] = [
     courseIds: ['agriculture-integrated', 'agriculture-distance'],
     subjects: ['fisiologia animal', 'animais domésticos'],
     synopsis: 'Funcionamento dos sistemas orgânicos dos animais de produção e companhia.',
-    availability: 'borrowed',
     callNumber: '636.089 D877',
+    publisher: 'Guanabara Koogan',
+    edition: '13ª edição',
+    pages: 760,
+    copies: { total: 2, available: 0 },
   }),
 
   // Ciências da Saúde
@@ -307,8 +391,11 @@ export const books: Book[] = [
     courseIds: ['nutrition'],
     subjects: ['nutrição', 'dietoterapia', 'alimentação'],
     synopsis: 'Referência em nutrição clínica, da avaliação nutricional à dietoterapia.',
-    availability: 'borrowed',
     callNumber: '613.2 K91',
+    publisher: 'Elsevier',
+    edition: '13ª edição',
+    pages: 1228,
+    copies: { total: 4, available: 0 },
   }),
   defineBook({
     id: 'taco-tabela-composicao',
@@ -320,6 +407,10 @@ export const books: Book[] = [
     subjects: ['nutrição', 'alimentos', 'composição nutricional'],
     synopsis: 'Composição nutricional dos alimentos mais consumidos no Brasil.',
     callNumber: '613.2 T113',
+    publisher: 'NEPA – Unicamp',
+    edition: '4ª edição',
+    pages: 164,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'guia-alimentar-populacao-brasileira',
@@ -331,6 +422,10 @@ export const books: Book[] = [
     subjects: ['alimentação', 'saúde pública', 'nutrição'],
     synopsis: 'Recomendações para uma alimentação saudável baseada em comida de verdade.',
     callNumber: '613.2 B823g',
+    publisher: 'Ministério da Saúde',
+    edition: '2ª edição',
+    pages: 156,
+    copies: { total: 5, available: 5 },
   }),
   defineBook({
     id: 'mcardle-fisiologia-exercicio',
@@ -342,6 +437,10 @@ export const books: Book[] = [
     subjects: ['fisiologia do exercício', 'treinamento', 'nutrição esportiva'],
     synopsis: 'Energia, nutrição e desempenho humano explicados a partir da fisiologia.',
     callNumber: '612.044 M478f',
+    publisher: 'Guanabara Koogan',
+    edition: '8ª edição',
+    pages: 1104,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'fleck-treinamento-forca',
@@ -352,8 +451,11 @@ export const books: Book[] = [
     courseIds: ['physical-education', 'physical-education-teaching'],
     subjects: ['treinamento', 'força muscular', 'musculação'],
     synopsis: 'Como planejar programas de força com base em evidências científicas.',
-    availability: 'borrowed',
     callNumber: '613.71 F596f',
+    publisher: 'Artmed',
+    edition: '4ª edição',
+    pages: 472,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'dangelo-anatomia-humana',
@@ -365,6 +467,10 @@ export const books: Book[] = [
     subjects: ['anatomia', 'corpo humano'],
     synopsis: 'Anatomia do corpo humano organizada por sistemas e por regiões.',
     callNumber: '611 D182a',
+    publisher: 'Atheneu',
+    edition: '3ª edição',
+    pages: 763,
+    copies: { total: 4, available: 3 },
   }),
   defineBook({
     id: 'coletivo-metodologia-educacao-fisica',
@@ -376,6 +482,9 @@ export const books: Book[] = [
     subjects: ['educação física escolar', 'didática', 'cultura corporal'],
     synopsis: 'Proposta crítica para a educação física escolar centrada na cultura corporal.',
     callNumber: '796.07 M593',
+    publisher: 'Cortez',
+    pages: 120,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'shils-nutricao-moderna',
@@ -387,6 +496,10 @@ export const books: Book[] = [
     subjects: ['nutrição', 'bioquímica', 'doenças'],
     synopsis: 'Bases bioquímicas e clínicas da nutrição humana em profundidade.',
     callNumber: '612.3 N976',
+    publisher: 'Manole',
+    edition: '10ª edição',
+    pages: 2256,
+    copies: { total: 2, available: 1 },
   }),
 
   // Ciências Humanas
@@ -399,8 +512,10 @@ export const books: Book[] = [
     courseIds: teachingCourses,
     subjects: ['educação', 'pedagogia crítica', 'filosofia da educação'],
     synopsis: 'A educação como prática de liberdade, em diálogo com a realidade do educando.',
-    availability: 'borrowed',
     callNumber: '370.1 F866p',
+    publisher: 'Paz e Terra',
+    pages: 256,
+    copies: { total: 4, available: 0 },
   }),
   defineBook({
     id: 'freire-pedagogia-autonomia',
@@ -412,6 +527,9 @@ export const books: Book[] = [
     subjects: ['educação', 'docência', 'ética'],
     synopsis: 'Saberes necessários à prática docente, em textos curtos e inspiradores.',
     callNumber: '370.1 F866pa',
+    publisher: 'Paz e Terra',
+    pages: 144,
+    copies: { total: 4, available: 3 },
   }),
   defineBook({
     id: 'libaneo-didatica',
@@ -423,6 +541,10 @@ export const books: Book[] = [
     subjects: ['didática', 'educação', 'planejamento de ensino'],
     synopsis: 'Fundamentos do processo de ensino e aprendizagem para quem vai lecionar.',
     callNumber: '371.3 L694d',
+    publisher: 'Cortez',
+    edition: '2ª edição',
+    pages: 288,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'holanda-raizes-brasil',
@@ -433,6 +555,9 @@ export const books: Book[] = [
     subjects: ['história do Brasil', 'sociologia', 'formação nacional'],
     synopsis: 'Ensaio que interpreta a formação social brasileira e o "homem cordial".',
     callNumber: '981 H722r',
+    publisher: 'Companhia das Letras',
+    pages: 256,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'ribeiro-povo-brasileiro',
@@ -443,6 +568,9 @@ export const books: Book[] = [
     subjects: ['antropologia', 'história do Brasil', 'formação nacional'],
     synopsis: 'A formação e o sentido do Brasil a partir das matrizes que compõem seu povo.',
     callNumber: '981 R484p',
+    publisher: 'Global',
+    pages: 368,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'platao-republica',
@@ -453,6 +581,9 @@ export const books: Book[] = [
     subjects: ['filosofia', 'política', 'justiça'],
     synopsis: 'Diálogo sobre justiça e a cidade ideal, onde está a alegoria da caverna.',
     callNumber: '184 P718r',
+    publisher: 'Martin Claret',
+    pages: 352,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'aristoteles-etica-nicomaco',
@@ -464,6 +595,9 @@ export const books: Book[] = [
     synopsis: 'Investigação sobre a felicidade, a virtude e o modo de viver bem.',
     quote: 'Uma andorinha só não faz verão, nem um dia apenas.',
     callNumber: '171.3 A716e',
+    publisher: 'Edipro',
+    pages: 320,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'harari-sapiens',
@@ -473,8 +607,10 @@ export const books: Book[] = [
     areaId: 'humanities',
     subjects: ['história', 'antropologia', 'divulgação científica'],
     synopsis: 'Da revolução cognitiva à científica, como o Homo sapiens dominou o planeta.',
-    availability: 'borrowed',
     callNumber: '909 H254s',
+    publisher: 'L&PM',
+    pages: 464,
+    copies: { total: 3, available: 0 },
   }),
 
   // Ciências Sociais Aplicadas
@@ -488,6 +624,10 @@ export const books: Book[] = [
     subjects: ['administração', 'gestão', 'organizações'],
     synopsis: 'Panorama das teorias administrativas, de Taylor às abordagens contemporâneas.',
     callNumber: '658 C532i',
+    publisher: 'Manole',
+    edition: '9ª edição',
+    pages: 624,
+    copies: { total: 4, available: 4 },
   }),
   defineBook({
     id: 'kotler-administracao-marketing',
@@ -498,8 +638,11 @@ export const books: Book[] = [
     courseIds: ['administration', 'tourism-management'],
     subjects: ['marketing', 'gestão', 'consumidor'],
     synopsis: 'Conceitos e práticas de marketing, da pesquisa de mercado à marca.',
-    availability: 'borrowed',
     callNumber: '658.8 K87a',
+    publisher: 'Pearson',
+    edition: '14ª edição',
+    pages: 796,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'beni-analise-estrutural-turismo',
@@ -511,6 +654,9 @@ export const books: Book[] = [
     subjects: ['turismo', 'planejamento turístico'],
     synopsis: 'O turismo como sistema, com bases para planejamento e gestão de destinos.',
     callNumber: '338.4791 B467a',
+    publisher: 'Senac',
+    pages: 555,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'goeldner-turismo-principios',
@@ -522,6 +668,10 @@ export const books: Book[] = [
     subjects: ['turismo', 'hospitalidade', 'gestão'],
     synopsis: 'Introdução abrangente ao turismo como atividade econômica e social.',
     callNumber: '338.4791 G594t',
+    publisher: 'Bookman',
+    edition: '8ª edição',
+    pages: 478,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'furtado-formacao-economica',
@@ -532,6 +682,9 @@ export const books: Book[] = [
     subjects: ['economia', 'história do Brasil', 'desenvolvimento'],
     synopsis: 'Clássico que explica a economia brasileira desde a colônia.',
     callNumber: '330.981 F992f',
+    publisher: 'Companhia das Letras',
+    pages: 352,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'kahneman-rapido-devagar',
@@ -543,6 +696,9 @@ export const books: Book[] = [
     subjects: ['psicologia', 'tomada de decisão', 'economia comportamental'],
     synopsis: 'Os dois sistemas que guiam nosso pensamento e os vieses de cada um.',
     callNumber: '153.4 K12r',
+    publisher: 'Objetiva',
+    pages: 608,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'duhigg-poder-habito',
@@ -553,8 +709,10 @@ export const books: Book[] = [
     courseIds: ['administration'],
     subjects: ['psicologia', 'hábitos', 'comportamento'],
     synopsis: 'Por que fazemos o que fazemos e como mudar hábitos na vida e nas empresas.',
-    availability: 'borrowed',
     callNumber: '158.1 D877p',
+    publisher: 'Objetiva',
+    pages: 408,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'housel-psicologia-financeira',
@@ -566,6 +724,9 @@ export const books: Book[] = [
     subjects: ['finanças pessoais', 'comportamento', 'economia'],
     synopsis: 'Lições sobre dinheiro em que o comportamento pesa mais que as fórmulas.',
     callNumber: '332.024 H842p',
+    publisher: 'HarperCollins Brasil',
+    pages: 304,
+    copies: { total: 2, available: 1 },
   }),
 
   // Tecnologia e Computação
@@ -578,8 +739,10 @@ export const books: Book[] = [
     courseIds: ['information-systems', 'internet-systems', 'it-technician'],
     subjects: ['programação', 'boas práticas', 'engenharia de software'],
     synopsis: 'Práticas para escrever código legível, simples e fácil de manter.',
-    availability: 'borrowed',
     callNumber: '005.1 M379c',
+    publisher: 'Alta Books',
+    pages: 440,
+    copies: { total: 4, available: 0 },
   }),
   defineBook({
     id: 'hunt-programador-pragmatico',
@@ -591,6 +754,9 @@ export const books: Book[] = [
     subjects: ['programação', 'carreira', 'boas práticas'],
     synopsis: 'Conselhos práticos para evoluir como desenvolvedor de software.',
     callNumber: '005.1 H939p',
+    publisher: 'Bookman',
+    pages: 424,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'bhargava-entendendo-algoritmos',
@@ -602,6 +768,9 @@ export const books: Book[] = [
     subjects: ['algoritmos', 'programação', 'estruturas de dados'],
     synopsis: 'Algoritmos clássicos explicados com ilustrações e exemplos simples.',
     callNumber: '005.1 B575e',
+    publisher: 'Novatec',
+    pages: 264,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'cormen-algoritmos',
@@ -613,6 +782,10 @@ export const books: Book[] = [
     subjects: ['algoritmos', 'complexidade', 'estruturas de dados'],
     synopsis: 'Referência completa em projeto e análise de algoritmos.',
     callNumber: '005.1 A396',
+    publisher: 'Elsevier',
+    edition: '3ª edição',
+    pages: 944,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'sommerville-engenharia-software',
@@ -624,6 +797,10 @@ export const books: Book[] = [
     subjects: ['engenharia de software', 'requisitos', 'processos'],
     synopsis: 'Processos, requisitos, projeto e qualidade no desenvolvimento de software.',
     callNumber: '005.1 S697e',
+    publisher: 'Pearson',
+    edition: '9ª edição',
+    pages: 544,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'elmasri-banco-dados',
@@ -634,8 +811,11 @@ export const books: Book[] = [
     courseIds: ['information-systems', 'internet-systems', 'it-technician'],
     subjects: ['banco de dados', 'SQL', 'modelagem'],
     synopsis: 'Modelagem, SQL e projeto de bancos de dados relacionais.',
-    availability: 'borrowed',
     callNumber: '005.74 E48s',
+    publisher: 'Pearson',
+    edition: '6ª edição',
+    pages: 808,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'kurose-redes-computadores',
@@ -647,6 +827,10 @@ export const books: Book[] = [
     subjects: ['redes', 'internet', 'protocolos'],
     synopsis: 'A internet explicada de cima para baixo, da aplicação à camada física.',
     callNumber: '004.6 K96r',
+    publisher: 'Pearson',
+    edition: '6ª edição',
+    pages: 656,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'krug-nao-me-faca-pensar',
@@ -658,6 +842,10 @@ export const books: Book[] = [
     subjects: ['usabilidade', 'design de interfaces', 'web'],
     synopsis: 'Usabilidade na web com bom humor e princípios fáceis de aplicar.',
     callNumber: '006.7 K94n',
+    publisher: 'Alta Books',
+    edition: '3ª edição',
+    pages: 216,
+    copies: { total: 2, available: 1 },
   }),
 
   // Linguagens, Letras e Artes
@@ -670,6 +858,9 @@ export const books: Book[] = [
     subjects: ['linguística', 'língua portuguesa', 'sociolinguística'],
     synopsis: 'Desmonta mitos sobre o "português certo" e discute variação linguística.',
     callNumber: '469.798 B146p',
+    publisher: 'Parábola',
+    pages: 224,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'bechara-moderna-gramatica',
@@ -680,6 +871,10 @@ export const books: Book[] = [
     subjects: ['gramática', 'língua portuguesa'],
     synopsis: 'Gramática de referência da língua portuguesa, completa e atualizada.',
     callNumber: '469.5 B391m',
+    publisher: 'Nova Fronteira',
+    edition: '38ª edição',
+    pages: 672,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'candido-formacao-literatura',
@@ -690,6 +885,9 @@ export const books: Book[] = [
     subjects: ['literatura brasileira', 'crítica literária'],
     synopsis: 'Estudo clássico sobre como a literatura brasileira se formou como sistema.',
     callNumber: '869.09 C217f',
+    publisher: 'Ouro sobre Azul',
+    pages: 800,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'gombrich-historia-arte',
@@ -699,8 +897,11 @@ export const books: Book[] = [
     areaId: 'languages-arts',
     subjects: ['arte', 'história da arte'],
     synopsis: 'Da arte pré-histórica à moderna, contada de forma clara e envolvente.',
-    availability: 'borrowed',
     callNumber: '709 G632h',
+    publisher: 'LTC',
+    edition: '16ª edição',
+    pages: 688,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'berger-modos-ver',
@@ -711,6 +912,9 @@ export const books: Book[] = [
     subjects: ['arte', 'imagem', 'cultura visual'],
     synopsis: 'Ensaios que mudam a forma como olhamos pinturas, fotos e publicidade.',
     callNumber: '701.1 B496m',
+    publisher: 'Rocco',
+    pages: 168,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'wood-como-funciona-ficcao',
@@ -721,6 +925,9 @@ export const books: Book[] = [
     subjects: ['teoria literária', 'escrita', 'romance'],
     synopsis: 'Um passeio pelas técnicas que dão vida aos romances.',
     callNumber: '808.3 W874c',
+    publisher: 'SESI-SP',
+    pages: 224,
+    copies: { total: 1, available: 1 },
   }),
 
   // Literatura (gêneros literários)
@@ -735,6 +942,38 @@ export const books: Book[] = [
     synopsis: 'Bentinho revisita a juventude e a dúvida que o persegue: Capitu o traiu?',
     quote: 'Olhos de cigana oblíqua e dissimulada.',
     callNumber: '869.3 A848d',
+    publisher: 'Penguin-Companhia',
+    pages: 264,
+    copies: { total: 5, available: 5 },
+  }),
+  defineBook({
+    id: 'machado-quincas-borba',
+    title: 'Quincas Borba',
+    authors: ['Machado de Assis'],
+    year: 1891,
+    areaId: 'languages-arts',
+    genreIds: ['brazilian-classics'],
+    subjects: ['literatura brasileira', 'realismo', 'ironia'],
+    synopsis: 'Rubião herda a fortuna e a filosofia de Quincas Borba: ao vencedor, as batatas.',
+    quote: 'Ao vencido, ódio ou compaixão; ao vencedor, as batatas.',
+    callNumber: '869.3 A848q',
+    publisher: 'Penguin-Companhia',
+    pages: 352,
+    copies: { total: 3, available: 1 },
+  }),
+  defineBook({
+    id: 'machado-alienista',
+    title: 'O Alienista',
+    authors: ['Machado de Assis'],
+    year: 1882,
+    areaId: 'languages-arts',
+    genreIds: ['brazilian-classics', 'humor', 'short-stories'],
+    subjects: ['literatura brasileira', 'loucura', 'ironia'],
+    synopsis: 'Simão Bacamarte funda um hospício em Itaguaí e começa a internar a cidade inteira.',
+    callNumber: '869.3 A848a',
+    publisher: 'Ática',
+    pages: 96,
+    copies: { total: 4, available: 0 },
   }),
   defineBook({
     id: 'machado-memorias-postumas',
@@ -746,8 +985,10 @@ export const books: Book[] = [
     subjects: ['literatura brasileira', 'realismo', 'ironia'],
     synopsis: 'Um defunto autor narra a própria vida com ironia afiada.',
     quote: 'Ao verme que primeiro roeu as frias carnes do meu cadáver…',
-    availability: 'borrowed',
     callNumber: '869.3 A848m',
+    publisher: 'Penguin-Companhia',
+    pages: 304,
+    copies: { total: 4, available: 0 },
   }),
   defineBook({
     id: 'rosa-grande-sertao',
@@ -759,6 +1000,9 @@ export const books: Book[] = [
     subjects: ['literatura brasileira', 'sertão', 'Minas Gerais'],
     synopsis: 'Riobaldo conta sua travessia pelo sertão mineiro, entre jagunços, amor e o diabo.',
     callNumber: '869.3 R788g',
+    publisher: 'Companhia das Letras',
+    pages: 560,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'ramos-vidas-secas',
@@ -770,6 +1014,9 @@ export const books: Book[] = [
     subjects: ['literatura brasileira', 'seca', 'regionalismo'],
     synopsis: 'Uma família de retirantes atravessa a seca do sertão nordestino.',
     callNumber: '869.3 R175v',
+    publisher: 'Record',
+    pages: 176,
+    copies: { total: 4, available: 3 },
   }),
   defineBook({
     id: 'lispector-hora-estrela',
@@ -780,8 +1027,10 @@ export const books: Book[] = [
     genreIds: ['romance', 'brazilian-classics'],
     subjects: ['literatura brasileira', 'identidade'],
     synopsis: 'Macabéa, alagoana no Rio de Janeiro, e o narrador que tenta contá-la.',
-    availability: 'borrowed',
     callNumber: '869.3 L771h',
+    publisher: 'Rocco',
+    pages: 88,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'amado-gabriela',
@@ -793,6 +1042,9 @@ export const books: Book[] = [
     subjects: ['literatura brasileira', 'Bahia', 'costumes'],
     synopsis: 'Amor, cacau e política em Ilhéus nos anos 1920.',
     callNumber: '869.3 A481g',
+    publisher: 'Companhia das Letras',
+    pages: 424,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'austen-orgulho-preconceito',
@@ -806,6 +1058,9 @@ export const books: Book[] = [
     quote:
       'É uma verdade universalmente reconhecida que um homem solteiro, possuidor de boa fortuna, deve estar necessitado de uma esposa.',
     callNumber: '823 A933o',
+    publisher: 'Penguin-Companhia',
+    pages: 488,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'tolkien-hobbit',
@@ -816,8 +1071,10 @@ export const books: Book[] = [
     genreIds: ['fantasy', 'adventure'],
     subjects: ['literatura inglesa', 'fantasia', 'jornada'],
     synopsis: 'Bilbo Bolseiro deixa o conforto de casa para enfrentar um dragão.',
-    availability: 'borrowed',
     callNumber: '823 T649h',
+    publisher: 'HarperCollins Brasil',
+    pages: 336,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'stevenson-ilha-tesouro',
@@ -829,6 +1086,9 @@ export const books: Book[] = [
     subjects: ['literatura inglesa', 'piratas', 'aventura'],
     synopsis: 'Um mapa, piratas e o jovem Jim Hawkins em busca de um tesouro enterrado.',
     callNumber: '823 S848i',
+    publisher: 'Zahar',
+    pages: 320,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'verne-vinte-mil-leguas',
@@ -840,6 +1100,9 @@ export const books: Book[] = [
     subjects: ['literatura francesa', 'oceano', 'ficção científica'],
     synopsis: 'A bordo do Nautilus, com o enigmático capitão Nemo, pelos mares do mundo.',
     callNumber: '843 V531v',
+    publisher: 'Zahar',
+    pages: 488,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'adams-guia-mochileiro',
@@ -851,6 +1114,9 @@ export const books: Book[] = [
     subjects: ['literatura inglesa', 'espaço', 'humor'],
     synopsis: 'A Terra é demolida e Arthur Dent pega carona pela galáxia. Não entre em pânico.',
     callNumber: '823 A193g',
+    publisher: 'Arqueiro',
+    pages: 208,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'doyle-cao-baskervilles',
@@ -862,6 +1128,9 @@ export const books: Book[] = [
     subjects: ['literatura inglesa', 'Sherlock Holmes', 'investigação'],
     synopsis: 'Sherlock Holmes investiga a lenda de um cão infernal nos pântanos ingleses.',
     callNumber: '823 D754c',
+    publisher: 'Zahar',
+    pages: 240,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'christie-e-nao-sobrou-nenhum',
@@ -872,8 +1141,10 @@ export const books: Book[] = [
     genreIds: ['mystery'],
     subjects: ['literatura inglesa', 'investigação', 'suspense'],
     synopsis: 'Dez convidados numa ilha isolada, e um a um eles começam a morrer.',
-    availability: 'borrowed',
     callNumber: '823 C554e',
+    publisher: 'Globo Livros',
+    pages: 384,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'eco-nome-rosa',
@@ -885,6 +1156,9 @@ export const books: Book[] = [
     subjects: ['literatura italiana', 'Idade Média', 'bibliotecas'],
     synopsis: 'Mortes misteriosas numa abadia medieval guardiã de uma biblioteca proibida.',
     callNumber: '853 E19n',
+    publisher: 'Record',
+    pages: 560,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'haig-biblioteca-meia-noite',
@@ -896,6 +1170,9 @@ export const books: Book[] = [
     subjects: ['literatura inglesa', 'escolhas', 'vidas possíveis'],
     synopsis: 'Entre a vida e a morte, Nora encontra uma biblioteca com todas as vidas que poderia ter vivido.',
     callNumber: '823 H149b',
+    publisher: 'Bertrand Brasil',
+    pages: 308,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'rothfuss-nome-vento',
@@ -906,8 +1183,10 @@ export const books: Book[] = [
     genreIds: ['fantasy', 'adventure'],
     subjects: ['literatura norte-americana', 'magia', 'universidade'],
     synopsis: 'Kvothe narra como se tornou lenda, da trupe itinerante à universidade de magia.',
-    availability: 'borrowed',
     callNumber: '813 R846n',
+    publisher: 'Arqueiro',
+    pages: 656,
+    copies: { total: 1, available: 0 },
   }),
   defineBook({
     id: 'orwell-1984',
@@ -920,6 +1199,9 @@ export const books: Book[] = [
     synopsis: 'Sob o olhar do Grande Irmão, Winston Smith ousa pensar por conta própria.',
     quote: 'Guerra é paz. Liberdade é escravidão. Ignorância é força.',
     callNumber: '823 O79m',
+    publisher: 'Companhia das Letras',
+    pages: 416,
+    copies: { total: 3, available: 3 },
   }),
   defineBook({
     id: 'huxley-admiravel-mundo-novo',
@@ -931,6 +1213,9 @@ export const books: Book[] = [
     subjects: ['literatura inglesa', 'distopia', 'sociedade'],
     synopsis: 'Uma sociedade estável e feliz, fabricada em laboratório, e o preço dessa felicidade.',
     callNumber: '823 H987a',
+    publisher: 'Biblioteca Azul',
+    pages: 312,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'bradbury-fahrenheit-451',
@@ -941,8 +1226,10 @@ export const books: Book[] = [
     genreIds: ['science-fiction'],
     subjects: ['literatura norte-americana', 'distopia', 'livros'],
     synopsis: 'Num futuro em que bombeiros queimam livros, um deles começa a lê-los.',
-    availability: 'borrowed',
     callNumber: '813 B811f',
+    publisher: 'Biblioteca Azul',
+    pages: 216,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'shelley-frankenstein',
@@ -955,6 +1242,9 @@ export const books: Book[] = [
     synopsis: 'Victor Frankenstein dá vida a uma criatura e não suporta as consequências.',
     quote: 'Cuidado, pois sou destemido e, portanto, poderoso.',
     callNumber: '823 S545f',
+    publisher: 'Penguin-Companhia',
+    pages: 344,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'stoker-dracula',
@@ -966,6 +1256,9 @@ export const books: Book[] = [
     subjects: ['literatura irlandesa', 'vampiros', 'gótico'],
     synopsis: 'Cartas e diários revelam a chegada de um conde da Transilvânia à Inglaterra.',
     callNumber: '823 S874d',
+    publisher: 'Zahar',
+    pages: 528,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'king-iluminado',
@@ -976,8 +1269,10 @@ export const books: Book[] = [
     genreIds: ['horror'],
     subjects: ['literatura norte-americana', 'hotel', 'sobrenatural'],
     synopsis: 'Um inverno isolado num hotel nas montanhas desperta forças sombrias.',
-    availability: 'borrowed',
     callNumber: '813 K52i',
+    publisher: 'Suma',
+    pages: 520,
+    copies: { total: 1, available: 0 },
   }),
   defineBook({
     id: 'drummond-sentimento-mundo',
@@ -989,6 +1284,9 @@ export const books: Book[] = [
     subjects: ['poesia brasileira', 'modernismo', 'Minas Gerais'],
     synopsis: 'Poemas em que o poeta mineiro se abre para as dores do seu tempo.',
     callNumber: '869.1 A553s',
+    publisher: 'Companhia das Letras',
+    pages: 112,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'moraes-antologia-poetica',
@@ -1000,6 +1298,9 @@ export const books: Book[] = [
     subjects: ['poesia brasileira', 'amor', 'sonetos'],
     synopsis: 'Seleção feita pelo próprio poeta, com seus sonetos mais conhecidos.',
     callNumber: '869.1 M827a',
+    publisher: 'Companhia das Letras',
+    pages: 344,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'azevedo-lira-vinte-anos',
@@ -1012,6 +1313,9 @@ export const books: Book[] = [
     synopsis: 'Poemas do ultrarromantismo brasileiro, entre o sonho, o amor e a morte.',
     quote: 'Se eu morresse amanhã, viria ao menos fechar meus olhos minha triste irmã.',
     callNumber: '869.1 A994l',
+    publisher: 'Martin Claret',
+    pages: 256,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'frank-diario',
@@ -1023,6 +1327,9 @@ export const books: Book[] = [
     subjects: ['Segunda Guerra Mundial', 'Holocausto', 'diário'],
     synopsis: 'O diário de uma adolescente escondida com a família durante a ocupação nazista.',
     callNumber: '940.53 F828d',
+    publisher: 'Record',
+    pages: 352,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'jesus-quarto-despejo',
@@ -1033,8 +1340,10 @@ export const books: Book[] = [
     genreIds: ['biography', 'brazilian-classics'],
     subjects: ['literatura brasileira', 'favela', 'diário'],
     synopsis: 'O diário de uma catadora de papel na favela do Canindé, em São Paulo.',
-    availability: 'borrowed',
     callNumber: '869.8 J58q',
+    publisher: 'Ática',
+    pages: 200,
+    copies: { total: 3, available: 0 },
   }),
   defineBook({
     id: 'yousafzai-eu-sou-malala',
@@ -1046,6 +1355,9 @@ export const books: Book[] = [
     subjects: ['educação', 'direitos humanos', 'Paquistão'],
     synopsis: 'A jovem que defendeu o direito das meninas à escola e sobreviveu a um atentado.',
     callNumber: '920.72 Y82e',
+    publisher: 'Companhia das Letras',
+    pages: 360,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'spiegelman-maus',
@@ -1057,6 +1369,9 @@ export const books: Book[] = [
     subjects: ['quadrinhos', 'Holocausto', 'memória'],
     synopsis: 'A história de um sobrevivente do Holocausto contada em quadrinhos pelo filho.',
     callNumber: '741.5 S755m',
+    publisher: 'Quadrinhos na Cia.',
+    pages: 296,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'satrapi-persepolis',
@@ -1067,8 +1382,10 @@ export const books: Book[] = [
     genreIds: ['comics', 'biography'],
     subjects: ['quadrinhos', 'Irã', 'memória'],
     synopsis: 'Infância e juventude de Marjane durante a Revolução Islâmica no Irã.',
-    availability: 'borrowed',
     callNumber: '741.5 S253p',
+    publisher: 'Quadrinhos na Cia.',
+    pages: 352,
+    copies: { total: 2, available: 0 },
   }),
   defineBook({
     id: 'cafaggi-lacos',
@@ -1080,6 +1397,9 @@ export const books: Book[] = [
     subjects: ['quadrinhos', 'amizade', 'quadrinhos brasileiros'],
     synopsis: 'Mônica, Cebolinha, Cascão e Magali partem em busca do cachorro Floquinho.',
     callNumber: '741.5 C129l',
+    publisher: 'Panini',
+    pages: 84,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'suassuna-auto-compadecida',
@@ -1091,6 +1411,9 @@ export const books: Book[] = [
     subjects: ['teatro brasileiro', 'Nordeste', 'cultura popular'],
     synopsis: 'As trapaças de João Grilo e Chicó levadas até o julgamento final.',
     callNumber: '869.2 S939a',
+    publisher: 'Nova Fronteira',
+    pages: 208,
+    copies: { total: 3, available: 2 },
   }),
   defineBook({
     id: 'verissimo-comedias-vida-privada',
@@ -1102,6 +1425,9 @@ export const books: Book[] = [
     subjects: ['crônicas', 'cotidiano', 'família'],
     synopsis: 'Crônicas bem-humoradas sobre a vida doméstica da classe média brasileira.',
     callNumber: '869.8 V517c',
+    publisher: 'L&PM',
+    pages: 328,
+    copies: { total: 2, available: 2 },
   }),
   defineBook({
     id: 'lispector-lacos-familia',
@@ -1113,6 +1439,9 @@ export const books: Book[] = [
     subjects: ['contos', 'literatura brasileira', 'cotidiano'],
     synopsis: 'Contos em que pequenos instantes do cotidiano viram grandes revelações.',
     callNumber: '869.3 L771l',
+    publisher: 'Rocco',
+    pages: 144,
+    copies: { total: 2, available: 1 },
   }),
   defineBook({
     id: 'rosa-sagarana',
@@ -1123,7 +1452,9 @@ export const books: Book[] = [
     genreIds: ['short-stories', 'brazilian-classics'],
     subjects: ['contos', 'sertão', 'Minas Gerais'],
     synopsis: 'Contos do interior mineiro, com burrinhos, valentões e a linguagem única de Rosa.',
-    availability: 'borrowed',
     callNumber: '869.3 R788s',
+    publisher: 'Global',
+    pages: 416,
+    copies: { total: 2, available: 0 },
   }),
 ]

@@ -18,6 +18,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { pickCoverColor } from '../lib/cover-color'
 import type { Book } from '../models/book'
 
 interface Props {
@@ -30,30 +31,9 @@ const props = withDefaults(defineProps<Props>(), {
   decorative: false,
 })
 
-// Tons profundos de biblioteca clássica, iguais nos temas claro e escuro.
-const COVER_COLORS = [
-  '#174D3B',
-  '#356B56',
-  '#2E5A6B',
-  '#6E2F3A',
-  '#8A4B1F',
-  '#3E3A5C',
-  '#5C5A2E',
-  '#242722',
-]
-
-// Hash estável do id para que o livro tenha sempre a mesma cor.
-function pickColor(id: string): string {
-  let hash = 0
-  for (const char of id) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0
-  }
-  return COVER_COLORS[hash % COVER_COLORS.length] ?? COVER_COLORS[0]
-}
-
 const { t } = useI18n()
 
-const coverColor = computed(() => pickColor(props.book.id))
+const coverColor = computed(() => pickCoverColor(props.book.id))
 const label = computed(() =>
   t('common.coverLabel', { title: props.book.title, author: props.book.authors.join(', ') }),
 )

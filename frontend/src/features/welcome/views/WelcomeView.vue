@@ -74,7 +74,7 @@
       <div class="container flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <p>{{ t('common.libraryName') }} · {{ t('common.institution') }}</p>
         <a
-          :href="LIBRARY_SITE_URL"
+          :href="LIBRARY_CATALOG_URL"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex min-h-11 items-center gap-1 font-semibold"
@@ -95,13 +95,11 @@ import AppHeader from '../../../components/AppHeader.vue'
 import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
 import IconExternalLink from '../../../components/icons/IconExternalLink.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
+import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
 import type { Book } from '../../../models/book'
 import { getBooksByIds } from '../../../services/catalog-service'
 import WelcomeCoverFan from '../components/WelcomeCoverFan.vue'
 import WelcomeHowItWorks from '../components/WelcomeHowItWorks.vue'
-
-const LIBRARY_SITE_URL =
-  'https://biblioteca.barbacena.ifsudestemg.edu.br/cgi-bin/wxis.exe?IsisScript=phl82.xis&cipar=phl82.cip&lang=por'
 
 // Seleção fixa para uma composição estável, misturando áreas e literatura.
 const FAN_BOOK_IDS = [

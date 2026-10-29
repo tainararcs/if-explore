@@ -255,9 +255,10 @@ There are no cover images. Generate a typographic cover:
 ### 7.5 Book card
 
 Cover on top, then title (`--text-h3`, two-line clamp), author (`--text-small`,
-muted, one line), and an availability badge. Cards are **not interactive** at
-this stage (no detail view): do not render them as buttons or links, and do not
-show hover affordances that suggest a click. In selection contexts (onboarding)
+muted, one line), and an availability badge (`AvailabilityBadge.vue`). The
+shared `BookCard.vue` is a link to the book page (`/books/:id`): the whole card is
+the link, its accessible name is the title, hover lifts the cover slightly and
+underlines the title (hover-capable devices only). In selection contexts (onboarding)
 the whole card becomes a toggle button with `aria-pressed`, a selected outline
 (3px `--color-primary`), and a check badge on the cover.
 

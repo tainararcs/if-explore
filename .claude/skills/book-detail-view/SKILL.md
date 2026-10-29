@@ -156,11 +156,11 @@ src/features/book-detail/
 ├── composables/useBookDetail.ts      (load by id, related books, status)
 ├── models/related-books.ts           (pure ranking)
 └── components/
-    ├── BookHero.vue                  (band, cover, title, availability)
+    ├── BookHero.vue                  (band, sticky cover, title, availability; slot for the rest)
     └── BookRecord.vue                (ficha técnica + copy location)
 src/lib/cover-color.ts                (moved from BookCover)
-src/lib/library-catalog-url.ts        (only if a search URL is possible)
-src/components/BookShelf.vue, BookCard.vue   (moved from features/home)
+src/lib/library-catalog.ts            (catalog home URL; PHL has no stable search URL)
+src/components/BookShelf.vue, BookCard.vue, AvailabilityBadge.vue   (shared)
 ```
 
 Interface text goes under `bookDetail.*` in `src/locales/pt-BR.ts`. Use
