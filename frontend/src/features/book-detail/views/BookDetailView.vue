@@ -3,7 +3,11 @@
   <div class="flex min-h-dvh flex-col">
     <AppHeader sticky />
 
-    <main class="flex-1 pb-28 md:pb-16">
+    <main
+      class="book-page flex-1 pb-28 md:pb-16"
+      :class="{ 'book-page--tinted': bandTone }"
+      :style="bandTone ? { '--band-tone': bandTone } : undefined"
+    >
       <div class="container pt-3 md:pt-4">
         <button
           type="button"
@@ -196,6 +200,7 @@ import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
 import IconExternalLink from '../../../components/icons/IconExternalLink.vue'
 import IconLibrary from '../../../components/icons/IconLibrary.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
+import { pickCoverColor } from '../../../lib/cover-color'
 import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
 import BookHero from '../components/BookHero.vue'
 import BookRecord from '../components/BookRecord.vue'
@@ -224,6 +229,9 @@ const actions = useTemplateRef<HTMLDivElement>('actions')
 // No celular, o botão do acervo fica fixo embaixo depois que o original sai da tela.
 const scrolledPastActions = useScrolledPast(actions)
 const showCatalogBar = computed(() => status.value === 'ready' && scrolledPastActions.value)
+
+// A faixa começa logo abaixo do cabeçalho, atrás do "Voltar", só quando há livro.
+const bandTone = computed(() => (book.value ? pickCoverColor(book.value.id) : null))
 
 const fallbackPath = computed(() => (hasPreferences.value ? '/home' : '/'))
 
@@ -268,6 +276,42 @@ watch(
 </script>
 
 <style scoped>
+/*
+  Faixa de fundo na cor da capa, misturada ao papel para manter o contraste do
+  texto; no escuro a mistura é mais forte e o tom recebe uma luminosidade
+  mínima, para que capas escuras (carvão, índigo) não se confundam com o fundo.
+  Ela se dissolve no fundo da página na parte de baixo.
+*/
+.book-page {
+  --band-height: 420px;
+
+  position: relative;
+  isolation: isolate;
+}
+
+.book-page--tinted::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: var(--band-height);
+  background: linear-gradient(
+    to bottom,
+    light-dark(
+        color-mix(in srgb, var(--band-tone) 20%, var(--color-bg)),
+        color-mix(in srgb, oklch(from var(--band-tone) max(l, 0.5) c h) 40%, var(--color-bg))
+      )
+      55%,
+    var(--color-bg)
+  );
+}
+
+@media (min-width: 900px) {
+  .book-page {
+    --band-height: 360px;
+  }
+}
+
 .skeleton {
   display: block;
   background: var(--color-surface-muted);

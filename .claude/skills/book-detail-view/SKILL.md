@@ -99,6 +99,9 @@ whole hero. Title left-aligned; breadcrumb-like back link above:
   4.5:1 contrast in light and dark.
 - Subtle fade at the bottom edge into `--color-bg`; no photos or gradients
   beyond that.
+- The band is drawn by the page wrapper (`<main>`), so it starts right below
+  the header and sits behind the "Voltar" row; loading, error, and not-found
+  states have no band.
 
 ### Record ("Ficha técnica")
 

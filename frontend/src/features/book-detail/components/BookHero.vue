@@ -1,13 +1,10 @@
 <!--
-  Destaque da página do livro: faixa tingida com a cor da capa, capa (fixa ao
-  rolar no desktop), título e disponibilidade. O slot recebe o restante do
-  conteúdo, que fica na coluna de detalhes a partir de 900px.
+  Destaque da página do livro: capa (fixa ao rolar no desktop), título e
+  disponibilidade. O slot recebe o restante do conteúdo, que fica na coluna de
+  detalhes a partir de 900px. A faixa na cor da capa é desenhada pela página.
 -->
 <template>
-  <div
-    class="book-hero"
-    :style="{ '--band-tone': tone }"
-  >
+  <div>
     <div class="container grid gap-6 pt-2 md:grid-cols-[240px_minmax(0,1fr)] md:gap-12 md:pt-6">
       <div class="book-hero__cover mx-auto w-36 md:mx-0 md:w-full">
         <BookCover :book="book" />
@@ -41,10 +38,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue'
+import { useTemplateRef } from 'vue'
 import AvailabilityBadge from '../../../components/AvailabilityBadge.vue'
 import BookCover from '../../../components/BookCover.vue'
-import { pickCoverColor } from '../../../lib/cover-color'
 import type { Book } from '../../../models/book'
 
 interface Props {
@@ -53,10 +49,9 @@ interface Props {
   eyebrow: string
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const heading = useTemplateRef<HTMLHeadingElement>('heading')
-const tone = computed(() => pickCoverColor(props.book.id))
 
 defineExpose({
   /** Move o foco para o título, ao trocar de livro pela prateleira de relacionados. */
@@ -65,45 +60,11 @@ defineExpose({
 </script>
 
 <style scoped>
-/*
-  Faixa de fundo na cor da capa, misturada ao papel para manter o contraste do
-  texto; no escuro a mistura é mais forte e o tom recebe uma luminosidade
-  mínima, para que capas escuras (carvão, índigo) não se confundam com o fundo.
-  Ela se dissolve no fundo da página na parte de baixo.
-*/
-.book-hero {
-  --band-height: 360px;
-
-  position: relative;
-  isolation: isolate;
-}
-
-.book-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: -1;
-  height: var(--band-height);
-  background: linear-gradient(
-    to bottom,
-    light-dark(
-        color-mix(in srgb, var(--band-tone) 20%, var(--color-bg)),
-        color-mix(in srgb, oklch(from var(--band-tone) max(l, 0.5) c h) 40%, var(--color-bg))
-      )
-      55%,
-    var(--color-bg)
-  );
-}
-
 .book-hero__title {
   font-size: var(--text-h1);
 }
 
 @media (min-width: 900px) {
-  .book-hero {
-    --band-height: 300px;
-  }
-
   .book-hero__cover {
     position: sticky;
     top: calc(var(--header-height) + var(--space-6));
