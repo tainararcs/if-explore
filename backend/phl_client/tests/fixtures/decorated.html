@@ -1,0 +1,124 @@
+<!-- FMX000102 -->
+<html>
+<head>
+<link href="/phl82/css/phl.css" rel="stylesheet" type="text/css">
+<link href="/phl82/css/buscaphl.css" rel="stylesheet" type="text/css">
+<script language="JavaScript" src="/phl82/js/submit.js"></script>
+<script language="JavaScript" src="/phl82/js/url.js"></script>
+<script language="JavaScript" type="text/javascript">
+<!--
+function comentario(x){
+ ajuda = window.open("/cgi-bin/wxis.exe?IsisScript=phl82/051.xis&&tmp=/tmp/file5cm6F5&opc=form&mfn="+x,"janela","height=400,width=600,menubar=yes,resizable=yes,scrollbars=yes,status=yes")
+ } 
+ function sf(){document.formulario.exp.focus()} function openwindow(x,y){ 
+ ajuda = window.open("/phl82/por"+x+".html#"+y,"janela","height=600,width=800,scrollbars=yes")
+ } 
+function getXmlHttpRequestObject() { 
+if (window.XMLHttpRequest) { 
+return new XMLHttpRequest();
+} else if(window.ActiveXObject) { 
+return new ActiveXObject("Microsoft.XMLHTTP");
+} else { 
+alert("Seu navegador necessita ser atualizado para uma versao mais recente!");
+}
+}
+var searchReq = getXmlHttpRequestObject();
+function searchSuggest() { 
+if (searchReq.readyState == 4 || searchReq.readyState == 0) {
+var str = escape(document.getElementById("txtSearch").value); 
+searchReq.open("GET", "/cgi-bin/wxis.exe?IsisScript=phl82/087.xis&tmp=/tmp/file5cm6F5&exp=" + str, true);
+searchReq.onreadystatechange = handleSearchSuggest;
+searchReq.send(null);
+}
+}
+function handleSearchSuggest() {
+if (searchReq.readyState == 4) { 
+var ss = document.getElementById("search_suggest") 
+ss.innerHTML = ""; 
+var str = searchReq.responseText.split("\n");
+for(i=0; i < str.length - 1; i++) { 
+var suggest = "<div onmouseover=javascript:suggestOver(this); ";
+suggest += "onmouseout=javascript:suggestOut(this); ";
+suggest += "onclick=javascript:setSearch(this.innerHTML); ";
+suggest += "class=suggest_link>" + str[i] + "</div>";
+ss.innerHTML += suggest;
+} 
+}
+}
+function suggestOver(div_value) { 
+div_value.className = "suggest_link_over"; 
+} 
+function suggestOut(div_value) { 
+div_value.className = "suggest_link"; 
+}
+oldvalue = "";
+function setSearch(value) { 
+  if (value != "") { 
+  document.getElementById("txtSearch").value = value; 
+  document.getElementById("search_suggest").innerHTML = ""; 
+} 
+} 
+-->
+</script> 
+</head>
+<body onload="sf();">
+<form name="formulario" action="/cgi-bin/wxis.exe" method="POST" target="result">
+<input type="hidden" name="tmp" value="/tmp/file5cm6F5">
+<table width="100%" align="center" bgcolor="#e4fbc5">
+<tr><td width="70%" align="left">&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="radio" name="bool"checked value="and">Todas as palavras&nbsp;<input type="radio" name="bool" value="or">Qualquer palavra&nbsp;
+<input type="radio" name="bool" value="frase">Frase exata&nbsp;
+<input type="radio" name="bool" value="exp">Expressão&nbsp;
+</td><td width="30%"></td></tr>
+<tr><td width="70%" align="left">&nbsp;&nbsp;&nbsp;&nbsp;
+<input size="70" type="text" name="exp">&nbsp;<input class="botao" name="submitter" onClick="return DoubleClickTrapperAction();" type="submit" value="Buscar"> 
+</td><td width="30%"><a href=/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=filtro&rpp=1&tag=&acv=&tip=&idm=&pft=decorado&col=&spt=&cnt=&ordem=&tmp=/tmp/file5cm6F5&idx=>Preferências</a></td></tr>
+<tr><td width="70%" align="center"><b></b>
+</td><td width="30%">&nbsp;</td></tr>
+</table>
+<input type="hidden" name="IsisScript" value="phl82/003.xis">
+<input type="hidden" name="acv" value="">
+<input type="hidden" name="cnt" value="">
+<input type="hidden" name="col" value="">
+<input type="hidden" name="idm" value="">
+<input type="hidden" name="opc" value="decorado">
+<input type="hidden" name="pft" value="decorado">
+<input type="hidden" name="rpp" value="1">
+<input type="hidden" name="spt" value="">
+<input type="hidden" name="stf" value="">
+<input type="hidden" name="tag" value="">
+<input type="hidden" name="tip" value="">
+<input type="hidden" name="idx" value="">
+</form>
+<!-- FMX000206 -->
+<html>
+<head>
+<link href="/phl82/css/phl.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<form action="/cgi-bin/wxis.exe" method="POST" target="result">
+<input type="hidden" name="tmp" value="/tmp/file5cm6F5">
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">1/13</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>005.13 / S955p</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=43862"> Selecionar&nbsp;<img src="/phl82/img/002.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=102231235013&acv=001&tmp=/tmp/file5cm6F5">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_20/14665.jpg"></div></td><td width="80%">SUMMERFIELD, Mark. <b>Programação em <b id="c1">Python</b> 3: </b>uma introdução completa à linguagem <b id="c1">python</b>. Trad. por: Fabiane Fiorini.  Rio de Janeiro: Alta Books, 2009. 505 p.  ISBN 978-85-7608-384-9.<p><b>Notas de conteúdo:</b><li>Rápida introdução à programação procedural</li><li>Tipos de dados colecionáveis</li><li>Estrutura de controle e funções</li><li>Módulos</li><li>Programação orientada a objeto</li><li>Manipulação de arquivos</li><li>Técnicas de programação avançado</li><li>Processadores e threads</li><li>Rede de comunicação</li><li>Programação em banco de dados</li><li>Expressões regulares</li><li>Introdução à programação gui</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=LINGUAGEM DE PROGRAMACAO&tmp=/tmp/file5cm6F5">LINGUAGEM DE PROGRAMACAO; </a><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=PYTHON&tmp=/tmp/file5cm6F5"><b id="c1">PYTHON</b>.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000090 -->
+<input type="hidden" name="IsisScript" value="phl82/003.xis">
+<input type="hidden" name="acv" value="">
+<input type="hidden" name="ante" value="1"><input type="hidden" name="bool" value="and">
+<input type="hidden" name="cnt" value="">
+<input type="hidden" name="col" value="">
+<input type="hidden" name="exp" value="PYTHON">
+<input type="hidden" name="idm" value="">
+<input type="hidden" name="pft" value="decorado">
+<input type="hidden" name="prox" value="2"><input type="hidden" name="rpp" value="1"><input type="hidden" name="sel" value="
+">
+<input type="hidden" name="spt" value="">
+<input type="hidden" name="stf" value="">
+<input type="hidden" name="tag" value="">
+<input type="hidden" name="tip" value="">
+<input type="hidden" name="ulti" value="13"><center><hr><input type="image" name="opc" src="/phl82/img/014.gif"></center></form>
+</body>
+<head>
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+</head>
+</html>
