@@ -269,10 +269,20 @@ Small pill with a dot plus text, `--text-caption` without uppercase:
 
 ### 7.7 Header (`AppHeader.vue`)
 
-Single header, no bottom navigation bar. Left: brand mark + "IF Explore"
-(link to `/home` when preferences exist, otherwise `/`). Right: contextual
-actions passed through a slot (for example the ✦ "Ajustar preferências" icon
-button on the home), followed by the theme toggle, present on every view. The
+Single header, no bottom navigation bar. Left: brand mark + "IF Explore",
+always a link to the welcome view (`/`). From `sm` (600px), center: the main navigation (`<nav>`, three-column grid so it stays centered
+on wide screens): "Recomendações" (`/home`, marked with
+`aria-current="page"`, primary color and underline when active) and "Sobre",
+rendered as a disabled link (`aria-disabled`, not focusable, "Em breve") until
+the about view exists. Below 600px the links move into a menu opened by a
+hamburger button at the far right (`aria-expanded`/`aria-controls`). The menu
+fills the screen below the header (fixed, above page content, page scroll
+locked), shows the links in larger type and a simple footer (library name,
+campus, link to the official site), and closes on navigation, Escape (focus
+returns to the button), or a tap outside the header. The header always sits
+above page content (`z-20`). Right: icon-only contextual actions passed through a slot (for
+example the ✦ "Ajustar preferências" icon button on the home), followed by the
+theme toggle, present on every view. The
 toggle shows the moon in light mode and the sun in dark mode, swapping them
 with a short rotate/scale/fade transition. Height 64px, `--color-surface` with a bottom border,
 sticky on the home, static elsewhere.

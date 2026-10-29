@@ -6,8 +6,17 @@ export const ptBR = {
     appName: 'IF Explore',
     libraryName: 'Biblioteca Roberval Cardoso',
     institution: 'IF Sudeste MG – Campus Barbacena',
-    brandHomeLabel: 'IF Explore, página inicial',
+    brandHomeLabel: 'IF Explore, boas-vindas',
+    nav: {
+      label: 'Navegação principal',
+      recommendations: 'Recomendações',
+      about: 'Sobre',
+      comingSoon: 'Em breve',
+      openMenu: 'Abrir menu',
+      closeMenu: 'Fechar menu',
+    },
     opensInNewTab: '(abre em nova aba)',
+    officialSite: 'Acessar o site oficial da biblioteca',
     coverLabel: 'Capa de {title}, de {author}',
     theme: {
       useLight: 'Ativar tema claro',
@@ -59,7 +68,6 @@ export const ptBR = {
         text: 'Descubra leituras do acervo feitas para você.',
       },
     },
-    officialSite: 'Acessar o site oficial da biblioteca',
   },
   onboarding: {
     back: 'Voltar',

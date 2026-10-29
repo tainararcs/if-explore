@@ -79,7 +79,7 @@
           rel="noopener noreferrer"
           class="inline-flex min-h-11 items-center gap-1 font-semibold"
         >
-          {{ t('welcome.officialSite') }}
+          {{ t('common.officialSite') }}
           <IconExternalLink class="size-4" />
           <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
         </a>
