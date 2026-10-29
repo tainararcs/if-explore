@@ -16,3 +16,6 @@ htmlcov/
 *.sqlite3
 *.sqlite3-*
 .env
+
+# Arquivos estáticos coletados (collectstatic)
+staticfiles/
