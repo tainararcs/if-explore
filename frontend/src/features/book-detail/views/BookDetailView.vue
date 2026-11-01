@@ -173,7 +173,8 @@
     <Transition name="catalog-bar">
       <div
         v-if="showCatalogBar"
-        class="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-surface pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom))] md:hidden"
+        data-bottom-overlay
+        class="fixed inset-x-0 bottom-0 z-10 bg-surface pt-3 pb-[calc(var(--space-3)+env(safe-area-inset-bottom))] md:hidden"
       >
         <div class="container">
           <a

@@ -68,6 +68,7 @@
       </section>
 
       <WelcomeHowItWorks />
+      <WelcomeAbout />
     </main>
 
     <AppFooter />
@@ -83,6 +84,7 @@ import IconArrowRight from '../../../components/icons/IconArrowRight.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
 import type { Book } from '../../../models/book'
 import { getBooksByIds } from '../../../services/catalog-service'
+import WelcomeAbout from '../components/WelcomeAbout.vue'
 import WelcomeCoverFan from '../components/WelcomeCoverFan.vue'
 import WelcomeHowItWorks from '../components/WelcomeHowItWorks.vue'
 

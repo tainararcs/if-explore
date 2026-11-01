@@ -7,7 +7,7 @@
 <template>
   <header
     ref="header"
-    class="z-20 border-b border-border bg-surface"
+    class="z-20 bg-surface"
     :class="sticky ? 'sticky top-0' : 'relative'"
   >
     <!-- Três colunas: marca à esquerda, links de texto centralizados e ações em ícone à direita. -->
@@ -47,16 +47,13 @@
             </RouterLink>
           </li>
           <li>
-            <!-- A página "Sobre" ainda não existe: o link aparece, mas fica desabilitado. -->
-            <a
-              role="link"
-              aria-disabled="true"
-              class="flex min-h-12 cursor-not-allowed items-center gap-2 rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline sm:inline-flex sm:min-h-11 sm:text-small"
-              :title="t('common.nav.comingSoon')"
+            <RouterLink
+              to="/#about-section"
+              class="flex min-h-12 items-center rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline hover:bg-surface-muted hover:text-text sm:inline-flex sm:min-h-11 sm:text-small"
+              @click="isMenuOpen = false"
             >
-              <span>{{ t('common.nav.about') }}</span>
-              <span class="rounded-pill bg-surface-muted px-2 py-0.5 text-caption">{{ t('common.nav.comingSoon') }}</span>
-            </a>
+              {{ t('common.nav.about') }}
+            </RouterLink>
           </li>
         </ul>
 

@@ -1,8 +1,9 @@
 <!-- Explica em três passos como o IF Explore gera as recomendações. -->
 <template>
   <section
-    class="border-t border-border bg-surface py-12 md:py-16"
+    class="bg-bg py-12 md:py-16"
     aria-labelledby="how-it-works-title"
+    style="background-color: light-dark(#E5E0D2, #141713)"
   >
     <div class="container">
       <h2 id="how-it-works-title">
@@ -14,7 +15,9 @@
           :key="step.key"
           class="flex items-start gap-4"
         >
-          <span class="grid size-12 shrink-0 place-items-center rounded-[50%] bg-primary-soft text-on-primary-soft">
+          <span
+            class="how-it-works__icon grid size-12 shrink-0 place-items-center rounded-[50%] bg-primary-soft text-on-primary-soft"
+          >
             <component :is="step.icon" />
           </span>
           <div>
@@ -46,3 +49,15 @@ const steps = [
   { key: 'recommendations', icon: IconSparkle },
 ]
 </script>
+
+<style scoped>
+:global(:root[data-theme='light']) .how-it-works__icon {
+  color: var(--color-primary-hover);
+}
+
+@media (prefers-color-scheme: light) {
+  :global(:root:not([data-theme])) .how-it-works__icon {
+    color: var(--color-primary-hover);
+  }
+}
+</style>

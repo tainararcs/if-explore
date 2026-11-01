@@ -29,16 +29,17 @@
   --breakpoint-*: initial;
 
   /* Tokens semânticos: light-dark() escolhe o valor conforme o color-scheme ativo. */
-  --color-bg: light-dark(var(--palette-paper), #1a1d19);
-  --color-surface: light-dark(#fbf8f2, var(--palette-charcoal));
-  --color-surface-muted: light-dark(#eee8dc, #2d312b);
-  --color-border: light-dark(var(--palette-sand), #4d544a);
+  --color-bg: light-dark(#EEE8DC, #1a1d19);
+  --color-surface: light-dark(#FBF8F2, var(--palette-charcoal));
+  --color-surface-muted: light-dark(#E2D7C5, #2d312b);
+  --color-border: light-dark(#C8BBA6, #4d544a);
+  --color-text-muted: light-dark(#4B5148, #b4b9ae);
   /* Contorno de campos, que precisa de 3:1 contra a superfície no escuro. */
   --color-border-strong: light-dark(var(--palette-sand), #737b6d);
   /* Contorno do chip não selecionado; no claro o fundo já o separa da página. */
   --color-chip-border: light-dark(transparent, #4d544a);
   --color-text: light-dark(var(--palette-charcoal), #f0ebe0);
-  --color-text-muted: light-dark(#5b6158, #b4b9ae);
+  --color-text-muted: light-dark(#4B5148, #b4b9ae);
   --color-primary: light-dark(var(--palette-green-900), #6cc196);
   --color-primary-hover: light-dark(var(--palette-green-700), #7fcca3);
   --color-on-primary: light-dark(#fbf8f2, #0f1d16);

@@ -11,11 +11,11 @@ export const ptBR = {
       label: 'Navegação principal',
       recommendations: 'Recomendações',
       about: 'Sobre',
-      comingSoon: 'Em breve',
       openMenu: 'Abrir menu',
       closeMenu: 'Fechar menu',
     },
     opensInNewTab: '(abre em nova aba)',
+    scrollToTop: 'Voltar ao início da página',
     officialSite: 'Acessar o site oficial da biblioteca',
     footer: {
       description:
@@ -83,6 +83,23 @@ export const ptBR = {
       recommendations: {
         title: 'Receba recomendações',
         text: 'Descubra leituras do acervo feitas para você.',
+      },
+    },
+    about: {
+      eyebrow: 'Uma nova forma de explorar o acervo',
+      title: 'Sua próxima leitura pode estar mais perto do que você imagina.',
+      description:
+        'O IF Explore transforma a busca por livros em uma experiência de descoberta. Explore títulos da Biblioteca Roberval Cardoso e encontre caminhos de leitura que combinam com seus interesses.',
+      audience:
+        'Uma iniciativa de extensão do IF Sudeste MG – Campus Barbacena, aberta a estudantes, servidores e à comunidade externa. O catálogo oficial continua sendo o lugar para consultar empréstimos e reservas.',
+      action: 'Começar a descobrir',
+      discovery: {
+        title: 'Descubra além do que já conhece',
+        text: 'Uma experiência visual para explorar o acervo mesmo quando você ainda não tem um título específico em mente.',
+      },
+      access: {
+        title: 'Feito para a comunidade',
+        text: 'Uma porta de entrada para conhecer as possibilidades de leitura da biblioteca, para a vida acadêmica e para além dela.',
       },
     },
   },
