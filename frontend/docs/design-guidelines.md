@@ -399,7 +399,7 @@ directories (see `docs/project-guidelines.md`):
     Turismo (presencial e EaD), Sistemas para Internet.
   - Pós-graduação: Especialização em Planejamento e Gestão de Áreas Naturais
     Protegidas.
-- **Literary genres (refine step):** Romance, Aventura, Suspense e mistério,
+- **Literary genres (optional step):** Romance, Aventura, Suspense e mistério,
   Fantasia, Ficção científica, Terror, Poesia, Clássicos brasileiros, Biografias e
   memórias, Quadrinhos, Humor, Crônicas e contos.
 

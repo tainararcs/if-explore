@@ -111,7 +111,6 @@ export const ptBR = {
     recommend: 'Me recomende',
     progress: {
       step: 'Passo {current} de {total}',
-      refine: 'Etapa extra',
     },
     areas: {
       title: 'O que você estuda ou quer estudar?',
@@ -135,12 +134,12 @@ export const ptBR = {
       filterLegend: 'Filtrar títulos por área',
       allAreas: 'Todas',
       missing: 'Escolha mais títulos | Falta 1 título | Faltam {n} títulos',
-      complete: 'Pronto! Peça suas recomendações ou refine seus gostos.',
-      refine: 'Refinar com gêneros literários',
+      complete: 'Boa escolha! Falta só mais um passo.',
+      continue: 'Continuar',
     },
     genres: {
       title: 'E fora da sala de aula, o que você gosta de ler?',
-      helper: 'Opcional: escolha quantos gêneros quiser.',
+      helper: 'Opcional: escolha quantos gêneros quiser para deixar suas recomendações mais certeiras.',
       legend: 'Gêneros literários',
       selected: 'Nenhum gênero escolhido | 1 gênero escolhido | {n} gêneros escolhidos',
     },
