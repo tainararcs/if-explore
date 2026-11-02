@@ -70,19 +70,19 @@ token definitions.
 
 | Semantic token | Light | Dark | Use |
 |---|---|---|---|
-| `--color-bg` | `#F6F2E9` | `#1A1D19` | Page background |
+| `--color-bg` | `#EEE8DC` | `#1A1D19` | Page background |
 | `--color-surface` | `#FBF8F2` | `#242722` | Cards, sheets, header |
-| `--color-surface-muted` | `#EEE8DC` | `#2D312B` | Inputs, skeletons, unselected chips |
-| `--color-border` | `#DED4C3` | `#4D544A` | Dividers, outlines |
+| `--color-surface-muted` | `#E2D7C5` | `#2D312B` | Inputs, skeletons, unselected chips |
+| `--color-border` | `#C8BBA6` | `#4D544A` | Dividers, outlines |
 | `--color-border-strong` | `#DED4C3` | `#737B6D` | Form field outlines (3:1 on surface in dark) |
 | `--color-chip-border` | transparent | `#4D544A` | Unselected chip outline |
 | `--color-text` | `#242722` | `#F0EBE0` | Primary text |
-| `--color-text-muted` | `#5B6158` | `#B4B9AE` | Secondary text, metadata |
+| `--color-text-muted` | `#4B5148` | `#B4B9AE` | Secondary text, metadata |
 | `--color-primary` | `#174D3B` | `#6CC196` | Primary buttons, selected states, links |
 | `--color-primary-hover` | `#356B56` | `#7FCCA3` | Hover/active of primary |
 | `--color-on-primary` | `#FBF8F2` | `#0F1D16` | Text/icons over primary |
 | `--color-primary-soft` | `#DCE6DF` | `#2B4A3B` | Selected chip background, highlights |
-| `--color-on-primary-soft` | `#174D3B` | `#9CDCBA` | Text/icons over primary-soft |
+| `--color-on-primary-soft` | `#174D3B` | `#9CDCBA` | Text/icons over primary-soft (the "Como funciona" icons use `--color-text` in dark) |
 | `--color-focus` | `#356B56` | `#6CC196` | Focus ring |
 | `--color-success` | `#2F6B47` | `#8FCBA5` | "Disponível" |
 | `--color-warning` | `#8A4B1F` | `#E0A878` | "Emprestado" |
@@ -241,7 +241,10 @@ in a `<fieldset>` with a `<legend>` and wrap them with `flex-wrap` and
 
 The search field is a pill with a leading magnifier icon, a clear button when it
 has text, `type="search"`, a visible `<label>` (visually hidden is acceptable when
-the placeholder and icon make the purpose obvious), and min-height 48px.
+the placeholder and icon make the purpose obvious), and min-height 48px. On
+hover the border changes to `--color-primary-hover`. On focus it changes to
+`--color-primary` with a soft 3px `--color-primary` outline at 30% opacity and no
+offset, instead of the default focus ring (see §8).
 
 ### 7.4 Book cover (`BookCover.vue`)
 
@@ -279,8 +282,7 @@ Single header, no bottom navigation bar. Left: brand mark + "IF Explore",
 always a link to the welcome view (`/`). From `sm` (600px), center: the main navigation (`<nav>`, three-column grid so it stays centered
 on wide screens): "Recomendações" (`/home`, marked with
 `aria-current="page"`, primary color and underline when active) and "Sobre",
-rendered as a disabled link (`aria-disabled`, not focusable, "Em breve") until
-the about view exists. Below 600px the links move into a menu opened by a
+a link to the about section of the welcome view (`/#about-section`). Below 600px the links move into a menu opened by a
 hamburger button at the far right (`aria-expanded`/`aria-controls`). The menu
 fills the screen below the header (fixed, above page content, page scroll
 locked), shows the links in larger type and a simple footer (library name,
@@ -290,13 +292,13 @@ above page content (`z-20`). Right: icon-only contextual actions passed through 
 example the ✦ "Ajustar preferências" icon button on the home), followed by the
 theme toggle, present on every view. The
 toggle shows the moon in light mode and the sun in dark mode, swapping them
-with a short rotate/scale/fade transition. Height 64px, `--color-surface` with a bottom border,
+with a short rotate/scale/fade transition. Height 64px, `--color-surface` with no border,
 sticky on the home, static elsewhere.
 
 ### 7.7.1 Footer (`AppFooter.vue`)
 
 Shared footer on the welcome, home, and book pages (not on the onboarding,
-which stays a focus flow). Surface background, top border, small muted text,
+which stays a focus flow). Surface background, no border, small muted text,
 links without underline until hover. Columns: about the project (brand, short
 description, note that the official catalog is still where loans happen),
 library (name, hours, email, catalog link), campus (`<address>`, phone, email,
@@ -333,7 +335,8 @@ area.
   `nav`, `footer`).
 - Visible focus ring on every interactive element:
   `outline: 2px solid var(--color-focus); outline-offset: 2px` via
-  `:focus-visible`.
+  `:focus-visible`. The search field is the exception: its focus state is
+  described in §7.3.
 - Touch targets ≥ 44×44px.
 - Moving between onboarding steps moves focus to the new step's heading.
 - Live counters (for example "2 de 3 escolhidos") use `aria-live="polite"`.

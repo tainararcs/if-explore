@@ -33,7 +33,6 @@
   --color-surface: light-dark(#FBF8F2, var(--palette-charcoal));
   --color-surface-muted: light-dark(#E2D7C5, #2d312b);
   --color-border: light-dark(#C8BBA6, #4d544a);
-  --color-text-muted: light-dark(#4B5148, #b4b9ae);
   /* Contorno de campos, que precisa de 3:1 contra a superfície no escuro. */
   --color-border-strong: light-dark(var(--palette-sand), #737b6d);
   /* Contorno do chip não selecionado; no claro o fundo já o separa da página. */
