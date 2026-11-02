@@ -267,7 +267,12 @@ Cover on top, then title (`--text-h3`, two-line clamp), author (`--text-small`,
 muted, one line), and an availability badge (`AvailabilityBadge.vue`). The
 shared `BookCard.vue` is a link to the book page (`/books/:id`): the whole card is
 the link, its accessible name is the title, hover lifts the cover slightly and
-underlines the title (hover-capable devices only). In selection contexts (onboarding)
+underlines the title (hover-capable devices only). A small badge with an up-right arrow
+stays on the cover's top-right corner on every device, because touch screens have
+no hover cue. Do not use the external-link icon here: the link stays in the app. On
+hover or keyboard focus, the badge grows to the left to reveal "Explorar", keeping
+its background, and the arrow grows slightly. On the mobile featured shelf, the
+centered book keeps the badge expanded. In selection contexts (onboarding)
 the whole card becomes a toggle button with `aria-pressed`, a selected outline
 (3px `--color-primary`), and a check badge on the cover.
 

@@ -15,6 +15,7 @@ export const ptBR = {
       closeMenu: 'Fechar menu',
     },
     opensInNewTab: '(abre em nova aba)',
+    exploreBook: 'Explorar',
     scrollToTop: 'Voltar ao início da página',
     officialSite: 'Acessar o site oficial da biblioteca',
     footer: {
