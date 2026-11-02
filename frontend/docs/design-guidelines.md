@@ -309,6 +309,18 @@ mocked. Contact data lives in `src/lib/campus-info.ts` (source: the campus
 screen-reader hint). Layout: 1 column at base, 2 at `sm`, 3 at `md` with the
 about block on its own row, 4 at `lg`.
 
+### 7.7.2 Scroll-to-top button (`ScrollToTopButton.vue`)
+
+Floating icon-only button rendered once in `App.vue`, so it is available on every
+view. It appears after the page scrolls more than 400px and returns to the top,
+smoothly unless `prefers-reduced-motion: reduce` is set. A 48px circle with
+`--color-primary` fill, `--color-on-primary` icon, `--color-primary-hover` on
+hover, and `--shadow-md`, fixed at the bottom end corner (`z-30`), 16px from the
+bottom and 16px from the side (24px from `sm`). Its accessible name comes from
+`common.scrollToTop`. Fixed or sticky bars at the bottom of the screen declare
+`data-bottom-overlay` so the button moves above them, keeping a 16px gap, while
+they overlap it.
+
 ### 7.8 Icons
 
 Line icons, 24px grid, 1.5px stroke, round caps and joins, `currentColor`, in the
