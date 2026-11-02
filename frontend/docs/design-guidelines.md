@@ -282,7 +282,9 @@ Single header, no bottom navigation bar. Left: brand mark + "IF Explore",
 always a link to the welcome view (`/`). From `sm` (600px), center: the main navigation (`<nav>`, three-column grid so it stays centered
 on wide screens): "Recomendações" (`/home`, marked with
 `aria-current="page"`, primary color and underline when active) and "Sobre",
-a link to the about section of the welcome view (`/#about-section`). Below 600px the links move into a menu opened by a
+a link to the about section of the welcome view (`/#about-section`). On hover,
+keyboard focus, and the active state, these links show a 2px underline that grows
+from the center and extends 4px past the text on each side, with no background. Below 600px the links move into a menu opened by a
 hamburger button at the far right (`aria-expanded`/`aria-controls`). The menu
 fills the screen below the header (fixed, above page content, page scroll
 locked), shows the links in larger type and a simple footer (library name,

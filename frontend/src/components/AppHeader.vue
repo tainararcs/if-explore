@@ -40,7 +40,7 @@
           <li>
             <RouterLink
               to="/home"
-              class="flex min-h-12 items-center rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline hover:bg-surface-muted hover:text-text aria-[current=page]:text-primary aria-[current=page]:underline aria-[current=page]:decoration-2 aria-[current=page]:underline-offset-[6px] sm:inline-flex sm:min-h-11 sm:text-small"
+              class="header-link header-link--tracks-page relative flex min-h-12 items-center rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline hover:text-text max-sm:hover:bg-surface-muted aria-[current=page]:text-primary max-sm:aria-[current=page]:underline max-sm:aria-[current=page]:decoration-2 max-sm:aria-[current=page]:underline-offset-[6px] sm:inline-flex sm:min-h-11 sm:text-small"
               @click="isMenuOpen = false"
             >
               {{ t('common.nav.recommendations') }}
@@ -49,7 +49,7 @@
           <li>
             <RouterLink
               to="/#about-section"
-              class="flex min-h-12 items-center rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline hover:bg-surface-muted hover:text-text sm:inline-flex sm:min-h-11 sm:text-small"
+              class="header-link relative flex min-h-12 items-center rounded-pill px-3 text-h3 font-semibold text-text-muted no-underline hover:text-text max-sm:hover:bg-surface-muted sm:inline-flex sm:min-h-11 sm:text-small"
               @click="isMenuOpen = false"
             >
               {{ t('common.nav.about') }}
@@ -176,3 +176,46 @@ watch(isMenuOpen, (open, _previous, onCleanup) => {
   })
 })
 </script>
+
+<style scoped>
+/*
+ * Sublinhado dos links no desktop: nasce no centro e ultrapassa o texto em 4px de cada lado.
+ * O estado ativo fica restrito a --tracks-page porque o Vue Router ignora o hash ao marcar
+ * aria-current, o que deixaria "Sobre" (/#about-section) sublinhado na tela de boas-vindas.
+ * A animação usa left/right, e não scaleX: a camada criada pelo transform suaviza as bordas
+ * e deixa o traço visualmente mais grosso enquanto anima.
+ */
+@media (min-width: 600px) {
+  .header-link::after {
+    position: absolute;
+    right: 50%;
+    bottom: 6px;
+    left: 50%;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: currentColor;
+    content: '';
+  }
+
+  .header-link:focus-visible::after,
+  .header-link--tracks-page[aria-current='page']::after {
+    right: var(--space-2);
+    left: var(--space-2);
+  }
+}
+
+@media (min-width: 600px) and (hover: hover) {
+  .header-link:hover::after {
+    right: var(--space-2);
+    left: var(--space-2);
+  }
+}
+
+@media (min-width: 600px) and (prefers-reduced-motion: no-preference) {
+  .header-link::after {
+    transition:
+      left var(--duration-base) var(--ease-standard),
+      right var(--duration-base) var(--ease-standard);
+  }
+}
+</style>
