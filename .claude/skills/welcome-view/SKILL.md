@@ -43,6 +43,11 @@ to start. One primary action, nothing else competing for attention.
   1. Escolha suas áreas de estudo.
   2. Marque três títulos que chamam sua atenção.
   3. Receba recomendações do acervo.
+- "Sobre" (`id="about-section"`, target of the header link `/#about-section`):
+  eyebrow, title, description, audience note, an action ("Começar a descobrir" →
+  `/onboarding` without saved preferences, "Ver minhas recomendações" → `/home`
+  with them), and two cards (discovery and community), each with a title and a
+  short text.
 - Privacy note (small, muted): preferences stay only in this browser.
 - Footer: link "Acessar o site oficial da biblioteca" (official URL from the
   design guidelines, `target="_blank"`, `rel="noopener noreferrer"`, with an
@@ -75,6 +80,7 @@ Lead paragraph
 Privacy note
 Hero: fan of 3–5 generated BookCovers, slightly rotated and overlapping
 Como funciona (3 items, stacked)
+Sobre: eyebrow, title, description, audience note, full-width button, cards (stacked)
 Footer link to the official library
 ```
 
@@ -83,10 +89,22 @@ on the left, cover fan on the right, vertically centered, hero filling roughly
 `min(100dvh - header, 720px)`. "Como funciona" becomes three columns below.
 Buttons become auto-width and inline.
 
+"Sobre" at `md`+ uses one grid of two equal columns (`gap-6`) for both rows, so
+the right text column, its button, and the second card start on the same line.
+Top row, aligned to the top: eyebrow and title on the left; description, audience
+note, and button (auto-width from `sm`, with the trailing arrow) on the right.
+Second row: the two cards.
+
 Visual details:
 
 - Paper background (`--color-bg`) with a subtle large serif ornament or thin
-  horizontal rule under the eyebrow (as in the moodboard), no stock photos.
+  horizontal rule under the eyebrow (as in the moodboard), no stock photos. The
+  "Sobre" eyebrow uses the same rule.
+- "Como funciona" sits on `--color-surface` with no border. Its icons use
+  `--color-on-primary-soft` in light and `--color-text` in dark over
+  `--color-primary-soft`.
+- "Sobre" sits on `--color-bg`; its cards use `--color-surface` and the default
+  `h3` style, not the display serif.
 - Cover fan uses real mock books (pick by fixed ids for a stable composition),
   decorative (`aria-hidden`), with a soft `--shadow-md`; on hover/reduced-motion
   rules from the guidelines, the fan may spread a few degrees.
@@ -99,6 +117,7 @@ Visual details:
 src/features/welcome/
 ├── views/WelcomeView.vue
 └── components/
+    ├── WelcomeAbout.vue
     ├── WelcomeCoverFan.vue     (only if the fan markup is non-trivial)
     └── WelcomeHowItWorks.vue   (only if it improves readability)
 ```

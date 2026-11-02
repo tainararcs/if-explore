@@ -355,16 +355,15 @@
     color: var(--color-text-muted);
   }
 
-  /* Ícone de seta em círculo usado no botão primário (referência ao wireframe). */
+  /* Seta simples do botão primário: herda a cor do texto e o complementa sem competir com ele. */
   .button__arrow {
     display: inline-grid;
     place-items: center;
-    width: 28px;
-    height: 28px;
-    margin-inline-end: calc(var(--space-2) * -1);
-    border-radius: 50%;
-    background: var(--color-on-primary);
-    color: var(--color-primary);
+  }
+
+  .button__arrow svg {
+    width: 20px;
+    height: 20px;
   }
 
   @media (prefers-reduced-motion: no-preference) {

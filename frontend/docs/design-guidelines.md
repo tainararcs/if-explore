@@ -218,7 +218,7 @@ Global classes in `src/index.css`, applicable to `<button>`, `<a>`, and
 - `.button` base: pill, min-height 48px (44px for `.button--small`), padding
   `0 var(--space-5)`, body font 600, inline icon gap `var(--space-2)`.
 - `.button--primary`: `--color-primary` fill, `--color-on-primary` text. One per
-  screen region. A trailing arrow icon in a circle echoes the wireframe's CTA.
+  screen region. A simple trailing arrow icon, with no circle, inherits the text color.
 - `.button--secondary`: transparent, 1.5px `--color-primary` border.
 - `.button--ghost`: text only, for tertiary actions ("Pular", "Voltar").
 - Disabled: 45% opacity, `cursor: not-allowed`, and keep it focusable only if an
