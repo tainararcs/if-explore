@@ -9,8 +9,10 @@ emprestados.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from itertools import zip_longest
 
 from django.db import connection
 from django.db.models import (
@@ -28,7 +30,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 
-from catalog.models import Book, BookAuthor, KnowledgeArea, LiteraryGenre
+from catalog.models import Book, BookAuthor, Course, KnowledgeArea, LiteraryGenre
 from catalog.services.books import DOCUMENT_TYPES
 
 RECOMMENDABLE_TYPES = tuple(DOCUMENT_TYPES[key] for key in ("book", "ebook", "audiobook", "thesis"))
@@ -176,14 +178,28 @@ def home_shelves(profile: Profile) -> list[Shelf]:
 
 # ---- onboarding
 def onboarding_candidates(area_ids: Sequence[str], course_ids: Sequence[str], limit: int) -> list[str]:
-    """Títulos para o visitante escolher no onboarding: primeiro os dos cursos
-    marcados, depois os das áreas. Se sobrarem menos de 3, completa com os demais."""
-    courses = Book.courses.through.objects.filter(book_id=OuterRef("pk"), course_id__in=course_ids)
-    ranked = (recommendable()
-              .annotate(score=Case(When(Exists(courses), then=Value(2)), When(area_id__in=area_ids, then=Value(1)),
-                                   default=Value(0), output_field=IntegerField()))
-              .filter(score__gt=0))
-    ids = list(ranked.order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:limit])
+    """Títulos para o visitante escolher no onboarding.
+
+    O limite é dividido entre as áreas escolhidas e as dos cursos marcados, e as
+    áreas se intercalam na lista: assim nenhuma área fica sem títulos quando o
+    visitante filtra por ela. Dentro de cada área, vêm primeiro os livros dos
+    cursos marcados. Se sobrarem menos de 3, completa com os demais.
+    """
+    course_areas = Course.objects.filter(slug__in=course_ids).values_list("area_id", flat=True)
+    groups = list(dict.fromkeys([*area_ids, *course_areas]))
+    ids: list[str] = []
+    if groups:
+        per_group = math.ceil(limit / len(groups))
+        courses = Book.courses.through.objects.filter(book_id=OuterRef("pk"), course_id__in=course_ids)
+        by_group = [
+            list(recommendable().filter(area_id=area)
+                 .annotate(score=Case(When(Exists(courses), then=Value(1)), default=Value(0),
+                                      output_field=IntegerField()))
+                 .order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:per_group])
+            for area in groups
+        ]
+        ids = list(dict.fromkeys(book_id for round_ in zip_longest(*by_group) for book_id in round_ if book_id))
+        ids = ids[:limit]
     if len(ids) >= REQUIRED_SEED_BOOKS:
         return ids
     rest = recommendable().exclude(id__in=ids).order_by(*_tie_breakers()).values_list("id", flat=True)
