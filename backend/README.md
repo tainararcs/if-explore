@@ -8,6 +8,7 @@ sincronizada com o catálogo PHL do campus, e a classifica na taxonomia do IF Ex
 
 - [Python](https://www.python.org/) 3.12 ou mais novo.
 - [Django 5.2 LTS](https://docs.djangoproject.com/en/5.2/): ORM, migrações, admin e comandos de sincronização.
+- [Django Ninja](https://django-ninja.dev/): rotas da API, validação com Pydantic e documentação OpenAPI.
 - [SQLite](https://www.sqlite.org/) em modo WAL, com [FTS5](https://www.sqlite.org/fts5.html) para a busca textual.
 - `phl_client`: cliente do catálogo PHL, sem dependências além da biblioteca padrão
   ([documentação](phl_client/api.html)).
@@ -59,7 +60,49 @@ Tudo por variáveis de ambiente; os padrões servem para desenvolvimento.
 | `PHL_PAUSE` | `0.5` | Pausa entre requisições ao PHL, em segundos. |
 | `CATALOG_SYNC_MIN_RATIO` | `0.9` | Snapshot com menos títulos que esta fração dos ativos é recusado. |
 | `COPIES_SYNC_BATCH` | `5000` | Títulos verificados por execução do rodízio de exemplares. |
+| `COPIES_LIVE_MAX_AGE_MINUTES` | `15` | Na página de um livro, exemplares mais velhos que isto são consultados de novo no PHL. |
+| `PHL_LIVE_TIMEOUT` | `5` | Tempo limite, em segundos, dessa consulta ao vivo. |
 | `CATALOG_LOG_LEVEL` | `INFO` | Nível dos logs da sincronização. |
+
+## API
+
+Com o servidor rodando, a documentação interativa (OpenAPI) fica em
+<http://localhost:8000/api/docs>. As respostas usam camelCase, como o tipo `Book` do
+frontend, e valores ausentes saem como `null`.
+
+| Rota | O que devolve |
+|---|---|
+| `GET /api/areas`, `/api/courses`, `/api/genres` | A taxonomia do IF Explore. |
+| `GET /api/books` | Busca e lista livros, paginados (`{items, total, page, pageSize}`). |
+| `GET /api/books/{id}` | Um livro completo; a disponibilidade é consultada no PHL se tiver mais de 15 min. |
+| `GET /api/books/{id}/related` | `{sameAuthor, related}`: outros livros de um autor em comum e os demais por afinidade. |
+| `POST /api/recommendations` | `{shelves, areas}` para o perfil do visitante (`{areaIds, courseIds, seedBookIds, genreIds}`). |
+| `GET /api/recommendations/candidates` | Títulos para escolher no onboarding (`area`, `course`, `limit`). |
+| `GET /api/status` | Tamanho do acervo local e as últimas sincronizações. |
+
+Parâmetros de `GET /api/books`:
+
+| Parâmetro | Uso |
+|---|---|
+| `q` | Texto livre: título, autores, assuntos, sinopse, editora, série, ISBN. Sem diferença de acento ou caixa; aceita início de palavra (`algoritm`). |
+| `ids` | Livros pedidos, na ordem dada (até 60); ignora os demais parâmetros. |
+| `area`, `course`, `genre` | Filtros pelos ids da taxonomia. |
+| `type` | `book`, `ebook`, `audiobook`, `thesis` ou `periodical`. |
+| `available` | `true`: só com exemplar disponível; `false`: só sem. |
+| `preferArea` | Áreas cujos livros vêm primeiro (as do visitante). |
+| `sort` | `relevance` (padrão com `q`), `popular` (padrão sem `q`), `recent` ou `title`. |
+| `page`, `pageSize` | Página a partir de 1; até 100 por página (padrão 24). |
+
+Valores repetidos de um filtro se somam (OU) e filtros diferentes valem juntos (E).
+Listas vão com a chave repetida (`?area=technology&area=humanities`); no Axios, use
+`paramsSerializer: { indexes: null }` para ele não gerar `area[]=`.
+
+As recomendações seguem as regras que o frontend usava com o acervo fictício e só
+incluem livros, e-books, audiolivros e TCCs. Em empates, vêm primeiro os livros com
+capa e os mais emprestados.
+
+Em desenvolvimento, aponte o frontend para a API com um proxy do Vite (`/api` →
+`http://localhost:8000`), sem precisar de CORS.
 
 ## Sincronização com o PHL
 
@@ -110,11 +153,16 @@ próxima sincronização do catálogo.
 
 ```text
 backend/
-├── config/                # settings e rotas do Django
+├── config/                # settings e rotas (admin e /api/)
 ├── catalog/               # app do acervo
 │   ├── models.py          # livros, autores, assuntos, taxonomia e execuções
 │   ├── admin.py           # curadoria da taxonomia; livros só leitura
+│   ├── api.py             # rotas da API
+│   ├── schemas.py         # contrato JSON (camelCase)
 │   ├── services/
+│   │   ├── books.py           # filtros, busca e listagem
+│   │   ├── recommendations.py # relacionados, prateleiras e candidatos do onboarding
+│   │   ├── availability.py    # disponibilidade ao vivo na página do livro
 │   │   ├── classification.py  # área, cursos e gêneros (funções puras)
 │   │   ├── search_index.py    # índice FTS5 e busca por relevância
 │   │   └── sync.py            # snapshot do catálogo e rodízio de exemplares

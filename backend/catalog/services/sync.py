@@ -3,7 +3,7 @@
 Duas rotinas, de custos muito diferentes no servidor do campus:
 
 * `sync_catalog`: snapshot completo dos metadados, 1 requisição (~10 s). Diária.
-* `sync_copies`: situação dos exemplares, 1 requisição por título (~1,2 s com a
+* `sync_copies`: situação dos exemplares, 1 requisição por título (~0,7 s com a
   pausa). Em rodízio, começando pelos títulos verificados há mais tempo.
 
 `refresh_copies` atualiza um único título e também serve à consulta ao vivo.

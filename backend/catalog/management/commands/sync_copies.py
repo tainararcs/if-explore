@@ -11,7 +11,7 @@ from phl_client import LibraryError
 
 class Command(BaseCommand):
     help = ("Verifica os exemplares dos títulos verificados há mais tempo (1 requisição por título, "
-            "~1,2 s cada) e grava disponibilidade e empréstimos.")
+            "~0,7 s cada) e grava disponibilidade e empréstimos.")
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("--limit", type=int, default=None,

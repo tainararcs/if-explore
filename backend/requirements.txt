@@ -1,3 +1,4 @@
 Django==5.2.18
+django-ninja==1.7.3
 # Base de fusos horários para o zoneinfo no Windows (no Linux vem do sistema).
 tzdata==2026.6; sys_platform == "win32"
