@@ -1,0 +1,21 @@
+# Ambiente virtual
+.venv/
+
+# Bytecode do Python
+__pycache__/
+*.py[cod]
+
+# Caches de ferramentas (tipos, lint, testes, cobertura)
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Banco local e variáveis de ambiente
+*.sqlite3
+*.sqlite3-*
+.env
+
+# Arquivos estáticos coletados (collectstatic)
+staticfiles/
