@@ -1,7 +1,7 @@
 <!-- Explica em três passos como o IF Explore gera as recomendações. -->
 <template>
   <section
-    class="border-t border-border bg-surface py-12 md:py-16"
+    class="bg-surface py-12 md:py-16"
     aria-labelledby="how-it-works-title"
   >
     <div class="container">
@@ -14,7 +14,7 @@
           :key="step.key"
           class="flex items-start gap-4"
         >
-          <span class="grid size-12 shrink-0 place-items-center rounded-[50%] bg-primary-soft text-on-primary-soft">
+          <span class="grid size-12 shrink-0 place-items-center rounded-[50%] bg-primary-soft text-[color:light-dark(var(--color-on-primary-soft),var(--color-text))]">
             <component :is="step.icon" />
           </span>
           <div>

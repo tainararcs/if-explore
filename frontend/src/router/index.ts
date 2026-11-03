@@ -43,6 +43,9 @@ export const router = createRouter({
     if (savedPosition) {
       return waitForScrollableHeight(savedPosition.top).then(() => savedPosition)
     }
+    if (to.hash) {
+      return { el: to.hash }
+    }
     return to.path === from.path ? false : { top: 0 }
   },
   routes: [

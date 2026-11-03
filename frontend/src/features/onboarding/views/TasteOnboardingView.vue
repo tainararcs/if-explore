@@ -1,4 +1,4 @@
-<!-- Onboarding "Descobrir minhas leituras": áreas, três títulos e refinamento opcional por gêneros. -->
+<!-- Onboarding "Descobrir minhas leituras": áreas, três títulos e gêneros literários (opcionais). -->
 <template>
   <div class="flex min-h-dvh flex-col">
     <AppHeader />
@@ -148,25 +148,16 @@
         {{ t('onboarding.areas.continue') }}
         <span class="button__arrow"><IconArrowRight /></span>
       </button>
-      <template v-else-if="currentStep === 'books'">
-        <button
-          type="button"
-          class="button button--secondary"
-          :disabled="!isBooksComplete"
-          @click="goTo('genres')"
-        >
-          {{ t('onboarding.books.refine') }}
-        </button>
-        <button
-          type="button"
-          class="button button--primary"
-          :disabled="!isBooksComplete"
-          @click="complete"
-        >
-          {{ t('onboarding.recommend') }}
-          <span class="button__arrow"><IconArrowRight /></span>
-        </button>
-      </template>
+      <button
+        v-else-if="currentStep === 'books'"
+        type="button"
+        class="button button--primary"
+        :disabled="!isBooksComplete"
+        @click="goTo('genres')"
+      >
+        {{ t('onboarding.books.continue') }}
+        <span class="button__arrow"><IconArrowRight /></span>
+      </button>
       <button
         v-else
         type="button"

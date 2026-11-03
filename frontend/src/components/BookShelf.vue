@@ -69,6 +69,7 @@
           <BookCard
             :book="book"
             :show-quote="showQuotes"
+            :focused="layout === 'featured' && index === currentPage"
           />
         </li>
       </ul>
@@ -359,7 +360,8 @@ onUnmounted(() => {
     transform: scale(calc(0.88 + 0.12 * var(--shelf-focus)));
   }
 
-  .shelf--featured .shelf__item :deep(.book-cover) {
+  .shelf--featured .shelf__item :deep(.book-cover),
+  .shelf--featured .shelf__item :deep(.book-card__badge) {
     opacity: calc(0.55 + 0.45 * var(--shelf-focus));
   }
 

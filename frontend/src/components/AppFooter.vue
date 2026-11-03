@@ -3,7 +3,7 @@
   campus, redes sociais do IF e quem desenvolveu.
 -->
 <template>
-  <footer class="border-t border-border bg-surface text-small text-text-muted [&_a]:no-underline [&_a:hover]:underline">
+  <footer class="bg-surface text-small text-text-muted [&_a]:no-underline [&_a:hover]:underline">
     <div class="container grid gap-10 py-12 sm:grid-cols-2 md:grid-cols-3 md:gap-8 md:py-16 lg:grid-cols-[1.3fr_1fr_1.2fr_1fr]">
       <section
         class="sm:col-span-2 md:col-span-3 lg:col-span-1"

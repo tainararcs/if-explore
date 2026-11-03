@@ -36,7 +36,7 @@
       <fieldset
         v-for="group in coursesByLevel"
         :key="group.level"
-        class="m-0 min-w-0 rounded-md border border-border bg-surface p-4"
+        class="m-0 min-w-0 rounded-md border-0 bg-surface p-4"
       >
         <legend class="eyebrow float-left mb-3 w-full p-0">
           {{ t(`onboarding.areas.levels.${group.level}`) }}

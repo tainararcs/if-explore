@@ -1,6 +1,6 @@
 ---
 name: taste-onboarding-view
-description: Implement or change the IF Explore taste onboarding (route `/onboarding`, TasteOnboardingView.vue) — the short "Descobrir minhas leituras" flow where the visitor picks study areas (optional campus courses), chooses three titles, optionally refines with literary genres, and saves preferences before going to the home.
+description: Implement or change the IF Explore taste onboarding (route `/onboarding`, TasteOnboardingView.vue) — the short "Descobrir minhas leituras" flow where the visitor picks study areas (optional campus courses), chooses three titles, optionally picks literary genres, and saves preferences before going to the home.
 ---
 
 # Taste onboarding view
@@ -12,8 +12,9 @@ reuse them, never duplicate them.
 
 ## 1. Goal
 
-Netflix/Spotify-like taste picking: visual, fast, and inviting. Two mandatory
-steps, one optional refinement. A visitor should finish in about a minute.
+Netflix/Spotify-like taste picking: visual, fast, and inviting. Three steps in
+one linear flow: the first two are mandatory and the last accepts zero choices,
+so every visitor sees it. A visitor should finish in about a minute.
 
 ## 2. Steps
 
@@ -48,15 +49,11 @@ without an area) redirect to the first incomplete step with `router.replace`.
   dimmed; deselecting one re-enables them. Do not silently replace a selection.
 - If the selected area has fewer than 3 books, also show books from related
   areas so the step can always be completed.
+- Primary: "Continuar" → step 3, enabled only with 3 books. Do not offer a
+  shortcut to `/home` here: testers overlooked genres when they were a
+  secondary action.
 
-### Finish (after step 2)
-
-Two choices in the action bar:
-
-- Primary: "Me recomende" → save and go to `/home`.
-- Secondary: "Refinar com gêneros literários" → step 3.
-
-### Step 3 — `genres` (optional refinement)
+### Step 3 — `genres` (optional choices)
 
 - Title: "E fora da sala de aula, o que você gosta de ler?"
 - Multi-select chips with the literary genres; zero is allowed.
@@ -68,7 +65,7 @@ Focus mode: no app navigation, minimal header.
 
 ```
 AppHeader: [BrandMark] IF Explore                 [theme toggle]
-[← Voltar]  [progress bar]  "Passo 1 de 2"
+[← Voltar]  [progress bar]  "Passo 1 de 3"
 Step title (serif, h1 — focus moves here on step change)
 Helper text
 Step content (chips / grid)            ← scrolls
@@ -76,9 +73,8 @@ Step content (chips / grid)            ← scrolls
 Sticky action bar: hint/counter · [Primary]   (safe-area aware)
 ```
 
-- Progress: segmented bar with 2 segments (areas, books) plus a third dashed
-  segment only when the refinement is open; also text "Passo 1 de 2" for
-  screen readers and users who do not read the bar.
+- Progress: segmented bar with 3 segments (areas, books, genres); also text
+  "Passo 1 de 3" for screen readers and users who do not read the bar.
 - Content column max 720px for chips; the book grid may use up to 1200px.
 - At `md`+, the action bar can stay sticky at the bottom of the content column
   instead of the viewport, with the primary button auto-width aligned right.

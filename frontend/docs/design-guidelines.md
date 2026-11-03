@@ -70,19 +70,19 @@ token definitions.
 
 | Semantic token | Light | Dark | Use |
 |---|---|---|---|
-| `--color-bg` | `#F6F2E9` | `#1A1D19` | Page background |
+| `--color-bg` | `#EEE8DC` | `#1A1D19` | Page background |
 | `--color-surface` | `#FBF8F2` | `#242722` | Cards, sheets, header |
-| `--color-surface-muted` | `#EEE8DC` | `#2D312B` | Inputs, skeletons, unselected chips |
-| `--color-border` | `#DED4C3` | `#4D544A` | Dividers, outlines |
+| `--color-surface-muted` | `#E2D7C5` | `#2D312B` | Inputs, skeletons, unselected chips |
+| `--color-border` | `#C8BBA6` | `#4D544A` | Dividers, outlines |
 | `--color-border-strong` | `#DED4C3` | `#737B6D` | Form field outlines (3:1 on surface in dark) |
 | `--color-chip-border` | transparent | `#4D544A` | Unselected chip outline |
 | `--color-text` | `#242722` | `#F0EBE0` | Primary text |
-| `--color-text-muted` | `#5B6158` | `#B4B9AE` | Secondary text, metadata |
+| `--color-text-muted` | `#4B5148` | `#B4B9AE` | Secondary text, metadata |
 | `--color-primary` | `#174D3B` | `#6CC196` | Primary buttons, selected states, links |
 | `--color-primary-hover` | `#356B56` | `#7FCCA3` | Hover/active of primary |
 | `--color-on-primary` | `#FBF8F2` | `#0F1D16` | Text/icons over primary |
 | `--color-primary-soft` | `#DCE6DF` | `#2B4A3B` | Selected chip background, highlights |
-| `--color-on-primary-soft` | `#174D3B` | `#9CDCBA` | Text/icons over primary-soft |
+| `--color-on-primary-soft` | `#174D3B` | `#9CDCBA` | Text/icons over primary-soft (the "Como funciona" icons use `--color-text` in dark) |
 | `--color-focus` | `#356B56` | `#6CC196` | Focus ring |
 | `--color-success` | `#2F6B47` | `#8FCBA5` | "Disponível" |
 | `--color-warning` | `#8A4B1F` | `#E0A878` | "Emprestado" |
@@ -218,7 +218,7 @@ Global classes in `src/index.css`, applicable to `<button>`, `<a>`, and
 - `.button` base: pill, min-height 48px (44px for `.button--small`), padding
   `0 var(--space-5)`, body font 600, inline icon gap `var(--space-2)`.
 - `.button--primary`: `--color-primary` fill, `--color-on-primary` text. One per
-  screen region. A trailing arrow icon in a circle echoes the wireframe's CTA.
+  screen region. A simple trailing arrow icon, with no circle, inherits the text color.
 - `.button--secondary`: transparent, 1.5px `--color-primary` border.
 - `.button--ghost`: text only, for tertiary actions ("Pular", "Voltar").
 - Disabled: 45% opacity, `cursor: not-allowed`, and keep it focusable only if an
@@ -241,7 +241,10 @@ in a `<fieldset>` with a `<legend>` and wrap them with `flex-wrap` and
 
 The search field is a pill with a leading magnifier icon, a clear button when it
 has text, `type="search"`, a visible `<label>` (visually hidden is acceptable when
-the placeholder and icon make the purpose obvious), and min-height 48px.
+the placeholder and icon make the purpose obvious), and min-height 48px. On
+hover the border changes to `--color-primary-hover`. On focus it changes to
+`--color-primary` with a soft 3px `--color-primary` outline at 30% opacity and no
+offset, instead of the default focus ring (see §8).
 
 ### 7.4 Book cover (`BookCover.vue`)
 
@@ -264,7 +267,12 @@ Cover on top, then title (`--text-h3`, two-line clamp), author (`--text-small`,
 muted, one line), and an availability badge (`AvailabilityBadge.vue`). The
 shared `BookCard.vue` is a link to the book page (`/books/:id`): the whole card is
 the link, its accessible name is the title, hover lifts the cover slightly and
-underlines the title (hover-capable devices only). In selection contexts (onboarding)
+underlines the title (hover-capable devices only). A small badge with an up-right arrow
+stays on the cover's top-right corner on every device, because touch screens have
+no hover cue. Do not use the external-link icon here: the link stays in the app. On
+hover or keyboard focus, the badge grows to the left to reveal "Explorar", keeping
+its background, and the arrow grows slightly. On the mobile featured shelf, the
+centered book keeps the badge expanded. In selection contexts (onboarding)
 the whole card becomes a toggle button with `aria-pressed`, a selected outline
 (3px `--color-primary`), and a check badge on the cover.
 
@@ -279,8 +287,9 @@ Single header, no bottom navigation bar. Left: brand mark + "IF Explore",
 always a link to the welcome view (`/`). From `sm` (600px), center: the main navigation (`<nav>`, three-column grid so it stays centered
 on wide screens): "Recomendações" (`/home`, marked with
 `aria-current="page"`, primary color and underline when active) and "Sobre",
-rendered as a disabled link (`aria-disabled`, not focusable, "Em breve") until
-the about view exists. Below 600px the links move into a menu opened by a
+a link to the about section of the welcome view (`/#about-section`). On hover,
+keyboard focus, and the active state, these links show a 2px underline that grows
+from the center and extends 4px past the text on each side, with no background. Below 600px the links move into a menu opened by a
 hamburger button at the far right (`aria-expanded`/`aria-controls`). The menu
 fills the screen below the header (fixed, above page content, page scroll
 locked), shows the links in larger type and a simple footer (library name,
@@ -290,13 +299,13 @@ above page content (`z-20`). Right: icon-only contextual actions passed through 
 example the ✦ "Ajustar preferências" icon button on the home), followed by the
 theme toggle, present on every view. The
 toggle shows the moon in light mode and the sun in dark mode, swapping them
-with a short rotate/scale/fade transition. Height 64px, `--color-surface` with a bottom border,
+with a short rotate/scale/fade transition. Height 64px, `--color-surface` with no border,
 sticky on the home, static elsewhere.
 
 ### 7.7.1 Footer (`AppFooter.vue`)
 
 Shared footer on the welcome, home, and book pages (not on the onboarding,
-which stays a focus flow). Surface background, top border, small muted text,
+which stays a focus flow). Surface background, no border, small muted text,
 links without underline until hover. Columns: about the project (brand, short
 description, note that the official catalog is still where loans happen),
 library (name, hours, email, catalog link), campus (`<address>`, phone, email,
@@ -306,6 +315,18 @@ mocked. Contact data lives in `src/lib/campus-info.ts` (source: the campus
 "Fale conosco" page). External links use `ExternalLink.vue` (new tab, icon,
 screen-reader hint). Layout: 1 column at base, 2 at `sm`, 3 at `md` with the
 about block on its own row, 4 at `lg`.
+
+### 7.7.2 Scroll-to-top button (`ScrollToTopButton.vue`)
+
+Floating icon-only button rendered once in `App.vue`, so it is available on every
+view. It appears after the page scrolls more than 400px and returns to the top,
+smoothly unless `prefers-reduced-motion: reduce` is set. A 48px circle with
+`--color-primary` fill, `--color-on-primary` icon, `--color-primary-hover` on
+hover, and `--shadow-md`, fixed at the bottom end corner (`z-30`), 16px from the
+bottom and 16px from the side (24px from `sm`). Its accessible name comes from
+`common.scrollToTop`. Fixed or sticky bars at the bottom of the screen declare
+`data-bottom-overlay` so the button moves above them, keeping a 16px gap, while
+they overlap it.
 
 ### 7.8 Icons
 
@@ -333,7 +354,8 @@ area.
   `nav`, `footer`).
 - Visible focus ring on every interactive element:
   `outline: 2px solid var(--color-focus); outline-offset: 2px` via
-  `:focus-visible`.
+  `:focus-visible`. The search field is the exception: its focus state is
+  described in §7.3.
 - Touch targets ≥ 44×44px.
 - Moving between onboarding steps moves focus to the new step's heading.
 - Live counters (for example "2 de 3 escolhidos") use `aria-live="polite"`.
@@ -384,7 +406,7 @@ directories (see `docs/project-guidelines.md`):
     Turismo (presencial e EaD), Sistemas para Internet.
   - Pós-graduação: Especialização em Planejamento e Gestão de Áreas Naturais
     Protegidas.
-- **Literary genres (refine step):** Romance, Aventura, Suspense e mistério,
+- **Literary genres (optional step):** Romance, Aventura, Suspense e mistério,
   Fantasia, Ficção científica, Terror, Poesia, Clássicos brasileiros, Biografias e
   memórias, Quadrinhos, Humor, Crônicas e contos.
 
