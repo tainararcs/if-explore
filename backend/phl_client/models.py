@@ -12,7 +12,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING, TypedDict
 
-from .fields import BIBLIOGRAPHIC_LEVELS, KNOWLEDGE_AREAS, LANGUAGES, LIBRARY_CODE, MEDIA, Record
+from .fields import (
+    BIBLIOGRAPHIC_LEVELS, KNOWLEDGE_AREAS, LANGUAGES, LIBRARY_CODE, MEDIA, PLACEHOLDER_COVER_FILES, Record,
+)
 from .isbn import isbn_digits
 from .parsers import CopyRow
 from .text import clean_text, first_int, first_text, normalize, text_list, to_plain
@@ -204,7 +206,7 @@ class Book:
             course_codes=[code for code in text_list(record.get("course")) if code.isdigit()],
             tcc_course=clean_text(record.get("tcc_course")),
             links=links,
-            cover_url=clean_text(record.get("cover_image")),
+            cover_url=_cover_url(record),
             cataloged_at=cataloged_at,
             raw=record,
             _library=library,
@@ -298,6 +300,14 @@ class Book:
 
     def __hash__(self) -> int:
         return hash(self.id)
+
+
+def _cover_url(record: Record) -> str | None:
+    """URL da capa, ou None quando o cadastro aponta para a imagem "sem capa"."""
+    url = clean_text(record.get("cover_image"))
+    if url and url.rsplit("/", 1)[-1].lower() in PLACEHOLDER_COVER_FILES:
+        return None
+    return url
 
 
 # Atributos públicos de Book aceitos como colunas em SearchResult.to_markdown.

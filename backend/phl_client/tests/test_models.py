@@ -71,6 +71,13 @@ class BookTests(unittest.TestCase):
         record: Record = {"title_id": "1", "title": "X", "standardized_date": "20111131"}
         self.assertIsNone(Book.from_record(record).cataloged_at)
 
+    def test_placeholder_cover_is_no_cover(self) -> None:
+        placeholder: Record = {"title_id": "1", "title": "X",
+                               "cover_image": BASE_URL + "/phl82/img/capas/Capas_Livros_25/z.jpg"}
+        self.assertIsNone(Book.from_record(placeholder).cover_url)
+        real: Record = {"title_id": "1", "title": "X", "cover_image": BASE_URL + "/phl82/img/capas/x/998.jpg"}
+        self.assertEqual(Book.from_record(real).cover_url, real["cover_image"])
+
     def test_to_dict_is_json_ready(self) -> None:
         data = tcc_book().to_dict()
         self.assertNotIn("raw", data)

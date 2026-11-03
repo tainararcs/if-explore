@@ -54,6 +54,9 @@ FIELDS = {
 REPEATABLE_FIELDS = {"004", "007", "010", "017", "030", "040", "079", "086", "087"}
 # Campos cujo valor é um link: além do texto, a URL fica em `<nome>_url`.
 LINK_FIELDS = {"084", "092", "096"}
+# Arquivos de capa que não são capas: "z.jpg" é uma imagem "NÃO POSSUI IMAGEM",
+# usada em ~500 títulos.
+PLACEHOLDER_COVER_FILES = {"z.jpg"}
 
 # Situação do exemplar, codificada pelo nome do GIF na tela do OPAC.
 COPY_STATUS_BY_GIF = {
