@@ -48,7 +48,15 @@ A partir do diretório `backend/`:
 
 ## Configuração
 
-Tudo por variáveis de ambiente; os padrões servem para desenvolvimento.
+Tudo por variáveis de ambiente; os padrões servem para desenvolvimento, então o
+`.env` é opcional. Para mudar algo, copie o modelo e edite:
+
+```bash
+cp .env.example .env
+```
+
+O `.env` é lido ao iniciar o Django e não é versionado. Variáveis já definidas no
+ambiente do sistema (servidor, cron) têm prioridade sobre ele.
 
 | Variável | Padrão | Uso |
 |---|---|---|

@@ -1,15 +1,20 @@
 """Configuração do projeto Django da API do IF Explore.
 
-Valores sensíveis ou dependentes do ambiente vêm de variáveis de ambiente; os
-padrões servem para desenvolvimento local.
+Valores sensíveis ou dependentes do ambiente vêm de variáveis de ambiente, que
+podem ser declaradas em `backend/.env` (modelo em `.env.example`); os padrões
+servem para desenvolvimento local.
 """
 
 import os
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Variáveis já definidas no ambiente (servidor, cron) têm prioridade sobre o arquivo.
+load_dotenv(BASE_DIR / ".env", override=False)
 
 
 def env_bool(name: str, default: bool) -> bool:
