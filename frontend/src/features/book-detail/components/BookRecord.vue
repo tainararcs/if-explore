@@ -1,4 +1,4 @@
-<!-- Ficha técnica do livro, com botão para copiar a localização na estante. -->
+<!-- Ficha técnica do livro, com botão para copiar a localização na estante. Campos ausentes no catálogo não aparecem. -->
 <template>
   <section aria-labelledby="book-record-title">
     <h2
@@ -8,7 +8,10 @@
       {{ t('bookDetail.record.title') }}
     </h2>
     <dl class="m-0 grid gap-x-8 gap-y-4 rounded-md border border-border bg-surface p-4 sm:grid-cols-2 sm:p-6">
-      <div class="min-w-0 sm:col-span-2">
+      <div
+        v-if="book.callNumber"
+        class="min-w-0 sm:col-span-2"
+      >
         <dt class="eyebrow">
           {{ t('bookDetail.record.location') }}
         </dt>
@@ -43,6 +46,26 @@
           {{ item.value }}
         </dd>
       </div>
+      <div
+        v-if="book.links.length > 0"
+        class="min-w-0 sm:col-span-2"
+      >
+        <dt class="eyebrow">
+          {{ t('bookDetail.record.links') }}
+        </dt>
+        <dd class="m-0 mt-1">
+          <ul class="m-0 flex list-none flex-wrap gap-x-6 gap-y-2 p-0">
+            <li
+              v-for="link in book.links"
+              :key="link.url"
+            >
+              <ExternalLink :href="link.url">
+                {{ link.label }}
+              </ExternalLink>
+            </li>
+          </ul>
+        </dd>
+      </div>
     </dl>
   </section>
 </template>
@@ -50,15 +73,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import ExternalLink from '../../../components/ExternalLink.vue'
 import IconCheck from '../../../components/icons/IconCheck.vue'
 import { useClipboardFeedback } from '../../../composables/useClipboardFeedback'
-import type { Book } from '../../../models/book'
+import type { BookDetail } from '../../../models/book'
 
 interface Props {
-  book: Book
+  book: BookDetail
+  /** Nome da área; vazio quando o livro não tem área. */
   areaName: string
-  /** Ano já formatado (obras antigas aparecem como "c. 375 a.C."). */
-  yearLabel: string
   /** Cursos do campus aos quais o livro é indicado. */
   courseNames: string[]
 }
@@ -81,35 +104,35 @@ const copyLabel = computed(() => {
 
 const items = computed(() => {
   const { book } = props
-  const list = [
+  const candidates: { key: string; value: string | null }[] = [
     {
       key: 'copies',
-      value: t('bookDetail.record.copiesValue', {
-        available: book.copies.available,
-        total: book.copies.total,
-      }),
+      value: book.copies
+        ? t('bookDetail.record.copiesValue', { available: book.copies.available, total: book.copies.total })
+        : null,
     },
     {
       key: 'publisher',
-      value: book.edition ? `${book.publisher}, ${book.edition}` : book.publisher,
+      value: [book.publisher, book.edition].filter(Boolean).join(', ') || null,
     },
-    { key: 'year', value: props.yearLabel },
-    { key: 'pages', value: numberFormat.format(book.pages) },
-    { key: 'area', value: props.areaName },
-  ]
-  if (book.isbn) {
-    list.push({ key: 'isbn', value: book.isbn })
-  }
-  if (props.courseNames.length > 0) {
-    list.push({
+    { key: 'year', value: book.year === null ? null : String(book.year) },
+    { key: 'pages', value: book.pages === null ? null : numberFormat.format(book.pages) },
+    { key: 'area', value: props.areaName || null },
+    { key: 'contributors', value: book.contributors },
+    { key: 'isbn', value: book.isbn },
+    {
       key: 'courses',
-      value: new Intl.ListFormat('pt-BR', { type: 'conjunction' }).format(props.courseNames),
-    })
-  }
-  return list
+      value: props.courseNames.length > 0
+        ? new Intl.ListFormat('pt-BR', { type: 'conjunction' }).format(props.courseNames)
+        : null,
+    },
+  ]
+  return candidates.filter((item): item is { key: string; value: string } => item.value !== null)
 })
 
 function copyLocation(): void {
-  void copy(props.book.callNumber)
+  if (props.book.callNumber) {
+    void copy(props.book.callNumber)
+  }
 }
 </script>

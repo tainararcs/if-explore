@@ -1,144 +1,57 @@
-import type { Book } from '../../../models/book'
-import type { KnowledgeArea, LiteraryGenre } from '../../../models/taxonomy'
+import { HttpClient } from '../../../lib/http/HttpClient'
 import {
-  getBooks,
-  getKnowledgeAreas,
-  getLiteraryGenres,
-} from '../../../services/catalog-service'
-import type {
-  HomeRecommendations,
-  RecommendationProfile,
-  Shelf,
-} from '../models/recommendation'
+  ApiContractError,
+  list,
+  parseArea,
+  parseBook,
+  parseNullableString,
+  parseRecord,
+  parseString,
+} from '../../../services/catalog-parsers'
+import type { HomeRecommendations, RecommendationProfile, Shelf, ShelfKind } from '../models/recommendation'
 
-const SHELF_SIZE = 12
-const MIN_SHELF_SIZE = 3
-const MAX_SEED_SHELVES = 3
+const http = new HttpClient().instance
 
-function countShared(a: readonly string[], b: readonly string[]): number {
-  return a.filter((item) => b.includes(item)).length
+const SHELF_KINDS: readonly ShelfKind[] = ['forYou', 'becauseYouChose', 'moreFromArea', 'forPleasure']
+
+function isShelfKind(value: string): value is ShelfKind {
+  return SHELF_KINDS.some((kind) => kind === value)
+}
+
+function parseShelf(value: unknown, path: string): Shelf {
+  const data = parseRecord(value, path)
+  const kind = parseString(data.kind, `${path}.kind`)
+  if (!isShelfKind(kind)) {
+    throw new ApiContractError(`${path}.kind`)
+  }
+  const subject = parseNullableString(data.subject, `${path}.subject`)
+  return {
+    id: parseString(data.id, `${path}.id`),
+    kind,
+    ...(subject === null ? {} : { subject }),
+    books: list(data.books, `${path}.books`, parseBook),
+  }
 }
 
 /**
- * Pontua a afinidade de um livro com o perfil do visitante.
- *
- * Peso: curso > área > gênero > assuntos em comum com os títulos escolhidos.
- *
- * @param book - Livro avaliado.
- * @param profile - Preferências do visitante.
- * @param seedSubjects - Assuntos dos títulos escolhidos no onboarding.
- * @returns Pontuação; zero indica nenhuma afinidade.
- */
-export function scoreBook(
-  book: Book,
-  profile: RecommendationProfile,
-  seedSubjects: readonly string[],
-): number {
-  let score = 0
-  if (book.courseIds.some((id) => profile.courseIds.includes(id))) {
-    score += 4
-  }
-  if (profile.areaIds.includes(book.areaId)) {
-    score += 2
-  }
-  if (book.genreIds.some((id) => profile.genreIds.includes(id))) {
-    score += 1.5
-  }
-  return score + countShared(book.subjects, seedSubjects)
-}
-
-/**
- * Monta as prateleiras da home a partir do acervo e do perfil. Função pura,
- * independente da fonte dos dados.
- *
- * @returns Prateleiras com pelo menos três livros, sem repetir os títulos
- * escolhidos pelo visitante.
- */
-export function buildShelves(
-  books: readonly Book[],
-  areas: readonly KnowledgeArea[],
-  genres: readonly LiteraryGenre[],
-  profile: RecommendationProfile,
-): Shelf[] {
-  const seeds = books.filter((book) => profile.seedBookIds.includes(book.id))
-  const seedSubjects = seeds.flatMap((book) => book.subjects)
-  const pool = books.filter((book) => !profile.seedBookIds.includes(book.id))
-
-  const byScore = (list: Book[]) =>
-    list
-      .map((book) => ({ book, score: scoreBook(book, profile, seedSubjects) }))
-      .sort((a, b) => b.score - a.score)
-      .map((entry) => entry.book)
-
-  const shelves: Shelf[] = [
-    {
-      id: 'for-you',
-      kind: 'forYou',
-      books: byScore(pool.filter((book) => scoreBook(book, profile, seedSubjects) > 0)).slice(
-        0,
-        SHELF_SIZE,
-      ),
-    },
-  ]
-
-  for (const seed of seeds.slice(0, MAX_SEED_SHELVES)) {
-    const related = pool
-      .map((book) => ({
-        book,
-        affinity:
-          countShared(book.subjects, seed.subjects) * 2 +
-          countShared(book.authors, seed.authors) * 3 +
-          (book.areaId === seed.areaId ? 1 : 0),
-      }))
-      .filter((entry) => entry.affinity > 1)
-      .sort((a, b) => b.affinity - a.affinity)
-      .map((entry) => entry.book)
-    shelves.push({
-      id: `because-${seed.id}`,
-      kind: 'becauseYouChose',
-      subject: seed.title,
-      books: related.slice(0, SHELF_SIZE),
-    })
-  }
-
-  for (const area of areas.filter((item) => profile.areaIds.includes(item.id))) {
-    shelves.push({
-      id: `area-${area.id}`,
-      kind: 'moreFromArea',
-      subject: area.name,
-      books: byScore(pool.filter((book) => book.areaId === area.id)).slice(0, SHELF_SIZE),
-    })
-  }
-
-  for (const genre of genres.filter((item) => profile.genreIds.includes(item.id))) {
-    shelves.push({
-      id: `genre-${genre.id}`,
-      kind: 'forPleasure',
-      subject: genre.name,
-      books: pool.filter((book) => book.genreIds.includes(genre.id)).slice(0, SHELF_SIZE),
-    })
-  }
-
-  return shelves.filter((shelf) => shelf.books.length >= MIN_SHELF_SIZE)
-}
-
-/**
- * Obtém as recomendações da home. Simula o futuro serviço de recomendação
- * com IA usando apenas o acervo fictício local.
+ * Obtém as prateleiras da home para as preferências do visitante. As regras de
+ * recomendação ficam na API, que considera o acervo inteiro.
  *
  * @param profile - Preferências salvas do visitante.
- * @returns Prateleiras e áreas escolhidas.
+ * @returns Prateleiras (só as com livros suficientes) e as áreas escolhidas.
  */
 export async function getHomeRecommendations(
   profile: RecommendationProfile,
 ): Promise<HomeRecommendations> {
-  const [books, areas, genres] = await Promise.all([
-    getBooks(),
-    getKnowledgeAreas(),
-    getLiteraryGenres(),
-  ])
+  const { data } = await http.post<unknown>('/recommendations', {
+    areaIds: profile.areaIds,
+    courseIds: profile.courseIds,
+    seedBookIds: profile.seedBookIds,
+    genreIds: profile.genreIds,
+  })
+  const body = parseRecord(data, 'recommendations')
   return {
-    shelves: buildShelves(books, areas, genres, profile),
-    areas: areas.filter((area) => profile.areaIds.includes(area.id)),
+    shelves: list(body.shelves, 'recommendations.shelves', parseShelf),
+    areas: list(body.areas, 'recommendations.areas', parseArea),
   }
 }

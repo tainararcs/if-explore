@@ -91,7 +91,9 @@
             :areas="selectedAreas"
             :selected-ids="draft.seedBookIds"
             :limit-reached="isBooksComplete"
+            :status="candidatesStatus"
             @toggle-book="toggleBook"
+            @retry="loadCandidates"
           />
           <GenreStep
             v-else
@@ -202,6 +204,8 @@ const {
   genres,
   draft,
   candidateBooks,
+  candidatesStatus,
+  loadCandidates,
   coursesByLevel,
   canLeaveAreas,
   isBooksComplete,

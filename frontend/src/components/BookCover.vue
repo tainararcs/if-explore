@@ -1,4 +1,7 @@
-<!-- Capa tipográfica gerada para um livro, no estilo de edição clássica. -->
+<!--
+  Capa do livro: a imagem do catálogo quando existe; senão, ou se a imagem falhar,
+  uma capa tipográfica gerada no estilo de edição clássica.
+-->
 <template>
   <div
     class="book-cover"
@@ -7,8 +10,20 @@
     :aria-label="decorative ? undefined : label"
     :aria-hidden="decorative ? 'true' : undefined"
   >
-    <div class="book-cover__face">
-      <span class="book-cover__author">{{ book.authors[0] }}</span>
+    <img
+      v-if="showImage"
+      class="book-cover__image"
+      :src="book.coverUrl ?? undefined"
+      alt=""
+      loading="lazy"
+      decoding="async"
+      @error="failedUrl = book.coverUrl"
+    >
+    <div
+      v-else
+      class="book-cover__face"
+    >
+      <span class="book-cover__author">{{ firstAuthor }}</span>
       <span class="book-cover__title">{{ book.title }}</span>
       <span class="book-cover__ornament" />
     </div>
@@ -16,13 +31,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { formatAuthorName, formatAuthors } from '../lib/catalog-format'
 import { pickCoverColor } from '../lib/cover-color'
 import type { Book } from '../models/book'
 
 interface Props {
-  book: Pick<Book, 'id' | 'title' | 'authors'>
+  book: Pick<Book, 'id' | 'title' | 'authors' | 'coverUrl'>
   /** Oculta a capa de leitores de tela quando o título já aparece em texto ao lado. */
   decorative?: boolean
 }
@@ -33,9 +49,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { t } = useI18n()
 
+// Guarda a URL que falhou: se o livro mudar, a nova capa é tentada normalmente.
+const failedUrl = ref<string | null>(null)
+const showImage = computed(() => props.book.coverUrl !== null && props.book.coverUrl !== failedUrl.value)
+
 const coverColor = computed(() => pickCoverColor(props.book.id))
+const firstAuthor = computed(() => {
+  const [author] = props.book.authors
+  return author === undefined ? '' : formatAuthorName(author)
+})
 const label = computed(() =>
-  t('common.coverLabel', { title: props.book.title, author: props.book.authors.join(', ') }),
+  t('common.coverLabel', { title: props.book.title, author: formatAuthors(props.book.authors) }),
 )
 </script>
 
@@ -59,8 +83,16 @@ const label = computed(() =>
   overflow: hidden;
 }
 
-/* Filete interno, como nas capas de edições clássicas. */
-.book-cover::after {
+.book-cover__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Filete interno, como nas capas de edições clássicas (só na capa gerada). */
+.book-cover:not(:has(.book-cover__image))::after {
   content: '';
   position: absolute;
   inset: 6px 6px 6px calc(7.5% + 6px);

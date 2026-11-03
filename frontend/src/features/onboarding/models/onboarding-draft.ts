@@ -1,4 +1,3 @@
-import type { Book } from '../../../models/book'
 import { REQUIRED_SEED_BOOKS } from '../../../models/reading-preferences'
 
 /** Passos do onboarding, na ordem em que aparecem. `genres` é opcional. */
@@ -42,40 +41,6 @@ export function furthestReachableStep(draft: OnboardingDraft): OnboardingStep {
     return 'areas'
   }
   return canCompleteBooks(draft) ? 'genres' : 'books'
-}
-
-/**
- * Seleciona e ordena os livros oferecidos no passo de escolha de títulos.
- *
- * Livros ligados aos cursos escolhidos aparecem primeiro, seguidos pelos das
- * áreas. Se houver menos títulos que o necessário, completa com o restante do
- * acervo para que o passo sempre possa ser concluído.
- *
- * @param books - Acervo disponível.
- * @param draft - Áreas e cursos escolhidos.
- * @returns Livros candidatos em ordem de relevância.
- */
-export function rankCandidateBooks(
-  books: readonly Book[],
-  draft: Pick<OnboardingDraft, 'areaIds' | 'courseIds'>,
-): Book[] {
-  const score = (book: Book): number => {
-    if (book.courseIds.some((id) => draft.courseIds.includes(id))) {
-      return 2
-    }
-    return draft.areaIds.includes(book.areaId) ? 1 : 0
-  }
-
-  const ranked = books
-    .map((book) => ({ book, score: score(book) }))
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map((entry) => entry.book)
-
-  if (ranked.length >= REQUIRED_SEED_BOOKS) {
-    return ranked
-  }
-  return [...ranked, ...books.filter((book) => !ranked.includes(book))]
 }
 
 /**

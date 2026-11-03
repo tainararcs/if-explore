@@ -88,13 +88,14 @@ import WelcomeAbout from '../components/WelcomeAbout.vue'
 import WelcomeCoverFan from '../components/WelcomeCoverFan.vue'
 import WelcomeHowItWorks from '../components/WelcomeHowItWorks.vue'
 
-// Seleção fixa para uma composição estável, misturando áreas e literatura.
+// Seleção fixa de títulos do acervo, todos com capa, para uma composição estável
+// misturando áreas e literatura. Ids que saírem do acervo são ignorados.
 const FAN_BOOK_IDS = [
-  'darwin-origem-especies',
-  'machado-dom-casmurro',
-  'rosa-grande-sertao',
-  'martin-codigo-limpo',
-  'freire-pedagogia-oprimido',
+  '9012411043043', // A origem das espécies (Darwin)
+  '5042315405743', // A mão e a luva (Machado de Assis)
+  '9073115422543', // Grande Sertão (Guimarães Rosa)
+  '3032709253778', // Código limpo (Robert C. Martin)
+  '204131216473', // Pedagogia do oprimido (Paulo Freire)
 ]
 
 const { t } = useI18n()

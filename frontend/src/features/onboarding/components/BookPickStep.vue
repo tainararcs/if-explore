@@ -28,7 +28,37 @@
       </div>
     </fieldset>
 
-    <ul class="m-0 grid list-none grid-cols-3 gap-x-3 gap-y-6 p-0 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-8 md:grid-cols-6">
+    <div
+      v-if="status === 'error'"
+      class="py-8"
+      role="alert"
+    >
+      <p class="mb-4 text-danger">
+        {{ t('onboarding.books.error') }}
+      </p>
+      <button
+        type="button"
+        class="button button--secondary"
+        @click="emit('retry')"
+      >
+        {{ t('onboarding.books.retry') }}
+      </button>
+    </div>
+
+    <p
+      v-else-if="status === 'loading' && books.length === 0"
+      class="py-8 text-text-muted"
+      role="status"
+    >
+      {{ t('onboarding.books.loading') }}
+    </p>
+
+    <ul
+      v-else
+      class="m-0 grid list-none grid-cols-3 gap-x-3 gap-y-6 p-0 motion-safe:transition-opacity motion-safe:duration-(--duration-base) sm:grid-cols-4 sm:gap-x-4 sm:gap-y-8 md:grid-cols-6"
+      :class="{ 'opacity-60': status === 'loading' }"
+      :aria-busy="status === 'loading'"
+    >
       <li
         v-for="book in visibleBooks"
         :key="book.id"
@@ -66,7 +96,7 @@
           <span
             class="truncate text-caption text-text-muted sm:text-small"
             :class="{ 'opacity-45': isLocked(book.id) }"
-          >{{ book.authors.join(', ') }}</span>
+          >{{ formatAuthors(book.authors) }}</span>
         </button>
       </li>
     </ul>
@@ -79,6 +109,7 @@ import { useI18n } from 'vue-i18n'
 import BookCover from '../../../components/BookCover.vue'
 import IconCheck from '../../../components/icons/IconCheck.vue'
 import SelectableChip from '../../../components/SelectableChip.vue'
+import { formatAuthors } from '../../../lib/catalog-format'
 import type { Book } from '../../../models/book'
 import type { KnowledgeArea } from '../../../models/taxonomy'
 
@@ -90,12 +121,15 @@ interface Props {
   selectedIds: string[]
   /** Indica que o limite de títulos foi atingido. */
   limitReached: boolean
+  /** Carregamento dos candidatos; ao recarregar, a lista anterior continua visível. */
+  status: 'loading' | 'ready' | 'error'
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   toggleBook: [bookId: string]
+  retry: []
 }>()
 
 const { t } = useI18n()
