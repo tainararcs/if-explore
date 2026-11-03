@@ -10,8 +10,9 @@ skills under `.claude/skills/` at the repository root.
 IF Explore modernizes the discovery of books from the Biblioteca Roberval Cardoso
 (IF Sudeste MG – Campus Barbacena) and recommends readings from a short taste
 onboarding. It does **not** reimplement the library system: loans, reservations,
-and full records stay on the official site. At this stage all data is mocked;
-the app must make no request to the real catalog.
+and full records stay on the official site. Catalog data comes from the project
+API (`backend/`), which keeps a daily copy of the library catalog; the frontend
+never calls the library catalog directly.
 
 There is no authentication. Preferences are stored only in the visitor's browser.
 
@@ -310,8 +311,8 @@ links without underline until hover. Columns: about the project (brand, short
 description, note that the official catalog is still where loans happen),
 library (name, hours, email, catalog link), campus (`<address>`, phone, email,
 "Fale conosco" and campus site), IF Sudeste MG social networks, and "Desenvolvido
-por". Bottom bar: copyright and a notice that catalog data is illustrative while
-mocked. Contact data lives in `src/lib/campus-info.ts` (source: the campus
+por". Bottom bar: copyright and a notice that catalog data is updated daily
+from the library catalog. Contact data lives in `src/lib/campus-info.ts` (source: the campus
 "Fale conosco" page). External links use `ExternalLink.vue` (new tab, icon,
 screen-reader hint). Layout: 1 column at base, 2 at `sm`, 3 at `md` with the
 about block on its own row, 4 at `lg`.
@@ -345,8 +346,9 @@ area.
 - **Empty:** an icon, a short serif sentence, a helpful explanation, and an action.
 - **Error:** text in `--color-danger` plus an icon and a retry action; announce
   with `role="alert"`.
-- Mock services resolve after a short artificial delay (200–400ms) so loading
-  states are exercised.
+- Every screen that loads from the API handles loading, empty, and error states.
+  Requests that the visitor can supersede (search, onboarding candidates) are
+  canceled when a newer one starts, so a late response never replaces a newer one.
 
 ## 8. Accessibility
 
@@ -370,8 +372,10 @@ area.
 - All interface text lives in `vue-i18n` resources (`src/locales/pt-BR.ts`), with
   keys grouped by feature (`welcome.*`, `onboarding.*`, `home.*`, `common.*`).
   Only pt-BR is supported.
-- Mock catalog content (titles, authors, synopses) is data, not interface text,
-  and stays in the mock data files.
+- Catalog content (titles, authors, synopses) is data from the API, not interface
+  text. The catalog stores names as "SOBRENOME, Nome" and subjects in uppercase:
+  format them for display with `src/lib/catalog-format.ts` (`formatAuthors`,
+  `formatSubject`) and keep the original values for filters and comparisons.
 - Format numbers and dates with `Intl` through vue-i18n.
 
 ## 10. Shared domain and data
@@ -382,8 +386,9 @@ directories (see `docs/project-guidelines.md`):
 | Concern | Location |
 |---|---|
 | `Book`, `KnowledgeArea`, `Course`, `LiteraryGenre` types | `src/models/` |
-| Mock catalog data | `src/services/mocks/` |
-| Catalog access (async, mocked) | `src/services/catalog-service.ts` |
+| Catalog access (API) | `src/services/catalog-service.ts` |
+| API response validation | `src/services/catalog-parsers.ts` |
+| Display formatting of catalog text | `src/lib/catalog-format.ts` |
 | `ReadingPreferences` type | `src/models/reading-preferences.ts` |
 | Preferences persistence | `src/services/preferences-storage.ts` |
 | Reactive preferences access | `src/composables/useReadingPreferences.ts` |
@@ -410,27 +415,18 @@ directories (see `docs/project-guidelines.md`):
   Fantasia, Ficção científica, Terror, Poesia, Clássicos brasileiros, Biografias e
   memórias, Quadrinhos, Humor, Crônicas e contos.
 
-### 10.2 Book model (mock)
+### 10.2 Book model
 
-```ts
-interface Book {
-  id: string
-  title: string
-  authors: string[]
-  year: number
-  areaId: string
-  courseIds: string[]
-  genreIds: string[]
-  subjects: string[]
-  synopsis: string
-  quote?: string
-  availability: 'available' | 'borrowed'
-  callNumber: string // classificação/localização no acervo
-}
-```
+`Book` (`src/models/book.ts`) mirrors the API contract: lists, shelves, and
+search results use `Book`; the book page uses `BookDetail`, which adds credits,
+digital files (`links`), notes, and other record fields. Fields the catalog lacks
+arrive as `null` (`year`, `pages`, `publisher`, `synopsis`, `callNumber`,
+`coverUrl`, `areaId`), and screens must hide them instead of showing a
+placeholder. `copies` is `null` until the API has checked the title's copies:
+show the neutral "Consulte na biblioteca" badge, not "Emprestado".
 
-Mock at least 8 books per knowledge area and 3 per literary genre, using real,
-plausible academic and literary titles.
+Search, related books, recommendation shelves, and onboarding candidates are
+computed by the API over the whole collection; the frontend does not rank books.
 
 ### 10.3 Preferences persistence
 

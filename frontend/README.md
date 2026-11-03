@@ -42,6 +42,18 @@ npm run dev
 
 A aplicação estará disponível em [http://localhost:5173](http://localhost:5173).
 
+Os dados do acervo vêm da API do projeto, em `backend/` (veja o
+[README do backend](../backend/README.md) para instalar, criar o banco e sincronizar o
+acervo). Com a API rodando em `http://localhost:8000`, o servidor do Vite repassa as
+chamadas a `/api` para ela, sem precisar de CORS. Para usar outro endereço, defina
+`API_PROXY_TARGET` (por exemplo, num arquivo `.env.local` do frontend):
+
+```bash
+API_PROXY_TARGET=http://localhost:8001
+```
+
+Sem a API, as telas mostram a mensagem de erro com a opção de tentar novamente.
+
 ## Compilando o projeto para produção
 
 Para compilar o projeto para produção, execute o seguinte comando:

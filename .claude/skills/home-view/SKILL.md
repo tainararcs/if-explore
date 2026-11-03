@@ -1,18 +1,18 @@
 ---
 name: home-view
-description: Implement or change the IF Explore homepage (route `/home`, HomeView.vue) — search bar plus personalized recommendation shelves built from saved reading preferences, switching to a results grid while searching. Uses mocked catalog and recommendation services only.
+description: Implement or change the IF Explore homepage (route `/home`, HomeView.vue) — search bar plus personalized recommendation shelves built from saved reading preferences, switching to a results grid while searching. Search and shelves come from the project API (`backend/`).
 ---
 
 # Home view
 
 Read `frontend/AGENTS.md`, `frontend/docs/project-guidelines.md`, and
 `frontend/docs/design-guidelines.md` first. Foundations (tokens, i18n, models,
-mock catalog, preferences storage) are described in the `welcome-view` skill;
+catalog service, preferences storage) are described in the `welcome-view` skill;
 reuse them, never duplicate them.
 
 ## 1. Goal
 
-Simple, intuitive discovery: search the (mock) catalog and browse personalized
+Simple, intuitive discovery: search the library collection and browse personalized
 shelves, Play Books/Netflix style. Book cards open the book page (`/books/:id`).
 
 ## 2. Access
@@ -61,27 +61,31 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
   with reduced motion. With motion allowed, the change transitions, and where
   supported a scroll-driven animation (`animation-timeline: view(inline)`)
   makes it follow the finger. Other shelves keep the free scroll on mobile.
-- Each item is a book card linking to the book page: cover, title, author, availability
-  badge. The "Escolhidos para você" shelf shows the book's `quote` in italic
-  serif under the card, clamped to 3 lines.
+- Each item is a book card linking to the book page: cover (catalog image, or the
+  generated one when missing), title, authors (`formatAuthors`), and availability
+  badge ("Consulte na biblioteca" while the copies were not checked yet).
 
 ## 5. Search
 
-- Searches title, authors, and subjects of the whole mock catalog,
-  case- and accent-insensitive (`normalize('NFD')`), debounced ~250ms.
+- Searches the whole collection through `searchBooks` (`GET /api/books?q=`):
+  title, authors, subjects, and synopsis, case- and accent-insensitive, ranked by
+  relevance with the visitor's areas first (`preferArea`). Debounced ~250ms; a
+  new query cancels the previous request.
+- The area filter applies to the search on the API (`area`) and to the shelves
+  locally.
 - Query synced to the URL (`?q=`) with `router.replace`, so reload keeps it.
-- Results grid: 2 columns at base, 3 at `sm`, 5 at `md`, 6 at `lg`; results
-  matching the visitor's areas rank first.
+- Results grid: 2 columns at base, 3 at `sm`, 5 at `md`, 6 at `lg`. 24 results at
+  a time with a "Mostrar mais livros" button; the heading shows the total found.
 - Empty result: empty state with a suggestion to check spelling or clear the
   filter, plus a "Limpar busca" action.
 
 ## 6. Data
 
-- Recommendation logic is a mocked service in
-  `src/features/home/services/recommendation-service.ts` (async, artificial
-  delay), standing in for the future AI backend. Scoring is a pure function:
-  course match > area match > genre match > shared subjects with seed books;
-  never recommend the seed books themselves in "Escolhidos para você".
+- `src/features/home/services/recommendation-service.ts` posts the saved
+  preferences to `POST /api/recommendations` and validates the shelves it gets
+  back. Ranking happens in the API over the whole collection (course > area >
+  genre > shared subjects with the seed books; seed books never come back), and
+  only shelves with at least 3 books are returned.
 - A feature composable (`useHomeRecommendations.ts`) exposes shelves and
   loading/error state; search uses `catalog-service.ts`.
 - States: skeleton shelves while loading, error with retry (`role="alert"`).
