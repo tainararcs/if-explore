@@ -1,14 +1,14 @@
 import { computed, ref, watch, type Ref } from 'vue'
-import type { Book } from '../../../models/book'
+import type { BookDetail } from '../../../models/book'
 import type { Course, KnowledgeArea, LiteraryGenre } from '../../../models/taxonomy'
 import {
   getBookById,
-  getBooks,
   getCourses,
   getKnowledgeAreas,
   getLiteraryGenres,
 } from '../../../services/catalog-service'
-import { buildRelatedShelves } from '../models/related-books'
+import type { RelatedShelves } from '../models/related-books'
+import { getRelatedBooks } from '../services/book-detail-service'
 
 type LoadStatus = 'loading' | 'ready' | 'notFound' | 'error'
 
@@ -18,15 +18,16 @@ type LoadStatus = 'loading' | 'ready' | 'notFound' | 'error'
  * livros relacionados) e ignora respostas de ids anteriores.
  *
  * Ao trocar de livro, o anterior continua na tela com `isRefreshing` ativo
- * até o próximo chegar, em vez de voltar ao estado de carregamento.
+ * até o próximo chegar, em vez de voltar ao estado de carregamento. Uma falha
+ * só nos relacionados não impede a página: as prateleiras ficam de fora.
  *
  * @param bookId - Id do livro vindo da rota.
  * @returns Estado de carregamento, livro, dados de apoio e `reload`.
  */
 export function useBookDetail(bookId: Ref<string>) {
   const status = ref<LoadStatus>('loading')
-  const book = ref<Book | null>(null)
-  const catalog = ref<Book[]>([])
+  const book = ref<BookDetail | null>(null)
+  const shelves = ref<RelatedShelves | null>(null)
   const areas = ref<KnowledgeArea[]>([])
   const courses = ref<Course[]>([])
   const genres = ref<LiteraryGenre[]>([])
@@ -36,15 +37,16 @@ export function useBookDetail(bookId: Ref<string>) {
 
   async function reload(): Promise<void> {
     const current = ++requestId
+    const id = bookId.value
     if (status.value === 'ready') {
       isRefreshing.value = true
     } else {
       status.value = 'loading'
     }
     try {
-      const [found, allBooks, allAreas, allCourses, allGenres] = await Promise.all([
-        getBookById(bookId.value),
-        getBooks(),
+      const [found, related, allAreas, allCourses, allGenres] = await Promise.all([
+        getBookById(id),
+        getRelatedBooks(id).catch(() => null),
         getKnowledgeAreas(),
         getCourses(),
         getLiteraryGenres(),
@@ -53,7 +55,7 @@ export function useBookDetail(bookId: Ref<string>) {
         return
       }
       book.value = found
-      catalog.value = allBooks
+      shelves.value = found ? related : null
       areas.value = allAreas
       courses.value = allCourses
       genres.value = allGenres
@@ -83,9 +85,6 @@ export function useBookDetail(bookId: Ref<string>) {
     genres.value
       .filter((genre) => book.value?.genreIds.includes(genre.id))
       .map((genre) => genre.name),
-  )
-  const shelves = computed(() =>
-    book.value ? buildRelatedShelves(catalog.value, book.value) : null,
   )
 
   return {

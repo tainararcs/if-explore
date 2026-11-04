@@ -155,8 +155,15 @@ class RecommendationTests(ApiTestCase):
 
     def test_onboarding_candidates(self) -> None:
         candidates = [b["id"] for b in self.get("/api/recommendations/candidates?course=nutrition&area=technology")]
-        self.assertEqual(candidates[0], TCC)
+        # as áreas se intercalam: a de Tecnologia (escolhida) e a de Saúde (do curso marcado)
         self.assertEqual(len(candidates), 6)
+        self.assertEqual(candidates[1], TCC)
+        self.assertNotIn(SERIAL, candidates)
+
+    def test_candidates_cover_every_chosen_area(self) -> None:
+        candidates = self.get("/api/recommendations/candidates?course=internet-systems"
+                              "&area=technology&area=health-sciences&limit=4")
+        self.assertEqual({b["areaId"] for b in candidates}, {"technology", "health-sciences"})
         # sem área nem curso, completa com os demais títulos recomendáveis
         self.assertEqual(len(self.get("/api/recommendations/candidates?limit=4")), 4)
 

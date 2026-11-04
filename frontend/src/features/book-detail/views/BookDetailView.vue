@@ -108,6 +108,7 @@
           </div>
 
           <section
+            v-if="book.synopsis || tags.length > 0"
             class="mt-10"
             aria-labelledby="book-synopsis-title"
           >
@@ -115,20 +116,17 @@
               id="book-synopsis-title"
               class="mb-3 font-body text-h3 font-semibold"
             >
-              {{ t('bookDetail.synopsis') }}
+              {{ book.synopsis ? t('bookDetail.synopsis') : t('bookDetail.tags') }}
             </h2>
-            <p class="max-w-[65ch] text-body">
+            <p
+              v-if="book.synopsis"
+              class="mb-6 max-w-[65ch] text-body"
+            >
               {{ book.synopsis }}
             </p>
-            <blockquote
-              v-if="book.quote"
-              class="m-0 mt-6 max-w-[60ch] border-l-2 border-primary pl-4 font-display text-h3 leading-[1.4] text-text-muted italic"
-            >
-              “{{ book.quote }}”
-            </blockquote>
             <ul
               v-if="tags.length > 0"
-              class="m-0 mt-6 flex list-none flex-wrap gap-2 p-0"
+              class="m-0 flex list-none flex-wrap gap-2 p-0"
               :aria-label="t('bookDetail.tags')"
             >
               <li
@@ -145,7 +143,6 @@
             class="mt-10"
             :book="book"
             :area-name="areaName"
-            :year-label="yearLabel"
             :course-names="courseNames"
           />
         </BookHero>
@@ -204,6 +201,7 @@ import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
 import IconExternalLink from '../../../components/icons/IconExternalLink.vue'
 import IconLibrary from '../../../components/icons/IconLibrary.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
+import { formatSubject } from '../../../lib/catalog-format'
 import { pickCoverColor } from '../../../lib/cover-color'
 import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
 import BookHero from '../components/BookHero.vue'
@@ -239,15 +237,14 @@ const bandTone = computed(() => (book.value ? pickCoverColor(book.value.id) : nu
 
 const fallbackPath = computed(() => (hasPreferences.value ? '/home' : '/'))
 
-// Anos negativos representam obras anteriores à era comum.
-const yearLabel = computed(() => {
-  const year = book.value?.year ?? 0
-  return year < 0 ? t('bookDetail.yearBce', { year: -year }) : String(year)
-})
+const eyebrow = computed(() =>
+  [areaName.value, book.value?.year ?? null].filter((part) => part !== null && part !== '').join(' · '),
+)
 
-const eyebrow = computed(() => [areaName.value, yearLabel.value].filter(Boolean).join(' · '))
-
-const tags = computed(() => [...(book.value?.subjects ?? []), ...genreNames.value])
+// Os assuntos vêm em maiúsculas do catálogo; um mesmo assunto pode coincidir com um gênero.
+const tags = computed(() => [
+  ...new Set([...(book.value?.subjects ?? []).map(formatSubject), ...genreNames.value]),
+])
 
 // Volta pelo histórico quando o visitante veio de outra tela da aplicação.
 function goBack(): void {

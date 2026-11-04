@@ -30,24 +30,19 @@
         {{ book.title }}
       </h3>
       <p class="truncate text-caption text-text-muted sm:text-small">
-        {{ book.authors.join(', ') }}
+        {{ formatAuthors(book.authors) }}
       </p>
       <AvailabilityBadge
         class="mt-1"
         :book="book"
       />
-      <blockquote
-        v-if="showQuote && book.quote"
-        class="m-0 mt-2 line-clamp-3 font-display text-small leading-[1.4] text-text-muted italic"
-      >
-        “{{ book.quote }}”
-      </blockquote>
     </div>
   </RouterLink>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { formatAuthors } from '../lib/catalog-format'
 import type { Book } from '../models/book'
 import AvailabilityBadge from './AvailabilityBadge.vue'
 import BookCover from './BookCover.vue'
@@ -55,14 +50,11 @@ import IconArrowUpRight from './icons/IconArrowUpRight.vue'
 
 interface Props {
   book: Book
-  /** Exibe a citação do livro, quando houver. */
-  showQuote?: boolean
   /** Mantém o selo expandido, como no livro central da prateleira em destaque no celular. */
   focused?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
-  showQuote: false,
   focused: false,
 })
 

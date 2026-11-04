@@ -33,7 +33,7 @@ export const ptBR = {
       social: 'Redes do IF Sudeste MG',
       developedBy: 'Desenvolvido por',
       copyright: '© {year} IF Explore',
-      mockNotice: 'Nesta versão, os dados do acervo são ilustrativos.',
+      dataNotice: 'Dados do acervo atualizados diariamente a partir do catálogo da biblioteca.',
     },
     coverLabel: 'Capa de {title}, de {author}',
     theme: {
@@ -51,6 +51,7 @@ export const ptBR = {
       borrowed: 'Emprestado',
       copies: '{available} de {total} exemplar disponível | {available} de {total} exemplares disponíveis',
       allBorrowed: 'Exemplar emprestado | Todos os {n} exemplares emprestados',
+      unknown: 'Consulte na biblioteca',
     },
   },
   routes: {
@@ -137,6 +138,9 @@ export const ptBR = {
       missing: 'Escolha mais títulos | Falta 1 título | Faltam {n} títulos',
       complete: 'Boa escolha! Falta só mais um passo.',
       continue: 'Continuar',
+      loading: 'Carregando títulos…',
+      error: 'Não foi possível carregar os títulos.',
+      retry: 'Tentar novamente',
     },
     genres: {
       title: 'E fora da sala de aula, o que você gosta de ler?',
@@ -171,6 +175,9 @@ export const ptBR = {
         'Nenhum resultado para “{query}” | 1 resultado para “{query}” | {n} resultados para “{query}”',
       emptyTitle: 'Nenhum livro encontrado',
       emptyText: 'Confira a grafia, tente outras palavras ou remova o filtro de área.',
+      loadMore: 'Mostrar mais livros',
+      loadingMore: 'Carregando mais livros…',
+      loadMoreError: 'Não foi possível carregar mais livros.',
     },
   },
   bookDetail: {
@@ -181,7 +188,6 @@ export const ptBR = {
     openCatalog: 'Ver no acervo da biblioteca',
     synopsis: 'Sinopse',
     tags: 'Assuntos e gêneros',
-    yearBce: 'c. {year} a.C.',
     related: 'Leituras relacionadas',
     moreFromAuthor: 'Mais de {author}',
     share: {
@@ -210,6 +216,8 @@ export const ptBR = {
       area: 'Área',
       isbn: 'ISBN',
       courses: 'Indicado para',
+      contributors: 'Créditos',
+      links: 'Arquivos digitais',
     },
   },
 }

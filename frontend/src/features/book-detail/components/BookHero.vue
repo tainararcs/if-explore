@@ -22,8 +22,14 @@
           >
             {{ book.title }}
           </h1>
+          <p
+            v-if="book.subtitle"
+            class="max-w-[60ch] text-body"
+          >
+            {{ book.subtitle }}
+          </p>
           <p class="text-body text-text-muted">
-            {{ book.authors.join(', ') }}
+            {{ formatAuthors(book.authors) }}
           </p>
           <AvailabilityBadge
             class="mt-1 self-center md:self-start"
@@ -41,6 +47,7 @@
 import { useTemplateRef } from 'vue'
 import AvailabilityBadge from '../../../components/AvailabilityBadge.vue'
 import BookCover from '../../../components/BookCover.vue'
+import { formatAuthors } from '../../../lib/catalog-format'
 import type { Book } from '../../../models/book'
 
 interface Props {

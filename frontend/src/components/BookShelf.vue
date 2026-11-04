@@ -68,7 +68,6 @@
         >
           <BookCard
             :book="book"
-            :show-quote="showQuotes"
             :focused="layout === 'featured' && index === currentPage"
           />
         </li>
@@ -106,8 +105,6 @@ import BookCard from './BookCard.vue'
 interface Props {
   title: string
   books: Book[]
-  /** Exibe as citações dos livros nos cards. */
-  showQuotes?: boolean
   /**
    * No celular, destaca um livro por vez no centro, com os vizinhos em segundo
    * plano e um ponto por livro. No desktop, mantém a paginação comum.
@@ -116,7 +113,6 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  showQuotes: false,
   featured: false,
 })
 

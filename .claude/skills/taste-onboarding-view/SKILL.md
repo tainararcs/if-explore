@@ -7,7 +7,7 @@ description: Implement or change the IF Explore taste onboarding (route `/onboar
 
 Read `frontend/AGENTS.md`, `frontend/docs/project-guidelines.md`, and
 `frontend/docs/design-guidelines.md` first. Foundations (tokens, i18n, models,
-mock catalog, preferences storage) are described in the `welcome-view` skill;
+catalog service, preferences storage) are described in the `welcome-view` skill;
 reuse them, never duplicate them.
 
 ## 1. Goal
@@ -41,14 +41,22 @@ without an area) redirect to the first incomplete step with `router.replace`.
 - Title: "Escolha três títulos que chamam sua atenção."
 - Live counter: "1 de 3 escolhidos" (`aria-live="polite"`) with three dots/slots
   that fill as books are picked.
-- Grid of selectable book cards (cover + title + author) from the selected areas,
-  prioritizing books linked to selected courses. With more than one area, show
-  area filter chips above the grid ("Todas" + each area).
+- Grid of selectable book cards (cover + title + author) from
+  `getOnboardingCandidates` (`GET /api/recommendations/candidates`), reloaded
+  with a short debounce when areas or courses change (a new request cancels the
+  previous one). The API splits the titles among the chosen areas (and the areas
+  of the chosen courses), course books first in each, so every area filter has
+  titles. With more than one area, show area filter chips above the grid
+  ("Todas" + each area).
+- Picked titles stay picked and visible (first in the grid) even when an area
+  change drops them from the candidates.
+- Candidates have their own loading and error (with retry) states; while
+  reloading, the previous grid stays visible and dimmed.
 - Grid: 3 columns at base, 4 at `sm`, 5–6 at `md`+.
 - When 3 are selected, the remaining cards become `aria-disabled` and visually
   dimmed; deselecting one re-enables them. Do not silently replace a selection.
-- If the selected area has fewer than 3 books, also show books from related
-  areas so the step can always be completed.
+- If the selected areas have fewer than 3 titles, the API completes the list
+  with other titles so the step can always be completed.
 - Primary: "Continuar" → step 3, enabled only with 3 books. Do not offer a
   shortcut to `/home` here: testers overlooked genres when they were a
   secondary action.
@@ -86,7 +94,9 @@ Sticky action bar: hint/counter · [Primary]   (safe-area aware)
 - Keep draft selections in a feature composable (`useTasteOnboarding.ts`) that
   owns the step logic, validation (`canContinue`), and the final payload.
 - Pre-fill the draft from saved preferences when they exist (returning visitor,
-  or "Ajustar preferências" from the home, which links to `?step=areas`).
+  or "Ajustar preferências" from the home, which links to `?step=areas`). Saved
+  seed books are loaded with `getBooksByIds`; ids that left the collection are
+  dropped.
 - Save only on "Me recomende", through `useReadingPreferences()`; abandoning the
   flow must not overwrite existing preferences.
 - Validation of counts (≥ 1 area, exactly 3 books) is a pure function, testable
@@ -98,6 +108,7 @@ Sticky action bar: hint/counter · [Primary]   (safe-area aware)
 src/features/onboarding/
 ├── views/TasteOnboardingView.vue
 ├── composables/useTasteOnboarding.ts
+├── services/onboarding-service.ts   (candidates from the API)
 └── components/
     ├── OnboardingProgress.vue
     ├── AreaStep.vue

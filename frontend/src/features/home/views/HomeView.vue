@@ -107,8 +107,13 @@
         v-else-if="isSearching"
         class="mt-12"
         :query="query"
-        :books="filteredResults"
+        :books="results"
+        :total="total"
+        :can-load-more="canLoadMore"
+        :is-loading-more="isLoadingMore"
+        :load-more-failed="loadMoreFailed"
         @clear="clear"
+        @load-more="loadMore"
       />
 
       <div
@@ -120,7 +125,6 @@
           :key="shelf.id"
           :title="shelfTitle(shelf)"
           :books="shelf.books"
-          :show-quotes="shelf.kind === 'forYou'"
           :featured="shelf.kind === 'forYou'"
         />
         <p
@@ -154,17 +158,21 @@ const { t } = useI18n()
 
 const { status: shelvesStatus, shelves, areas, reload } = useHomeRecommendations()
 const areaIds = computed(() => areas.value.map((area) => area.id))
+const activeAreaId = ref<string | null>(null)
 const {
   input,
   query,
   isSearching,
   results,
+  total,
   status: searchStatus,
+  canLoadMore,
+  isLoadingMore,
+  loadMoreFailed,
   clear,
+  loadMore,
   reload: reloadSearch,
-} = useCatalogSearch(areaIds)
-
-const activeAreaId = ref<string | null>(null)
+} = useCatalogSearch(areaIds, activeAreaId)
 
 const isLoading = computed(
   () => shelvesStatus.value === 'loading' || searchStatus.value === 'loading',
@@ -177,7 +185,7 @@ const areaList = computed(() =>
   ),
 )
 
-// O filtro por área vale para prateleiras e resultados; prateleiras vazias somem.
+// O filtro por área vale para as prateleiras (aqui) e para a busca (na API); prateleiras vazias somem.
 const visibleShelves = computed(() =>
   shelves.value
     .map((shelf) => ({
@@ -188,12 +196,6 @@ const visibleShelves = computed(() =>
           : shelf.books.filter((book) => book.areaId === activeAreaId.value),
     }))
     .filter((shelf) => shelf.books.length > 0),
-)
-
-const filteredResults = computed(() =>
-  activeAreaId.value === null
-    ? results.value
-    : results.value.filter((book) => book.areaId === activeAreaId.value),
 )
 
 function shelfTitle(shelf: Shelf): string {

@@ -21,8 +21,8 @@ create it before the view, following `design-guidelines.md`:
    state each file's source; keep their licenses (OFL) next to them.
 3. `vue-i18n` configured in `src/lib/i18n.ts` with `src/locales/pt-BR.ts`,
    registered in `main.ts`; `lang="pt-BR"` and title "IF Explore" in `index.html`.
-4. Shared models, mock catalog, `preferences-storage.ts`, and
-   `useReadingPreferences.ts` (design guidelines §10).
+4. Shared models, catalog service (API client and response validation),
+   `preferences-storage.ts`, and `useReadingPreferences.ts` (design guidelines §10).
 5. Routes from design guidelines §11, replacing the current `/` → `/home`
    redirect, with a per-route document title.
 6. `BrandMark.vue` and `AppHeader.vue` in `src/components/`.
@@ -105,8 +105,9 @@ Visual details:
   `--color-primary-soft`.
 - "Sobre" sits on `--color-bg`; its cards use `--color-surface` and the default
   `h3` style, not the display serif.
-- Cover fan uses real mock books (pick by fixed ids for a stable composition),
-  decorative (`aria-hidden`), with a soft `--shadow-md`; on hover/reduced-motion
+- Cover fan uses real books of the collection with catalog covers, picked by
+  fixed ids in `WelcomeView.vue` for a stable composition (ids that leave the
+  collection are skipped), decorative (`aria-hidden`), with a soft `--shadow-md`; on hover/reduced-motion
   rules from the guidelines, the fan may spread a few degrees.
 - Staggered fade-in of title → lead → actions (≤ 400ms total), only under
   `prefers-reduced-motion: no-preference`.

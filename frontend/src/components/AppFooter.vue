@@ -135,7 +135,7 @@
     <div class="border-t border-border">
       <div class="container flex flex-col gap-1 py-5 text-caption sm:flex-row sm:justify-between">
         <p>{{ t('common.footer.copyright', { year }) }}</p>
-        <p>{{ t('common.footer.mockNotice') }}</p>
+        <p>{{ t('common.footer.dataNotice') }}</p>
       </div>
     </div>
   </footer>
