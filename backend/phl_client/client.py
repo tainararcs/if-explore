@@ -7,9 +7,19 @@ import time
 from collections.abc import Iterable, Iterator
 from typing import TypedDict, Unpack
 
+from .errors import LibraryConnectionError, LibraryError
 from .fields import AUTHORITY_INDEXES, DOCUMENT_TYPES, LIBRARY_CODE, SEARCH_FIELD_TAGS, Record
 from .isbn import isbn_digits, isbn_search_forms
-from .parsers import CopyRow, ReferenceItem, parse_copies, parse_records, parse_references
+from .parsers import (
+    CopyRow,
+    CopyStatusItem,
+    CopyStatusPage,
+    ReferenceItem,
+    parse_copies,
+    parse_copy_statuses,
+    parse_records,
+    parse_references,
+)
 from .query import clean_query, require_expression
 from .text import first_text, normalize, text_list
 from .transport import Transport
@@ -19,6 +29,24 @@ from .transport import Transport
 MAX_PAGE_SIZE = 25000
 # Quantos anos entram num único OU de DTP= em `cataloged_between`.
 YEARS_PER_QUERY = 200
+# Grupos de prefixos do código do título usados por `copy_statuses`, um por
+# requisição. O formato decorado ignora a paginação (`from`) e o servidor corta a
+# resposta perto de 10 MB (~6,5 mil títulos), então o acervo é dividido pelo
+# começo do código. Tamanhos em nov/2026: 3782, 3421, 4691, 3950 e 4546 títulos.
+# Os códigos 00xxxx são a numeração antiga e não crescem; os novos começam de 1 a 9.
+STATUS_TITLE_PREFIXES: tuple[tuple[str, ...], ...] = (
+    ("000", "001", "002", "003", "004"),
+    ("005", "006", "007", "008", "009", "01", "02", "03", "04", "05", "06", "07", "08", "09"),
+    ("1", "2", "3"),
+    ("4", "5", "6", "7"),
+    ("8", "9"),
+)
+# Títulos por requisição ao reler, pelo código, os títulos que ficaram depois de um
+# erro fatal do servidor no formato decorado (~2 KB de expressão na URL).
+STATUS_RETRY_BATCH = 100
+# Títulos que o servidor não consegue mostrar no formato decorado aceitos numa
+# leitura; acima disso, a leitura falha em vez de multiplicar as requisições.
+MAX_UNREADABLE_TITLES = 5
 
 
 class SearchFilters(TypedDict, total=False):
@@ -195,6 +223,78 @@ class PhlClient(Transport):
         """
         return parse_copies(self.request({"IsisScript": self.script, "opc": "status_tit",
                                           "tit": title_id, "acv": library}), include_borrower)
+
+    def copy_statuses(self, prefix_groups: Iterable[Iterable[str]] = STATUS_TITLE_PREFIXES) -> Iterator[CopyStatusItem]:
+        """Situação resumida dos exemplares de todo o acervo, em poucas requisições.
+
+        Lê o formato decorado, que traz por título as situações presentes e o total
+        de exemplares, mas não quantos estão livres nem os empréstimos (para isso,
+        `copies`). Faz uma requisição por grupo de `prefix_groups` (~10 s e ~8 MB
+        cada); juntos, os grupos precisam cobrir todos os códigos de título.
+
+        Alguns registros defeituosos derrubam o formato decorado no meio da página
+        ("WXIS|fatal error|...|dbxopen: _tbo.cnt"), e o servidor também não aceita
+        excluí-los da busca. Nesse caso os títulos já mostrados valem, o defeituoso
+        vira um item com situação "unknown", e os que faltaram são relidos pelo
+        código: 1 requisição no formato phl (que pagina) para descobrir quais são,
+        mais 1 para cada `STATUS_RETRY_BATCH` títulos.
+
+        Raises:
+            LibraryError: Quando uma página vem com menos títulos do que anuncia sem
+                erro do servidor (resposta cortada), ou quando há mais de
+                `MAX_UNREADABLE_TITLES` títulos que o servidor não mostra.
+        """
+        unreadable: list[str] = []
+        for group in prefix_groups:
+            prefixes = list(group)
+            expression = " + ".join("TIT=%s$" % prefix for prefix in prefixes)
+            yield from self._copy_statuses_of(expression, None, unreadable)
+
+    def _copy_statuses_of(self, expression: str, title_ids: list[str] | None,
+                          unreadable: list[str]) -> Iterator[CopyStatusItem]:
+        """Itens de uma expressão, contornando os títulos que derrubam o decorado.
+
+        Args:
+            expression: Expressão ISIS (OU de prefixos ou de códigos).
+            title_ids: Códigos da expressão, em ordem de MFN, quando ela é um OU de
+                códigos; None faz descobrir os que faltam pelo formato phl.
+            unreadable: Títulos que o servidor não mostrou até agora (acumula).
+        """
+        params = self._search_params(expression, "exp", per_page=MAX_PAGE_SIZE, output_format="decorado")
+        try:
+            page = parse_copy_statuses(self.request(params))
+        except LibraryConnectionError:
+            raise
+        except LibraryError as error:
+            # o primeiro título já derrubou a página: nada veio antes do erro
+            if "fatal error" not in str(error):
+                raise
+            page = CopyStatusPage(None, [], fatal_error=True)
+        yield from page.items
+        if not page.fatal_error:
+            if page.total is not None and len(page.items) < page.total:
+                raise LibraryError("situação dos exemplares cortada pelo servidor: %d de %d títulos em %s"
+                                   % (len(page.items), page.total, expression[:80]))
+            return
+        if title_ids is None:
+            title_ids = [str(record["title_id"]) for record in self.search(
+                expression, mode="exp", per_page=MAX_PAGE_SIZE, start=len(page.items) + 1)
+                if record.get("title_id")]
+            remaining = title_ids
+        else:
+            remaining = title_ids[len(page.items):]
+        if not remaining:
+            raise LibraryError("situação dos exemplares interrompida pelo servidor em %s" % expression[:80])
+        unreadable.append(remaining[0])
+        if len(unreadable) > MAX_UNREADABLE_TITLES:
+            raise LibraryError("o servidor não mostra a situação de mais de %d títulos (%s)"
+                               % (MAX_UNREADABLE_TITLES, ", ".join(unreadable)))
+        yield {"mfn": None, "title_id": remaining[0], "total": None, "statuses": ["unknown"]}
+        rest = remaining[1:]
+        for i in range(0, len(rest), STATUS_RETRY_BATCH):
+            batch = rest[i:i + STATUS_RETRY_BATCH]
+            yield from self._copy_statuses_of(" + ".join("TIT=%s" % title_id for title_id in batch),
+                                              batch, unreadable)
 
     def references(self, expression: str = "$", mode: str = "exp", page_size: int = 5000,
                    limit: int | None = None, **filters: Unpack[SearchFilters]) -> Iterator[ReferenceItem]:

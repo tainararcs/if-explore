@@ -4,7 +4,14 @@ import unittest
 
 from phl_client.errors import LibraryError
 from phl_client.fields import Record
-from phl_client.parsers import fill_title_author, normalize_year, parse_copies, parse_records, parse_references
+from phl_client.parsers import (
+    fill_title_author,
+    normalize_year,
+    parse_copies,
+    parse_copy_statuses,
+    parse_records,
+    parse_references,
+)
 
 from . import BASE_URL, fixture
 
@@ -73,6 +80,39 @@ class ParseCopiesTests(unittest.TestCase):
         self.assertNotIn("borrower", hidden[1])
         self.assertEqual(shown[1]["borrower"], "0000000")
         self.assertEqual(hidden[1]["due_date"], "05/11/2026")
+
+
+class ParseCopyStatusesTests(unittest.TestCase):
+    def test_statuses_and_totals_per_title(self) -> None:
+        total, items, fatal_error = parse_copy_statuses(fixture("decorated_statuses.html"))
+        self.assertEqual((total, fatal_error), (8, False))
+        by_title = {item["title_id"]: (item["total"], item["statuses"]) for item in items}
+        self.assertEqual(by_title, {
+            "000002": (1, ["available"]),
+            "000007": (1, ["in_library_use"]),
+            "000038": (1, ["unavailable"]),
+            None: (0, []),
+            # um só exemplar, emprestado: o OPAC mostra 003 e também 002
+            "000673": (1, ["available", "on_loan"]),
+            "004120": (1, ["on_loan", "unavailable"]),
+            "004366": (4, ["available", "on_loan", "in_library_use", "unavailable"]),
+            "4092610290646": (1, ["available", "on_loan", "reserved"]),
+        })
+        self.assertEqual(items[3]["mfn"], 342)
+
+    def test_title_with_copies_but_no_code_raises(self) -> None:
+        page = 'name="sel" value="MFN=1"> Selecionar&nbsp;<img src="/phl82/img/002.gif">&nbsp; [1] </td>'
+        with self.assertRaises(LibraryError):
+            parse_copy_statuses(page)
+
+    def test_page_without_titles(self) -> None:
+        self.assertEqual(parse_copy_statuses("<html>nada</html>"), (None, [], False))
+
+    def test_page_interrupted_by_a_fatal_error(self) -> None:
+        page = fixture("decorated_statuses.html").split("<!-- FMX000090 -->")[0]
+        cut = page[:page.index('value="MFN=657"')].rsplit("<table", 1)[0]
+        total, items, fatal_error = parse_copy_statuses(cut + "\n\nWXIS|fatal error|unavoidable|dbxopen: _tbo.cnt (2)|\n")
+        self.assertEqual((total, len(items), fatal_error), (8, 4, True))
 
 
 class ParseReferencesTests(unittest.TestCase):

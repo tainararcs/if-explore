@@ -1,0 +1,147 @@
+<!-- FMX000102 -->
+<html>
+<head>
+<link href="/phl82/css/phl.css" rel="stylesheet" type="text/css">
+<link href="/phl82/css/buscaphl.css" rel="stylesheet" type="text/css">
+<script language="JavaScript" src="/phl82/js/submit.js"></script>
+<script language="JavaScript" src="/phl82/js/url.js"></script>
+<script language="JavaScript" type="text/javascript">
+<!--
+function comentario(x){
+ ajuda = window.open("/cgi-bin/wxis.exe?IsisScript=phl82/051.xis&&tmp=/tmp/fileyEt1aL&opc=form&mfn="+x,"janela","height=400,width=600,menubar=yes,resizable=yes,scrollbars=yes,status=yes")
+ } 
+ function sf(){document.formulario.exp.focus()} function openwindow(x,y){ 
+ ajuda = window.open("/phl82/por"+x+".html#"+y,"janela","height=600,width=800,scrollbars=yes")
+ } 
+function getXmlHttpRequestObject() { 
+if (window.XMLHttpRequest) { 
+return new XMLHttpRequest();
+} else if(window.ActiveXObject) { 
+return new ActiveXObject("Microsoft.XMLHTTP");
+} else { 
+alert("Seu navegador necessita ser atualizado para uma versao mais recente!");
+}
+}
+var searchReq = getXmlHttpRequestObject();
+function searchSuggest() { 
+if (searchReq.readyState == 4 || searchReq.readyState == 0) {
+var str = escape(document.getElementById("txtSearch").value); 
+searchReq.open("GET", "/cgi-bin/wxis.exe?IsisScript=phl82/087.xis&tmp=/tmp/fileyEt1aL&exp=" + str, true);
+searchReq.onreadystatechange = handleSearchSuggest;
+searchReq.send(null);
+}
+}
+function handleSearchSuggest() {
+if (searchReq.readyState == 4) { 
+var ss = document.getElementById("search_suggest") 
+ss.innerHTML = ""; 
+var str = searchReq.responseText.split("\n");
+for(i=0; i < str.length - 1; i++) { 
+var suggest = "<div onmouseover=javascript:suggestOver(this); ";
+suggest += "onmouseout=javascript:suggestOut(this); ";
+suggest += "onclick=javascript:setSearch(this.innerHTML); ";
+suggest += "class=suggest_link>" + str[i] + "</div>";
+ss.innerHTML += suggest;
+} 
+}
+}
+function suggestOver(div_value) { 
+div_value.className = "suggest_link_over"; 
+} 
+function suggestOut(div_value) { 
+div_value.className = "suggest_link"; 
+}
+oldvalue = "";
+function setSearch(value) { 
+  if (value != "") { 
+  document.getElementById("txtSearch").value = value; 
+  document.getElementById("search_suggest").innerHTML = ""; 
+} 
+} 
+-->
+</script> 
+</head>
+<body onload="sf();">
+<form name="formulario" action="/cgi-bin/wxis.exe" method="POST" target="result">
+<input type="hidden" name="tmp" value="/tmp/fileyEt1aL">
+<table width="100%" align="center" bgcolor="#e4fbc5">
+<tr><td width="70%" align="left">&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="radio" name="bool" value="and">Todas as palavras&nbsp;<input type="radio" name="bool" value="or">Qualquer palavra&nbsp;
+<input type="radio" name="bool" value="frase">Frase exata&nbsp;
+<input type="radio" name="bool"checked value="exp">Expressão&nbsp;
+</td><td width="30%"></td></tr>
+<tr><td width="70%" align="left">&nbsp;&nbsp;&nbsp;&nbsp;
+<input size="70" type="text" name="exp">&nbsp;<input class="botao" name="submitter" onClick="return DoubleClickTrapperAction();" type="submit" value="Buscar"> 
+</td><td width="30%"><a href=/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=filtro&rpp=50&tag=&acv=&tip=&idm=&pft=decorado&col=&spt=&cnt=&ordem=&tmp=/tmp/fileyEt1aL&idx=>Preferências</a></td></tr>
+<tr><td width="70%" align="center"><b></b>
+</td><td width="30%">&nbsp;</td></tr>
+</table>
+<input type="hidden" name="IsisScript" value="phl82/003.xis">
+<input type="hidden" name="acv" value="">
+<input type="hidden" name="cnt" value="">
+<input type="hidden" name="col" value="">
+<input type="hidden" name="idm" value="">
+<input type="hidden" name="opc" value="decorado">
+<input type="hidden" name="pft" value="decorado">
+<input type="hidden" name="rpp" value="50">
+<input type="hidden" name="spt" value="">
+<input type="hidden" name="stf" value="">
+<input type="hidden" name="tag" value="">
+<input type="hidden" name="tip" value="">
+<input type="hidden" name="idx" value="">
+</form>
+<!-- FMX000206 -->
+<html>
+<head>
+<link href="/phl82/css/phl.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<form action="/cgi-bin/wxis.exe" method="POST" target="result">
+<input type="hidden" name="tmp" value="/tmp/fileyEt1aL">
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">1/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>B869.2 / L638e / 5.ed. / v.1</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=2"> Selecionar&nbsp;<img src="/phl82/img/002.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=000002&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_23/7160.jpg"></div></td><td width="80%">LESSA, Orígenes. <b>...É conversando que as coisas se entendem... </b>5.ed.  Rio de Janeiro: Codecri, 1983. v.1. 128 p. (Coleção Pasquinzinho,1). <p><b>Notas de conteúdo:</b><li>Uma turma muito levada descobre uma carta muito estranha no lixão. Um monstro enorme e peludo, que adora devorar pequenos animais, pede ajuda para que deixe de ser monstro.</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=TEATRO INFANTIL BRASILEIRO&tmp=/tmp/fileyEt1aL">TEATRO INFANTIL BRASILEIRO.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">2/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>636.3 / V215d</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=7"> Selecionar&nbsp;<img src="/phl82/img/004.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=000007&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_61/7198.jpg"></div></td><td width="80%">VALVERDE, Cláudio Cid. <b>Duzentas e cinquenta maneiras de preparar rações balanceadas para caprinos. </b> Viçosa/MG: Aprenda Fácil, 1999. [s.p.]. <p><b>Notas de conteúdo:</b><li>Hábitos alimentares dos ovinos</li><li>Digestão e absorção dos alimentos</li><li>Necessidades nutritivas dos ovinos</li><li>Alimentos para o gado ovino</li><li>Manejo das pastagens</li><li>Alimentação dos ovinos em períodos da seca ou da escassez de alimentos</li><li>Cálculo de ração balanceada para ovino</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=CAPRINOCULTURA&tmp=/tmp/fileyEt1aL">CAPRINOCULTURA.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">3/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>928 / C355a - C355h</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=37"> Selecionar&nbsp;<img src="/phl82/img/005.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=000038&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_25/z.jpg"></div></td><td width="80%">CASTRO, Augusto de. <b>A arca de Noé; Homenagens e paisagens que eu conheci. </b> Lisboa/Portugal: Bertrand - Livraria Clássica, [19..]. 276 p. - 328 p. <p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=MEMORIAS&tmp=/tmp/fileyEt1aL">MEMORIAS; </a><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=OBRAS RARAS&tmp=/tmp/fileyEt1aL">OBRAS RARAS.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">4/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>335 / K65m</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=342"> Selecionar&nbsp;</td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"></td><td width="80%">KLIMOV, Gregory. <b>A máquina do terror. </b> Rio de Janeiro: Civilização Brasileira, [19..]. [s.p]. <p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=COMUNISMO&tmp=/tmp/fileyEt1aL">COMUNISMO.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">5/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>B869.33 / L771ag / 3.ed.</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=657"> Selecionar&nbsp;<img src="/phl82/img/003.gif" border="0">&nbsp;<img src="/phl82/img/002.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=000673&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_22/1375.jpg"></div></td><td width="80%">LISPECTOR, Clarice. <b>Água viva. </b>3.ed.  Rio de Janeiro: Nova Fronteira, 1978. 97 p. <p><b>Notas de conteúdo:</b><li>Escrito em 1973, é um grande relato intimista, onde as relações cotidianas comezinhas levam as personagens e o leitor a digressões sobre o sentido da vida.</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=LITERATURA BRASILEIRA&tmp=/tmp/fileyEt1aL">LITERATURA BRASILEIRA; </a><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=ROMANCE&tmp=/tmp/fileyEt1aL">ROMANCE.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">6/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>981 / V633h</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=4058"> Selecionar&nbsp;<img src="/phl82/img/003.gif" border="0">&nbsp;<img src="/phl82/img/005.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=004120&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_38/6148.jpg"></div></td><td width="80%">VICENTINO, Cláudio. <b>História integrada: </b>o século XX.  São Paulo: Scipione, 1995. 160 p. <p><b>Notas de conteúdo:</b><li>--</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=HISTORIA DO BRASIL&tmp=/tmp/fileyEt1aL">HISTORIA DO BRASIL.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">7/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>658 / C532i / 6.ed.</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=4301"> Selecionar&nbsp;<img src="/phl82/img/003.gif" border="0">&nbsp;<img src="/phl82/img/002.gif" border="0">&nbsp;<img src="/phl82/img/005.gif" border="0">&nbsp;<img src="/phl82/img/004.gif" border="0">&nbsp; [4] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=004366&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Administracao/introducao_a_Teoria_Geral_da_Administracao_6_edicao.jpg"></div></td><td width="80%">CHIAVENATO, Idalberto. <b>Introdução à teoria geral da administração. </b>6.ed.  Rio de Janeiro: Campus, 2000. 700 p.  ISBN 8535205578.<p><b>Notas de conteúdo:</b><li>A administração e suas perspectivas</li><li>Os primórdios da administração</li><li>Antecedentes históricos da administração</li><li>Abordagem clássica da administração, humanística da administração, neoclássica da administração, comportamental da administração, sistêmica da administração e contingencial da administração.</li><li>Administração científica</li><li>Teoria clássica da administração, das relações humanas, neoclássica da administração, abordagem estruturalista da administração, comportamental da administração, do desenvolvimento organizacional (do), matemática da administração, de sistemas e da contingência.</li><li>Decorrências da teoria das relações humanas e da abordagem neoclássica: tipos de organização e departamentalização</li><li>Administração por objetivos (apo)</li><li>Modelo burocrático de organização</li><li>Cibernética e administração</li><li>Novas abordagens da administração</li><li>Para onde vai a TGA?</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=ADMINISTRACAO&tmp=/tmp/fileyEt1aL">ADMINISTRACAO.</a></p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000093 -->
+<table width="100%"><tr><td align="left" width="30%">8/8</td><td width="70%"></td></tr></table><table width="100%" cellpadding="0" cellspacing="0" bgcolor="#e4fbc5"><tr><td width="20%" class="ft12" align="center"><img src=/phl82/img/027.gif border=0>&nbsp;<b>Livro</b>
+</td><td width="50%" align="left"><b>510 / A135r</b></td><td width="30%" align="right"><input type="checkbox" name="sel" value="MFN=67242"> Selecionar&nbsp;<img src="/phl82/img/003.gif" border="0">&nbsp;<img src="/phl82/img/016.gif" border="0">&nbsp;<img src="/phl82/img/002.gif" border="0">&nbsp; [1] <a href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=status_tit&tit=4092610290646&acv=001&tmp=/tmp/fileyEt1aL">Status</a></td></table><table cellpadding="0" cellspacing="0"><tr><td width="20%" valign="top" align="center"><div class="foto"><br><img src="/phl82/img/capas/Capas_Livros_22/26814.jpg"></div></td><td width="80%">ABDALLA, Samuel Liló. <b>Raciocínio lógico para concursos. </b> São Paulo: Saraiva, 2012. 141 p.  ISBN 978-85-02-16248-8.<p><b>Notas de conteúdo:</b><li>Raciocínio Lógico para Concursos foi elaborado com o principal objetivo de ajudar o concursando a desenvolver ferramentas para analisar e resolver questões que envolvem essa disciplina, considerada por muitos um bicho de sete cabeças. Com metodologia acessível e linguagem descomplicada, este livro contém questões atualizadas e muitos exemplos que auxiliam os leitores a compreenderem os fundamentos da lógica e principalmente os tornam capazes de dominá-los e aplicá-los em casos práticos, garantindo um aprendizado seguro e embasado</li></p><p><b>Palavras-chave:</b><br><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=MATEMATICA&tmp=/tmp/fileyEt1aL">MATEMATICA; </a><a class="link10" href="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&bool=exp&opc=decorado&exp=RACIOCINIO LOGICO&tmp=/tmp/fileyEt1aL">RACIOCINIO LOGICO.</a></p><p><img src=/phl82/img/056.gif border=0>&nbsp;<b>Comentários:</b><br><li>20/03/2017 - olá esse livro é muito bom, recomendo a todos. - <i>(Inácio Araújo Costa)</i></li>
+<li>20/03/2017 - Inácio Araújo Costa - <i>(Inácio Araújo Costa)</i></li>
+</p></td></tr><tr><td></td><td align="right" class="ft10">Campus Barbacena</td></tr></table>
+<!-- FMX000090 -->
+<input type="hidden" name="IsisScript" value="phl82/003.xis">
+<input type="hidden" name="acv" value="">
+<input type="hidden" name="ante" value="1"><input type="hidden" name="bool" value="exp">
+<input type="hidden" name="cnt" value="">
+<input type="hidden" name="col" value="">
+<input type="hidden" name="exp" value="TIT=000002  OR  TIT=000673  OR  TIT=004366  OR  TIT=4092610290646  OR  TIT=004120  OR  TIT=000007  OR  TIT=000038  OR  MFN=342">
+<input type="hidden" name="idm" value="">
+<input type="hidden" name="pft" value="decorado">
+<input type="hidden" name="prox" value="9"><input type="hidden" name="rpp" value="50"><input type="hidden" name="sel" value="
+">
+<input type="hidden" name="spt" value="">
+<input type="hidden" name="stf" value="">
+<input type="hidden" name="tag" value="">
+<input type="hidden" name="tip" value="">
+<input type="hidden" name="ulti" value="1"><center><hr><input type="image" name="opc" src="/phl82/img/014.gif"></center></form>
+</body>
+<head>
+<META HTTP-EQUIV="Pragma" CONTENT="no-cache">
+</head>
+</html>

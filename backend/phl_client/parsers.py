@@ -6,7 +6,7 @@ from __future__ import annotations
 import html
 import re
 import urllib.parse
-from typing import TypedDict
+from typing import NamedTuple, TypedDict
 
 from .errors import LibraryError
 from .fields import COPY_STATUS_BY_GIF, FIELDS, LINK_FIELDS, REPEATABLE_FIELDS, Record
@@ -25,6 +25,33 @@ class CopyRow(TypedDict, total=False):
     borrower: str
     loans: str
     renewals: str
+
+
+class CopyStatusItem(TypedDict):
+    """Resumo dos exemplares de um título no formato 'decorado' do OPAC."""
+
+    #: None quando o servidor não conseguiu mostrar o título.
+    mfn: int | None
+    #: Código do título; None quando o título não tem exemplar (o OPAC omite o link).
+    title_id: str | None
+    #: Total de exemplares (o "[N]" da página); 0 sem exemplar; None quando o PHL
+    #: não conseguiu mostrar o título (ver `PhlClient.copy_statuses`).
+    total: int | None
+    #: Situações presentes, sem repetição, na ordem de `COPY_STATUS_BY_GIF`. Não
+    #: diz quantos exemplares há em cada uma; ver `parse_copy_statuses`. É
+    #: ["unknown"] quando o PHL não conseguiu mostrar o título.
+    statuses: list[str]
+
+
+class CopyStatusPage(NamedTuple):
+    """Uma página do formato 'decorado', já convertida."""
+
+    #: Total de títulos da busca ("n/total"), ou None se a página não mostra.
+    total: int | None
+    items: list[CopyStatusItem]
+    #: True quando a página termina num erro fatal do WWWisis: os itens até ali
+    #: valem, e o título seguinte (em ordem de MFN) é o que o servidor não mostrou.
+    fatal_error: bool
 
 
 class ReferenceItem(TypedDict):
@@ -160,6 +187,48 @@ def parse_copies(page: str, include_borrower: bool = False) -> list[CopyRow]:
             copy["borrower"] = cells[5]
         copies.append(copy)
     return copies
+
+
+_STATUS_ORDER = list(COPY_STATUS_BY_GIF.values())
+
+
+def parse_copy_statuses(page: str) -> CopyStatusPage:
+    """Página do formato 'decorado' -> total da busca, um item por título e se a
+    página foi interrompida por um erro fatal do servidor.
+
+    Cada título traz, ao lado do checkbox de seleção, um ícone por situação presente,
+    o total de exemplares ("[N]") e o link da tela de exemplares, com o código do
+    título. Título sem exemplar não tem nada disso e vem com `title_id` None.
+
+    Os ícones misturam duas origens: 003 (emprestado) e 016 (reserva) vêm da
+    circulação, os demais da situação cadastral do exemplar. Um exemplar emprestado
+    continua aparecendo como 002 (disponível), então 002 junto de 003 não garante
+    exemplar livre (ex.: título com um só exemplar, emprestado: 003 + 002, "[1]").
+
+    Raises:
+        LibraryError: Quando um título tem exemplares mas vem sem o código.
+    """
+    hits = re.search(r">\d+/(\d+)<", page)
+    items: list[CopyStatusItem] = []
+    for block in page.split('name="sel" value="MFN=')[1:]:
+        mfn, _, rest = block.partition('"')
+        cell = rest.split("</td>")[0]
+        gifs = set(re.findall(r"/img/(\d{3})\.gif", cell))
+        statuses = {COPY_STATUS_BY_GIF[gif] for gif in gifs if gif in COPY_STATUS_BY_GIF}
+        total = re.search(r"\[(\d+)\]", cell)
+        title_id = re.search(r"[?&]tit=(\d+)", cell)
+        if (statuses or total) and not title_id:
+            raise LibraryError("resposta do servidor em formato inesperado (título com exemplares sem código)")
+        if not mfn.isdigit():
+            raise LibraryError("resposta do servidor em formato inesperado (título sem MFN)")
+        items.append({
+            "mfn": int(mfn),
+            "title_id": title_id.group(1) if title_id else None,
+            "total": int(total.group(1)) if total else 0,
+            "statuses": [status for status in _STATUS_ORDER if status in statuses],
+        })
+    fatal_error = page.rstrip().rsplit("\n", 1)[-1].startswith("WXIS|")
+    return CopyStatusPage(int(hits.group(1)) if hits else None, items, fatal_error)
 
 
 def parse_references(xml: str) -> tuple[int | None, list[ReferenceItem]]:
