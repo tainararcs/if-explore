@@ -1,4 +1,4 @@
-import type { Book, BookCopies, BookDetail, BookLink } from '../models/book'
+import { COPY_STATUSES, type Book, type BookCopies, type BookDetail, type BookLink, type CopyStatus } from '../models/book'
 import { COURSE_LEVELS, type Course, type CourseLevel, type KnowledgeArea, type LiteraryGenre } from '../models/taxonomy'
 
 /** Resposta da API fora do contrato esperado. */
@@ -92,14 +92,22 @@ export function parseCourse(value: unknown, path = 'course'): Course {
   }
 }
 
+function isCopyStatus(value: unknown): value is CopyStatus {
+  return COPY_STATUSES.some((status) => status === value)
+}
+
 function parseCopies(value: unknown, path: string): BookCopies | null {
   if (value === null) {
     return null
   }
   const data = record(value, path)
+  if (!isCopyStatus(data.status)) {
+    throw new ApiContractError(`${path}.status`)
+  }
   return {
     total: number(data.total, `${path}.total`),
-    available: number(data.available, `${path}.available`),
+    status: data.status,
+    available: nullableNumber(data.available, `${path}.available`),
     updatedAt: string(data.updatedAt, `${path}.updatedAt`),
   }
 }
@@ -131,7 +139,6 @@ export function parseBook(value: unknown, path = 'book'): Book {
     documentType: nullableString(data.documentType, field('documentType')),
     coverUrl: nullableString(data.coverUrl, field('coverUrl')),
     copies: parseCopies(data.copies, field('copies')),
-    loans: number(data.loans, field('loans')),
   }
 }
 
@@ -163,6 +170,7 @@ export function parseBookDetail(value: unknown, path = 'book'): BookDetail {
     links: list(data.links, field('links'), parseLink),
     tccCourse: nullableString(data.tccCourse, field('tccCourse')),
     catalogedAt: nullableString(data.catalogedAt, field('catalogedAt')),
+    loans: nullableNumber(data.loans, field('loans')),
   }
 }
 

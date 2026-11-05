@@ -48,10 +48,13 @@ export const ptBR = {
     },
     availability: {
       available: 'Disponível',
+      libraryUse: 'Consulta local',
       borrowed: 'Emprestado',
-      copies: '{available} de {total} exemplar disponível | {available} de {total} exemplares disponíveis',
-      allBorrowed: 'Exemplar emprestado | Todos os {n} exemplares emprestados',
+      unavailable: 'Indisponível',
+      uncertain: 'Verifique a disponibilidade',
+      noCopies: 'Sem exemplar físico',
       unknown: 'Consulte na biblioteca',
+      copies: '{available} de {total} exemplar disponível | {available} de {total} exemplares disponíveis',
     },
   },
   routes: {
@@ -210,6 +213,7 @@ export const ptBR = {
       copyFailed: 'Não foi possível copiar',
       copies: 'Exemplares',
       copiesValue: '{available} de {total} disponíveis',
+      copiesTotal: '{n} exemplar | {n} exemplares',
       publisher: 'Editora',
       year: 'Ano',
       pages: 'Páginas',
