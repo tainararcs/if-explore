@@ -38,9 +38,10 @@ sticky cover on desktop, swipeable shelf).
 ## 3. Data
 
 - `getBookById(id)` in `src/services/catalog-service.ts` calls `GET /api/books/{id}`
-  and returns `BookDetail | null` (404 becomes `null`). The API refreshes the
-  copies from the library catalog when they are older than 15 minutes, so the
-  page shows live availability.
+  and returns `BookDetail | null` (404 becomes `null`). The API checks the
+  copies live in the library catalog when the last check is older than 15
+  minutes, so the page shows the exact count (`copies.available`); cards
+  elsewhere only have `copies.status`.
 - `getRelatedBooks(id)` in `features/book-detail/services/book-detail-service.ts`
   calls `GET /api/books/{id}/related` and returns `RelatedShelves`
   (`features/book-detail/models/related-books.ts`, type only).
@@ -103,7 +104,7 @@ Definition list (`<dl>`), two columns from `sm`:
 | Label | Value |
 |---|---|
 | Localização | `callNumber`, with a copy button ("Copiar localização", toast-free: the button label changes to "Copiado" for 2s and announces via `aria-live`) |
-| Exemplares | "2 de 3 disponíveis"; hidden while `copies` is `null` |
+| Exemplares | "2 de 3 disponíveis" with the live count, "3 exemplares" without it; hidden while `copies` is `null` or the title has no copies |
 | Editora | publisher, plus edition when present |
 | Ano | year |
 | Páginas | pages, formatted with `Intl.NumberFormat` |

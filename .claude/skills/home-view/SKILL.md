@@ -63,7 +63,7 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
   makes it follow the finger. Other shelves keep the free scroll on mobile.
 - Each item is a book card linking to the book page: cover (catalog image, or the
   generated one when missing), title, authors (`formatAuthors`), and availability
-  badge ("Consulte na biblioteca" while the copies were not checked yet).
+  badge (label from `copies.status`; "Consulte na biblioteca" while `copies` is `null`).
 
 ## 5. Search
 

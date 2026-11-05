@@ -79,7 +79,8 @@ def list_books(
     course: list[str] = Query([], description="Cursos (OU)."),
     genre: list[str] = Query([], description="Gêneros (OU)."),
     type_: list[BookType] = Query([], alias="type", description="Tipos de documento (OU)."),
-    available: bool | None = Query(None, description="Só com (true) ou sem (false) exemplar disponível."),
+    available: bool | None = Query(None, description="Só com (true) ou sem (false) exemplar livre para "
+                                   "empréstimo; títulos de situação incerta ou sem exemplar ficam fora dos dois."),
     prefer_area: list[str] = Query([], alias="preferArea", description="Áreas que vêm primeiro."),
     sort: books.SortOrder | None = Query(None, description="Padrão: relevance com q, popular sem."),
     page: int = Query(1, ge=1),
@@ -161,5 +162,5 @@ def get_status(request: HttpRequest) -> StatusOut:
     """Tamanho do acervo local e as últimas sincronizações com o PHL."""
     active = Book.objects.filter(is_active=True)
     return StatusOut(active_books=active.count(),
-                     books_with_copies=active.filter(copies_checked_at__isnull=False).count(),
-                     catalog_sync=_last_sync(SyncKind.CATALOG), copies_sync=_last_sync(SyncKind.COPIES))
+                     books_with_copies=active.exclude(copy_status="").count(),
+                     catalog_sync=_last_sync(SyncKind.CATALOG))

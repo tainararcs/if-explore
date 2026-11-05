@@ -1,4 +1,4 @@
-"""Comando `sync_catalog`: snapshot diário dos metadados do PHL."""
+"""Comando `sync_catalog`: snapshot dos metadados e da situação dos exemplares do PHL."""
 
 from argparse import ArgumentParser
 from typing import Any
@@ -10,7 +10,8 @@ from phl_client import LibraryError
 
 
 class Command(BaseCommand):
-    help = "Baixa o acervo inteiro do PHL (1 requisição, ~10 s) e atualiza livros, relações e índice de busca."
+    help = ("Baixa o acervo inteiro e a situação dos exemplares do PHL (~7 a 13 requisições, ~1,5 min) e atualiza "
+            "livros, exemplares, relações e índice de busca.")
 
     def add_arguments(self, parser: ArgumentParser) -> None:
         parser.add_argument("--min-ratio", type=float, default=None,

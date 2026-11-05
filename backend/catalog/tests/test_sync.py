@@ -3,16 +3,16 @@
 import datetime as dt
 from collections.abc import Iterator
 
-from django.core.management import CommandError, call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from catalog.models import Author, Book, SyncKind, SyncRun, SyncStatus
+from catalog.models import Author, Book, CopyStatus, SyncKind, SyncRun, SyncStatus
 from catalog.services import search_index
-from catalog.services.sync import SyncError, apply_snapshot, refresh_copies, sync_catalog, sync_copies
-from phl_client import Library, LibraryConnectionError, LibraryError
+from catalog.services.availability import refresh_copies
+from catalog.services.sync import SyncError, apply_snapshot, sync_catalog
+from phl_client import Library, LibraryError
 from phl_client.fields import Record
-from phl_client.parsers import CopyRow, parse_copies, parse_records
+from phl_client.parsers import CopyRow, CopyStatusItem, parse_copies, parse_records
 from phl_client.tests import BASE_URL, fixture
 
 PYTHON_BOOK, DJANGO_BOOK, TCC = "102231235013", "103020853083", "8121210140072"
@@ -24,6 +24,19 @@ def snapshot_records() -> list[Record]:
             for record in parse_records(fixture(name), BASE_URL)]
 
 
+def status_items() -> list[CopyStatusItem]:
+    """Situação em lote dos títulos do snapshot. O TCC fica de fora, como os títulos
+    sem exemplar no formato decorado."""
+    def item(mfn: int, title_id: str | None, total: int, statuses: list[str]) -> CopyStatusItem:
+        return {"mfn": mfn, "title_id": title_id, "total": total, "statuses": statuses}
+
+    ids = [str(record["title_id"]) for record in snapshot_records()]
+    others = [item(i, title_id, 1, ["unavailable"]) for i, title_id in enumerate(ids)
+              if title_id not in (PYTHON_BOOK, DJANGO_BOOK, TCC)]
+    return [item(100, PYTHON_BOOK, 3, ["available", "on_loan"]), item(101, DJANGO_BOOK, 2, ["available"]),
+            item(102, None, 0, []), *others]
+
+
 class FakeLibrary(Library):
     """Library que responde com páginas salvas e registra os títulos consultados."""
 
@@ -32,10 +45,16 @@ class FakeLibrary(Library):
         self.failing = failing or {}
         self.checked: list[str] = []
         self.phl.search_all = self._search_all  # type: ignore[method-assign]
+        self.phl.copy_statuses = self._copy_statuses  # type: ignore[method-assign]
         self.phl.copies = self._copies  # type: ignore[method-assign]
 
     def _search_all(self, *args: object, **kwargs: object) -> Iterator[Record]:
         yield from snapshot_records()
+
+    def _copy_statuses(self, *args: object, **kwargs: object) -> Iterator[CopyStatusItem]:
+        if "copy_statuses" in self.failing:
+            raise self.failing["copy_statuses"]
+        yield from status_items()
 
     def _copies(self, title_id: str, *args: object, **kwargs: object) -> list[CopyRow]:
         self.checked.append(title_id)
@@ -86,6 +105,30 @@ class SnapshotTests(TestCase):
         self.assertEqual((python.copies_total, python.loans_total, python.synced_at), (3, 40, later))
         self.assertNotIn(DJANGO_BOOK, search_index.ranked_ids("python"))
 
+    def test_batch_statuses(self) -> None:
+        stats = apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
+        self.assertEqual((stats["available"], stats["uncertain"], stats["no_copies"]), (1, 1, 1))
+        python, django, tcc = (Book.objects.get(id=i) for i in (PYTHON_BOOK, DJANGO_BOOK, TCC))
+        self.assertEqual((python.copies_total, python.copy_statuses, python.copy_status),
+                         (3, ["available", "on_loan"], CopyStatus.UNCERTAIN))
+        self.assertEqual((django.copy_status, django.copies_total), (CopyStatus.AVAILABLE, 2))
+        # ausente da leitura em lote: o decorado omite o código dos títulos sem exemplar
+        self.assertEqual((tcc.copy_status, tcc.copies_total, tcc.copy_statuses), (CopyStatus.NO_COPIES, 0, []))
+        self.assertIsNotNone(python.copies_synced_at)
+
+    def test_batch_keeps_live_counts(self) -> None:
+        Book.objects.filter(id=PYTHON_BOOK).update(copies_available=1, loans_total=40,
+                                                   copies_checked_at=timezone.now())
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
+        python = Book.objects.get(id=PYTHON_BOOK)
+        self.assertEqual((python.copies_available, python.loans_total), (1, 40))
+        self.assertIsNotNone(python.copies_checked_at)
+
+    def test_truncated_statuses_are_refused(self) -> None:
+        with self.assertRaises(SyncError):
+            apply_snapshot(snapshot_records(), status_items()[:3], min_ratio=0.9)
+        self.assertEqual(Book.objects.exclude(copy_status="").count(), 0)
+
     def test_truncated_snapshot_is_refused(self) -> None:
         with self.assertRaises(SyncError):
             apply_snapshot(snapshot_records()[:2], min_ratio=0.9)
@@ -96,6 +139,14 @@ class SyncRunTests(TestCase):
     def test_sync_catalog_records_the_run(self) -> None:
         run = sync_catalog(FakeLibrary())
         self.assertEqual((run.kind, run.status, run.stats["books"]), (SyncKind.CATALOG, SyncStatus.SUCCESS, 9))
+        self.assertEqual(Book.objects.get(id=DJANGO_BOOK).copy_status, CopyStatus.AVAILABLE)
+
+    def test_status_failure_applies_nothing(self) -> None:
+        library = FakeLibrary({"copy_statuses": LibraryError("situação dos exemplares cortada")})
+        with self.assertRaises(LibraryError):
+            sync_catalog(library)
+        self.assertEqual(Book.objects.count(), 0)
+        self.assertEqual(SyncRun.objects.get().status, SyncStatus.FAILED)
 
     def test_concurrent_run_is_refused(self) -> None:
         SyncRun.objects.create(kind=SyncKind.CATALOG)
@@ -103,36 +154,17 @@ class SyncRunTests(TestCase):
             sync_catalog(FakeLibrary())
 
 
-class CopiesTests(TestCase):
+class LiveCopiesTests(TestCase):
     def setUp(self) -> None:
-        apply_snapshot(snapshot_records(), min_ratio=0.9)
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
 
-    def test_refresh_copies_stores_totals(self) -> None:
-        summary = refresh_copies(FakeLibrary(), PYTHON_BOOK)
+    def test_refresh_copies_stores_exact_counts(self) -> None:
+        library = FakeLibrary()
+        summary = refresh_copies(library, PYTHON_BOOK)
+        self.assertEqual(library.checked, [PYTHON_BOOK])
         self.assertEqual((summary.total, summary.available, summary.loans), (2, 1, 9))
         book = Book.objects.get(id=PYTHON_BOOK)
         self.assertEqual((book.copies_total, book.copies_available, book.loans_total), (2, 1, 9))
+        # o lote dizia "incerta"; a tela de exemplares resolve
+        self.assertEqual((book.copy_status, book.copy_statuses), (CopyStatus.AVAILABLE, ["available", "on_loan"]))
         self.assertIsNotNone(book.copies_checked_at)
-
-    def test_rotation_checks_never_checked_titles_first(self) -> None:
-        checked_at = timezone.now() - dt.timedelta(days=1)
-        Book.objects.exclude(id__in=[TCC, PYTHON_BOOK]).update(copies_checked_at=checked_at)
-        library = FakeLibrary()
-        run = sync_copies(library, limit=2)
-        self.assertEqual(set(library.checked), {TCC, PYTHON_BOOK})
-        self.assertEqual(run.stats["checked"], 2)
-
-    def test_title_error_is_counted_and_rotation_continues(self) -> None:
-        run = sync_copies(FakeLibrary({PYTHON_BOOK: LibraryError("WXIS|erro")}), limit=9)
-        self.assertEqual((run.stats["checked"], run.stats["errors"]), (8, 1))
-
-    def test_connection_error_stops_the_rotation(self) -> None:
-        library = FakeLibrary({PYTHON_BOOK: LibraryConnectionError("fora do ar")})
-        with self.assertRaises(LibraryConnectionError):
-            sync_copies(library, book_ids=[PYTHON_BOOK, TCC])
-        self.assertEqual(library.checked, [PYTHON_BOOK])
-        self.assertEqual(SyncRun.objects.get(kind=SyncKind.COPIES).status, SyncStatus.FAILED)
-
-    def test_command_validates_limit(self) -> None:
-        with self.assertRaises(CommandError):
-            call_command("sync_copies", "--limit", "0")

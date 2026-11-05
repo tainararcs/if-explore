@@ -13,7 +13,7 @@ from ninja import Schema
 from pydantic import ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
-from catalog.models import Book, Course, KnowledgeArea, LiteraryGenre
+from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
 
 ShelfKind = Literal["forYou", "becauseYouChose", "moreFromArea", "forPleasure"]
 
@@ -54,12 +54,26 @@ class GenreOut(CamelSchema):
 
 # ---- livros
 class CopiesOut(CamelSchema):
-    """Exemplares do título. Ausente (`null` no livro) até a primeira verificação."""
+    """Exemplares do título. Ausente (`null` no livro) até a primeira leitura."""
 
     total: int
-    available: int
-    #: Quando a situação foi consultada no PHL.
+    #: Situação para o visitante (ver `CopyStatus`).
+    status: CopyStatus
+    #: Exemplares livres; só conhecido quando a consulta ao vivo é a leitura mais recente.
+    available: int | None
+    #: Quando a situação foi lida no PHL (em lote ou ao vivo).
     updated_at: dt.datetime
+
+    @classmethod
+    def from_model(cls, book: Book) -> CopiesOut | None:
+        """Exemplares do livro, ou None se ainda não foram lidos."""
+        times = [moment for moment in (book.copies_synced_at, book.copies_checked_at) if moment is not None]
+        if not book.copy_status or book.copies_total is None or not times:
+            return None
+        live_is_latest = book.copies_checked_at is not None and (
+            book.copies_synced_at is None or book.copies_checked_at >= book.copies_synced_at)
+        return cls(total=book.copies_total, status=CopyStatus(book.copy_status),
+                   available=book.copies_available if live_is_latest else None, updated_at=max(times))
 
 
 class BookLinkOut(CamelSchema):
@@ -90,17 +104,11 @@ class BookSummaryOut(CamelSchema):
     document_type: str | None
     cover_url: str | None
     copies: CopiesOut | None
-    #: Empréstimos já feitos, somando os exemplares (0 até a primeira verificação).
-    loans: int
 
     @staticmethod
     def fields_from(book: Book) -> dict[str, object]:
         """Campos comuns a partir de um livro com as relações pré-carregadas
         (ver `catalog.services.books.with_relations`)."""
-        copies = None
-        if book.copies_checked_at is not None and book.copies_total is not None:
-            copies = CopiesOut(total=book.copies_total, available=book.copies_available or 0,
-                               updated_at=book.copies_checked_at)
         return {
             "id": book.id, "title": book.title, "subtitle": book.subtitle or None,
             "authors": [link.author.name for link in book.bookauthor_set.all()],
@@ -112,7 +120,7 @@ class BookSummaryOut(CamelSchema):
             "isbn": book.isbn or None, "publisher": book.publisher or None,
             "edition": book.edition or None, "pages": book.pages,
             "document_type": book.document_type or None, "cover_url": book.cover_url or None,
-            "copies": copies, "loans": book.loans_total,
+            "copies": CopiesOut.from_model(book),
         }
 
     @classmethod
@@ -137,6 +145,8 @@ class BookDetailOut(BookSummaryOut):
     links: list[BookLinkOut]
     tcc_course: str | None
     cataloged_at: dt.date | None
+    #: Empréstimos já feitos, somando os exemplares; null até a consulta ao vivo.
+    loans: int | None
 
     @classmethod
     def from_model(cls, book: Book) -> BookDetailOut:
@@ -147,7 +157,7 @@ class BookDetailOut(BookSummaryOut):
             physical_description=book.physical_description or None, issn=book.issn or None,
             issue=book.issue or None, languages=book.languages, notes=book.notes,
             links=[BookLinkOut(label=link["label"], url=link["url"]) for link in book.links],
-            tcc_course=book.tcc_course or None, cataloged_at=book.cataloged_at,
+            tcc_course=book.tcc_course or None, cataloged_at=book.cataloged_at, loans=book.loans_total,
         )
 
 
@@ -205,8 +215,7 @@ class SyncOut(CamelSchema):
 
 class StatusOut(CamelSchema):
     active_books: int
-    #: Títulos com exemplares já verificados no PHL.
+    #: Títulos com a situação dos exemplares já lida no PHL.
     books_with_copies: int
-    #: Última sincronização concluída de cada tipo; null se nunca houve.
+    #: Última sincronização concluída do catálogo; null se nunca houve.
     catalog_sync: SyncOut | None
-    copies_sync: SyncOut | None

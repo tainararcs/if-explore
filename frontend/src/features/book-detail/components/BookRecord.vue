@@ -76,7 +76,7 @@ import { useI18n } from 'vue-i18n'
 import ExternalLink from '../../../components/ExternalLink.vue'
 import IconCheck from '../../../components/icons/IconCheck.vue'
 import { useClipboardFeedback } from '../../../composables/useClipboardFeedback'
-import type { BookDetail } from '../../../models/book'
+import type { BookCopies, BookDetail } from '../../../models/book'
 
 interface Props {
   book: BookDetail
@@ -107,9 +107,7 @@ const items = computed(() => {
   const candidates: { key: string; value: string | null }[] = [
     {
       key: 'copies',
-      value: book.copies
-        ? t('bookDetail.record.copiesValue', { available: book.copies.available, total: book.copies.total })
-        : null,
+      value: copiesText(book.copies),
     },
     {
       key: 'publisher',
@@ -129,6 +127,17 @@ const items = computed(() => {
   ]
   return candidates.filter((item): item is { key: string; value: string } => item.value !== null)
 })
+
+/** Contagem exata quando a consulta ao vivo a trouxe; senão, só o total. */
+function copiesText(copies: BookCopies | null): string | null {
+  if (copies === null || copies.total === 0) {
+    return null
+  }
+  const { available, total } = copies
+  return available === null
+    ? t('bookDetail.record.copiesTotal', { n: total }, total)
+    : t('bookDetail.record.copiesValue', { available, total })
+}
 
 function copyLocation(): void {
   if (props.book.callNumber) {

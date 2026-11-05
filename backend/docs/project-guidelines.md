@@ -30,7 +30,7 @@ backend/
 |---|---|
 | `phl_client/` | Talk to the PHL catalog and turn its pages into typed data. Knows nothing about Django. |
 | `catalog/models.py` | Entities, constraints, and indexes. The ORM is the data access layer. |
-| `catalog/services/` | Rules: sync, classification, search, recommendations, live availability. |
+| `catalog/services/` | Rules: sync, classification, copy status, search, recommendations, live availability. |
 | `catalog/api.py` | Routes: validate parameters, call a service, convert to schemas. |
 | `catalog/schemas.py` | The JSON contract with the frontend. |
 | `catalog/admin.py` | Curation of the taxonomy; synced data is read-only. |
@@ -82,21 +82,32 @@ collection.
 
 ## 5. Sync with the PHL catalog
 
-- `sync_catalog` downloads the whole collection in a few large requests and
-  applies it in one transaction: upsert books, rebuild relations, deactivate
+- `sync_catalog` runs every 6 hours. It downloads the whole collection and the
+  copy status summary in a few large requests and applies them in one
+  transaction: upsert books and their copy status, rebuild relations, deactivate
   missing titles, and rebuild the search index. The API keeps reading the
-  previous version until it commits.
+  previous version until it commits. If any download fails, nothing is applied.
 - A snapshot much smaller than the active collection is refused
   (`CATALOG_SYNC_MIN_RATIO`): it is treated as a truncated response.
-- The copy fields (`copies_*`, `loans_total`) are not in the snapshot field list
-  (`SNAPSHOT_FIELDS` in `sync.py`) and must never be overwritten by it.
-- `sync_copies` checks copies one title per request (~0.7 s each), in batches.
-  It is being replaced by reading the copy status in bulk from the OPAC result
-  pages (`decorado` format) during the catalog sync; do not extend it. Use
-  `--book ID` for one-off checks.
-- The book page refreshes its copies live from the PHL when they are older than
-  `COPIES_LIVE_MAX_AGE_MINUTES`; a PHL failure keeps the stored data instead of
-  failing the page.
+- The copy status comes from the OPAC `decorado` format
+  (`PhlClient.copy_statuses`): per title, the total and which statuses are
+  present, not how many copies are free. That format ignores pagination and the
+  server cuts it on some broken records, so it is split by title id prefix
+  (`STATUS_TITLE_PREFIXES`) and works around broken records at a bounded cost.
+- In that format a borrowed or reserved copy still shows as available, so the
+  title status (`CopyStatus`) is derived by `catalog/services/copy_status.py`:
+  "available" only without loans or reservations, otherwise `uncertain` when it
+  cannot tell. The frontend shows `copies.status` and never interprets raw
+  statuses.
+- The batch writes only `COPY_BATCH_FIELDS`. The exact free count and loans
+  (`copies_available`, `loans_total`) come only from the live check and must
+  never be overwritten by the sync; the API shows the free count only when the
+  live check is the most recent reading.
+- Popularity is the number of copies (`copies_total`), known for every title;
+  loans are only known for titles someone opened.
+- The book page refreshes its copies live from the PHL (1 request) when the last
+  live check is older than `COPIES_LIVE_MAX_AGE_MINUTES`; a PHL failure keeps the
+  stored data instead of failing the page.
 - Every sync run is recorded in `SyncRun`, and two runs of the same kind never
   overlap.
 - Count the PHL requests of any new sync step. Steps that grow with the size of
@@ -148,6 +159,6 @@ collection.
 
 - Measure before optimizing and report the numbers. Current reference on the
   real collection (~20k titles): search 10–190 ms, related books ~75 ms, home
-  recommendations ~0.4 s, full catalog sync ~40 s.
+  recommendations ~0.4 s, full catalog sync with copy status ~85 s.
 - SQLite runs in WAL mode so the sync can write while the API reads; keep write
   transactions short outside the snapshot.

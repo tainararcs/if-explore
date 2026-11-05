@@ -73,7 +73,7 @@ def recommendable() -> QuerySet[Book]:
 
 def _tie_breakers() -> list[object]:
     has_cover = Case(When(cover_url="", then=Value(0)), default=Value(1), output_field=IntegerField())
-    return [has_cover.desc(), F("loans_total").desc(), "id"]
+    return [has_cover.desc(), F("copies_total").desc(nulls_last=True), "id"]
 
 
 # ---- afinidade entre livros
@@ -108,7 +108,7 @@ def affinity_ranking(book: Book, *, min_score: int = 1, limit: int = MAX_AFFINIT
                    + CASE WHEN b.area_id IS NOT NULL AND b.area_id = %s THEN 1 ELSE 0 END AS score
               FROM scored s JOIN {book_table} b ON b.id = s.book_id
              WHERE b.is_active AND b.document_type IN ({types})
-             ORDER BY score DESC, b.cover_url = '', b.loans_total DESC, b.id
+             ORDER BY score DESC, b.cover_url = '', b.copies_total IS NULL, b.copies_total DESC, b.id
         """, [book.id, book.id, book.id, book.id, book.area_id, *RECOMMENDABLE_TYPES])
         ranking = [(row[0], int(row[1])) for row in cursor.fetchall()]
     return [(book_id, score) for book_id, score in ranking if score > min_score][:limit]

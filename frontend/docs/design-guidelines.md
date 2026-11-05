@@ -422,8 +422,12 @@ search results use `Book`; the book page uses `BookDetail`, which adds credits,
 digital files (`links`), notes, and other record fields. Fields the catalog lacks
 arrive as `null` (`year`, `pages`, `publisher`, `synopsis`, `callNumber`,
 `coverUrl`, `areaId`), and screens must hide them instead of showing a
-placeholder. `copies` is `null` until the API has checked the title's copies:
-show the neutral "Consulte na biblioteca" badge, not "Emprestado".
+placeholder. `copies` is `null` until the API has read the title's copies: show
+the neutral "Consulte na biblioteca" badge, not "Emprestado". Otherwise
+`copies.status` is computed by the API and the badge only maps it to a label
+("Disponível", "Consulta local", "Emprestado", "Indisponível", "Verifique a
+disponibilidade", "Sem exemplar físico"). `copies.available` (the exact free
+count) is `null` except right after the live check of the book page.
 
 Search, related books, recommendation shelves, and onboarding candidates are
 computed by the API over the whole collection; the frontend does not rank books.

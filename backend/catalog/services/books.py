@@ -10,11 +10,13 @@ from django.db import connection
 from django.db.models import Case, Exists, F, IntegerField, OuterRef, Prefetch, QuerySet, Value, When
 from django.db.models.functions import Upper
 
-from catalog.models import Book, BookAuthor
+from catalog.models import Book, BookAuthor, CopyStatus
 from catalog.services import search_index
 
 SortOrder = Literal["relevance", "popular", "recent", "title"]
 
+# Títulos com exemplar, mas nenhum livre para empréstimo (filtro available=false).
+UNAVAILABLE_STATUSES = (CopyStatus.IN_LIBRARY_USE, CopyStatus.ON_LOAN, CopyStatus.UNAVAILABLE)
 # Filtro `type` da API -> tipo de documento como o catálogo grava.
 DOCUMENT_TYPES = {
     "book": "Livro",
@@ -71,9 +73,9 @@ def filtered(filters: BookFilters) -> QuerySet[Book]:
     if filters.types:
         queryset = queryset.filter(document_type__in=[DOCUMENT_TYPES[key] for key in filters.types])
     if filters.available is True:
-        queryset = queryset.filter(copies_available__gt=0)
+        queryset = queryset.filter(copy_status=CopyStatus.AVAILABLE)
     elif filters.available is False:
-        queryset = queryset.filter(copies_available=0)
+        queryset = queryset.filter(copy_status__in=UNAVAILABLE_STATUSES)
     return queryset
 
 
@@ -83,7 +85,8 @@ def search(text: str, filters: BookFilters, *, sort: SortOrder | None = None,
 
     Com texto, busca no índice FTS5 (título, autores, assuntos, sinopse e extras) e,
     por padrão, ordena por relevância (bm25). Sem texto, lista pelos filtros e, por
-    padrão, ordena pelos mais emprestados. Em qualquer caso, `prefer_area_ids` põe os
+    padrão, ordena pelos que têm mais exemplares (a biblioteca compra mais
+    exemplares dos títulos mais procurados, como a bibliografia dos cursos). Em qualquer caso, `prefer_area_ids` põe os
     livros dessas áreas primeiro, como o frontend faz com as áreas do visitante.
 
     Args:
@@ -103,8 +106,8 @@ def search(text: str, filters: BookFilters, *, sort: SortOrder | None = None,
 def _list_page(queryset: QuerySet[Book], sort: SortOrder, prefer_area_ids: Sequence[str],
                offset: int, limit: int) -> BookPage:
     ordering = {
-        "relevance": ["-loans_total", Upper("title")],
-        "popular": ["-loans_total", Upper("title")],
+        "relevance": [F("copies_total").desc(nulls_last=True), Upper("title")],
+        "popular": [F("copies_total").desc(nulls_last=True), Upper("title")],
         "recent": [F("cataloged_at").desc(nulls_last=True), Upper("title")],
         "title": [Upper("title"), "id"],
     }[sort]
@@ -127,7 +130,7 @@ def _search_page(match: str, queryset: QuerySet[Book], sort: SortOrder, prefer_a
     weights = ", ".join(str(weight) for weight in search_index.BM25_WEIGHTS)
     order = {
         "relevance": f"bm25({fts}, {weights})",
-        "popular": "b.loans_total DESC, upper(b.title)",
+        "popular": "b.copies_total IS NULL, b.copies_total DESC, upper(b.title)",
         "recent": "b.cataloged_at IS NULL, b.cataloged_at DESC, upper(b.title)",
         "title": "upper(b.title)",
     }[sort]

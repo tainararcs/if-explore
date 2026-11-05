@@ -8,7 +8,7 @@ import unittest
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
-from phl_client import Book, Copy, Library, SearchResult
+from phl_client import Book, Copy, Library, LibraryError, SearchResult
 from phl_client.fields import Record
 from phl_client.parsers import parse_copies, parse_records
 
@@ -26,13 +26,13 @@ class FakeServerLibrary(Library):
         super().__init__(BASE_URL, connect=False, pause=0)
         self.phl.script_dir, self.phl.session = "phl82", "/tmp/fileTEST"
         self.requests: list[Mapping[str, str | None]] = []
+        self.pages = {"decorado": "decorated.html", "phl": "export.html", "status_tit": "status_on_loan.html",
+                      "referencia": "reference.html"}
         self.phl.request = self._respond  # type: ignore[method-assign]
 
     def _respond(self, params: Mapping[str, str | None]) -> str:
         self.requests.append(params)
-        pages = {"decorado": "decorated.html", "phl": "export.html", "status_tit": "status_on_loan.html",
-                 "referencia": "reference.html"}
-        return fixture(pages[str(params["opc"])])
+        return fixture(self.pages[str(params["opc"])])
 
 
 class BookTests(unittest.TestCase):
@@ -154,6 +154,56 @@ class LibraryTests(unittest.TestCase):
             with self.subTest(call=index), self.assertRaises(ValueError):
                 call()
         self.assertEqual(library.requests, [])
+
+    def test_copy_statuses_one_request_per_prefix_group(self) -> None:
+        library = FakeServerLibrary()
+        library.pages["decorado"] = "decorated_statuses.html"
+        items = list(library.phl.copy_statuses([["0"], ["1", "2"]]))
+        self.assertEqual(len(items), 16)
+        self.assertEqual([request["exp"] for request in library.requests], ["TIT=0$", "TIT=1$ + TIT=2$"])
+        self.assertEqual({(r["opc"], r["bool"], r["rpp"]) for r in library.requests}, {("decorado", "exp", "25000")})
+
+    def test_copy_statuses_refuse_a_truncated_page(self) -> None:
+        library = FakeServerLibrary()
+        # a página anuncia 13 títulos e só traz 1: o servidor cortou a resposta
+        with self.assertRaisesRegex(LibraryError, "cortada"):
+            list(library.phl.copy_statuses([["0"]]))
+
+    def test_copy_statuses_work_around_a_title_that_breaks_the_page(self) -> None:
+        library = FakeServerLibrary()
+        decorated = fixture("decorated_statuses.html")
+        cut = decorated[:decorated.index('value="MFN=342"')].rsplit("<table", 1)[0]
+        broken = cut + "\n\nWXIS|fatal error|unavoidable|dbxopen: _tbo.cnt (2)|\n"
+        # o formato phl, a partir do 4º título: o defeituoso e os que faltaram
+        export = "<hr>002: 4092610290646<br></td><hr>002: 000007<br></td>"
+
+        def respond(params: Mapping[str, str | None]) -> str:
+            library.requests.append(params)
+            if params["opc"] == "phl":
+                return export
+            return broken if params["exp"] == "TIT=0$" else decorated
+
+        library.phl.request = respond  # type: ignore[method-assign]
+        items = list(library.phl.copy_statuses([["0"]]))
+        # 3 títulos antes do erro; o seguinte (4092610290646) é o defeituoso; os demais são relidos
+        self.assertEqual([item["title_id"] for item in items[:4]], ["000002", "000007", "000038", "4092610290646"])
+        self.assertEqual((items[3]["total"], items[3]["statuses"]), (None, ["unknown"]))
+        self.assertEqual(len(items), 3 + 1 + 8)
+        self.assertEqual([(r["opc"], r["exp"]) for r in library.requests],
+                         [("decorado", "TIT=0$"), ("phl", "TIT=0$"), ("decorado", "TIT=000007")])
+        self.assertEqual(library.requests[1]["from"], "4")
+
+    def test_copy_statuses_give_up_after_too_many_broken_titles(self) -> None:
+        library = FakeServerLibrary()
+
+        def respond(params: Mapping[str, str | None]) -> str:
+            if params["opc"] == "phl":
+                return "".join("<hr>002: %d<br></td>" % i for i in range(10))
+            raise LibraryError("WXIS|fatal error|unavoidable|dbxopen: _tbo.cnt (2)|")
+
+        library.phl.request = respond  # type: ignore[method-assign]
+        with self.assertRaisesRegex(LibraryError, "mais de 5"):
+            list(library.phl.copy_statuses([["0"]]))
 
     def test_choice_helpers(self) -> None:
         self.assertEqual(Library._choose("engenharias", {"3": "Engenharias"}, "área"), "3")

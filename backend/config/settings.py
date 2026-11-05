@@ -120,11 +120,10 @@ LOGGING = {
 PHL_CATALOG_URL = os.environ.get("PHL_CATALOG_URL", "https://biblioteca.barbacena.ifsudestemg.edu.br")
 # Pausa de cortesia entre requisições ao CGI do campus, em segundos.
 PHL_PAUSE = float(os.environ.get("PHL_PAUSE", "0.5"))
-# Um snapshot com menos que esta fração dos títulos ativos é tratado como resposta
+# Um snapshot com menos que esta fração dos títulos ativos (ou uma leitura dos
+# exemplares com menos que esta fração dos registros) é tratado como resposta
 # truncada e não é aplicado.
 CATALOG_SYNC_MIN_RATIO = float(os.environ.get("CATALOG_SYNC_MIN_RATIO", "0.9"))
-# Títulos verificados por execução do rodízio de exemplares (~0,7 s cada).
-COPIES_SYNC_BATCH = int(os.environ.get("COPIES_SYNC_BATCH", "5000"))
 # Na página de um livro, exemplares verificados há mais que isto são consultados
 # de novo no PHL, com este tempo limite (segundos) por tentativa.
 COPIES_LIVE_MAX_AGE_MINUTES = int(os.environ.get("COPIES_LIVE_MAX_AGE_MINUTES", "15"))

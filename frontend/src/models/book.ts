@@ -1,8 +1,31 @@
-/** Exemplares do título no acervo, como verificados no catálogo da biblioteca. */
+/** Valores aceitos em {@link BookCopies.status}. */
+export const COPY_STATUSES = [
+  'available',
+  'in_library_use',
+  'on_loan',
+  'unavailable',
+  'uncertain',
+  'no_copies',
+] as const
+
+/**
+ * Situação do título para quem procura o livro, calculada pela API:
+ * - `available`: há exemplar livre para empréstimo;
+ * - `in_library_use`: nenhum livre, mas há exemplar para ler na biblioteca;
+ * - `on_loan`: nenhum livre; há exemplar emprestado ou reservado;
+ * - `unavailable`: nenhum exemplar livre, emprestado ou para consulta;
+ * - `uncertain`: a leitura em lote não permite saber se há exemplar livre;
+ * - `no_copies`: o título não tem exemplar físico.
+ */
+export type CopyStatus = (typeof COPY_STATUSES)[number]
+
+/** Exemplares do título no acervo, como lidos no catálogo da biblioteca. */
 export interface BookCopies {
   total: number
-  available: number
-  /** Quando a situação foi consultada, em ISO 8601. */
+  status: CopyStatus
+  /** Exemplares livres; `null` quando a contagem exata não é conhecida (ela vem da consulta ao vivo da página do livro). */
+  available: number | null
+  /** Quando a situação foi lida, em ISO 8601. */
   updatedAt: string
 }
 
@@ -34,10 +57,8 @@ export interface Book {
   /** Tipo como o catálogo exibe ("Livro", "Teses, dissertações, monografias, tcc"). */
   documentType: string | null
   coverUrl: string | null
-  /** `null` enquanto os exemplares do título ainda não foram verificados. */
+  /** `null` enquanto os exemplares do título ainda não foram lidos. */
   copies: BookCopies | null
-  /** Empréstimos já feitos, somando os exemplares. */
-  loans: number
 }
 
 /** Arquivo digital do título: PDF do TCC ou e-book, termo de autorização, apresentação. */
@@ -64,20 +85,19 @@ export interface BookDetail extends Book {
   tccCourse: string | null
   /** Data de entrada no catálogo, em ISO 8601. */
   catalogedAt: string | null
+  /** Empréstimos já feitos, somando os exemplares; `null` até a consulta ao vivo. */
+  loans: number | null
 }
 
-/** Situação para exibir: há exemplar livre, todos emprestados ou ainda não verificada. */
-export type Availability = 'available' | 'borrowed' | 'unknown'
+/** Situação para exibir: a do título, ou `unknown` enquanto os exemplares não foram lidos. */
+export type Availability = CopyStatus | 'unknown'
 
 /**
  * Situação de disponibilidade de um livro.
  *
  * @param book - Livro avaliado.
- * @returns `unknown` quando os exemplares ainda não foram verificados.
+ * @returns `unknown` quando os exemplares ainda não foram lidos.
  */
 export function availabilityOf(book: Pick<Book, 'copies'>): Availability {
-  if (book.copies === null) {
-    return 'unknown'
-  }
-  return book.copies.available > 0 ? 'available' : 'borrowed'
+  return book.copies === null ? 'unknown' : book.copies.status
 }

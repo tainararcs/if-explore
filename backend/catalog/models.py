@@ -110,11 +110,31 @@ class Subject(models.Model):
         return self.name
 
 
-class Book(models.Model):
-    """Título do acervo, copiado do PHL pela sincronização diária.
+class CopyStatus(models.TextChoices):
+    """Situação de um título para quem procura o livro."""
 
-    Os campos de exemplares (`copies_*`, `loans_total`) vêm de outra consulta, mais
-    cara, feita em rodízio; ficam nulos até a primeira verificação do título.
+    #: Há exemplar livre para empréstimo.
+    AVAILABLE = "available", "Disponível"
+    #: Nenhum livre para empréstimo, mas há exemplar para ler na biblioteca.
+    IN_LIBRARY_USE = "in_library_use", "Consulta local"
+    #: Nenhum livre; há exemplar emprestado ou reservado.
+    ON_LOAN = "on_loan", "Emprestado"
+    #: Nenhum exemplar livre, emprestado ou para consulta (extraviado, em reparo).
+    UNAVAILABLE = "unavailable", "Indisponível"
+    #: O resumo em lote não permite saber se há exemplar livre; a página do livro confirma.
+    UNCERTAIN = "uncertain", "Incerta"
+    #: O título não tem exemplar físico (e-books, registros só digitais).
+    NO_COPIES = "no_copies", "Sem exemplar"
+
+
+class Book(models.Model):
+    """Título do acervo, copiado do PHL pela sincronização do catálogo.
+
+    Os exemplares têm duas origens. A sincronização lê, em lote, o total e as
+    situações presentes (`copies_total`, `copy_statuses`, `copy_status`,
+    `copies_synced_at`). A consulta ao vivo, feita quando alguém abre a página do
+    livro, também grava a contagem exata de livres e os empréstimos
+    (`copies_available`, `loans_total`, `copies_checked_at`), que só ela conhece.
     """
 
     #: Código do título no PHL (campo 002).
@@ -162,11 +182,17 @@ class Book(models.Model):
     courses = models.ManyToManyField(Course, blank=True, related_name="books", verbose_name="cursos")
     genres = models.ManyToManyField(LiteraryGenre, blank=True, related_name="books", verbose_name="gêneros")
 
-    # Exemplares (rodízio e consulta ao vivo).
+    # Exemplares: lote da sincronização e consulta ao vivo.
     copies_total = models.PositiveSmallIntegerField("exemplares", null=True, blank=True)
+    #: Situações presentes, como o PHL as mostra (ver `phl_client.parsers.CopyStatusItem`).
+    copy_statuses = models.JSONField("situações dos exemplares", default=list, blank=True)
+    #: Situação para o visitante; vazia até a primeira leitura dos exemplares.
+    copy_status = models.CharField("situação", max_length=20, choices=CopyStatus.choices, blank=True)
+    copies_synced_at = models.DateTimeField("situação lida em lote em", null=True, blank=True)
+    # Só a consulta ao vivo conhece estes.
     copies_available = models.PositiveSmallIntegerField("disponíveis", null=True, blank=True)
-    loans_total = models.PositiveIntegerField("empréstimos", default=0)
-    copies_checked_at = models.DateTimeField("exemplares verificados em", null=True, blank=True)
+    loans_total = models.PositiveIntegerField("empréstimos", null=True, blank=True)
+    copies_checked_at = models.DateTimeField("exemplares consultados ao vivo em", null=True, blank=True)
 
     #: False quando o título saiu do catálogo; o registro fica para não quebrar
     #: preferências salvas que apontem para ele.
@@ -181,9 +207,9 @@ class Book(models.Model):
             models.Index(fields=["document_type"], name="book_document_type_idx"),
             models.Index(fields=["year"], name="book_year_idx"),
             models.Index(fields=["isbn"], name="book_isbn_idx"),
-            models.Index(fields=["-loans_total"], name="book_loans_idx"),
+            models.Index(fields=["-copies_total"], name="book_copies_total_idx"),
+            models.Index(fields=["copy_status"], name="book_copy_status_idx"),
             models.Index(fields=["-cataloged_at"], name="book_cataloged_idx"),
-            models.Index(fields=["copies_checked_at"], name="book_copies_checked_idx"),
             models.Index(fields=["synced_at"], name="book_synced_idx"),
         ]
 
@@ -210,7 +236,6 @@ class BookAuthor(models.Model):
 
 class SyncKind(models.TextChoices):
     CATALOG = "catalog", "Catálogo"
-    COPIES = "copies", "Exemplares"
 
 
 class SyncStatus(models.TextChoices):
