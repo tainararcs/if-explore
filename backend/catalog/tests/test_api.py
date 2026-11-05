@@ -9,11 +9,11 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone
 
-from catalog.models import Book
+from catalog.models import Book, CopyStatus
 from catalog.services.sync import apply_snapshot
 from phl_client import LibraryConnectionError
 
-from .test_sync import DJANGO_BOOK, PYTHON_BOOK, TCC, FakeLibrary, snapshot_records
+from .test_sync import DJANGO_BOOK, PYTHON_BOOK, TCC, FakeLibrary, snapshot_records, status_items
 
 SERIAL = "8040720094815"
 
@@ -58,6 +58,22 @@ class BookListTests(ApiTestCase):
         self.assertCountEqual(book["courseIds"], ["internet-systems", "information-systems"])
         self.assertIsNone(book["copies"])
         self.assertNotIn("links", book)
+        self.assertNotIn("loans", book)
+
+    def test_batch_copies_in_cards(self) -> None:
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
+        items = {b["id"]: b for b in self.get("/api/books?sort=title")["items"]}
+        self.assertEqual(items[PYTHON_BOOK]["copies"]["status"], "uncertain")
+        self.assertEqual(items[DJANGO_BOOK]["copies"]["total"], 2)
+        # a contagem exata de livres só vem da consulta ao vivo
+        self.assertIsNone(items[DJANGO_BOOK]["copies"]["available"])
+        self.assertEqual(items[TCC]["copies"], {"total": 0, "status": "no_copies", "available": None,
+                                                "updatedAt": items[TCC]["copies"]["updatedAt"]})
+
+    def test_popular_sorts_by_number_of_copies(self) -> None:
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
+        self.assertEqual([b["id"] for b in self.get("/api/books?pageSize=2")["items"]], [PYTHON_BOOK, DJANGO_BOOK])
+        self.assertEqual([b["id"] for b in self.get("/api/books?q=python&sort=popular")["items"]][0], PYTHON_BOOK)
 
     def test_filters(self) -> None:
         self.assertEqual([b["id"] for b in self.get("/api/books?course=nutrition")["items"]], [TCC])
@@ -65,8 +81,12 @@ class BookListTests(ApiTestCase):
         self.assertEqual(self.get("/api/books?area=technology")["total"], 5)
         self.assertEqual(self.get("/api/books?area=technology&area=health-sciences")["total"], 6)
         self.assertEqual(self.get("/api/books?q=python&area=health-sciences")["total"], 0)
-        Book.objects.filter(id=DJANGO_BOOK).update(copies_total=2, copies_available=1)
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
         self.assertEqual([b["id"] for b in self.get("/api/books?available=true")["items"]], [DJANGO_BOOK])
+        # incerta (Python) e sem exemplar (TCC) ficam fora dos dois filtros
+        unavailable = {b["id"] for b in self.get("/api/books?available=false")["items"]}
+        self.assertEqual(len(unavailable), 6)
+        self.assertFalse(unavailable & {PYTHON_BOOK, DJANGO_BOOK, TCC})
 
     def test_preferred_area_comes_first(self) -> None:
         page = self.get("/api/books?sort=title&preferArea=health-sciences")
@@ -98,14 +118,23 @@ class BookDetailTests(ApiTestCase):
         book = self.get("/api/books/%s" % PYTHON_BOOK)
         self.assertEqual(self.library.checked, [PYTHON_BOOK])
         self.assertEqual((book["copies"]["total"], book["copies"]["available"], book["loans"]), (2, 1, 9))
+        self.assertEqual(book["copies"]["status"], "available")
         self.assertEqual(book["contributors"], "Trad. por: Fabiane Fiorini")
         self.get("/api/books/%s" % PYTHON_BOOK)
         self.assertEqual(self.library.checked, [PYTHON_BOOK])  # ainda fresco: não consulta de novo
 
     def test_old_copies_are_refreshed(self) -> None:
-        Book.objects.filter(id=PYTHON_BOOK).update(copies_total=1, copies_available=0,
+        Book.objects.filter(id=PYTHON_BOOK).update(copies_total=1, copies_available=0, copy_status=CopyStatus.ON_LOAN,
                                                    copies_checked_at=timezone.now() - dt.timedelta(hours=1))
         self.assertEqual(self.get("/api/books/%s" % PYTHON_BOOK)["copies"]["available"], 1)
+
+    def test_newer_batch_hides_the_live_count(self) -> None:
+        self.get("/api/books/%s" % PYTHON_BOOK)
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9,
+                       now=timezone.now() + dt.timedelta(minutes=1))
+        book = self.get("/api/books/%s" % PYTHON_BOOK)
+        self.assertEqual(self.library.checked, [PYTHON_BOOK])  # a consulta ao vivo ainda vale
+        self.assertEqual((book["copies"]["status"], book["copies"]["available"], book["loans"]), ("uncertain", None, 9))
 
     def test_phl_failure_keeps_stored_data(self) -> None:
         self.library.failing[TCC] = LibraryConnectionError("fora do ar")
@@ -173,3 +202,6 @@ class StatusTests(ApiTestCase):
         status = self.get("/api/status")
         self.assertEqual((status["activeBooks"], status["booksWithCopies"]), (9, 0))
         self.assertIsNone(status["catalogSync"])  # apply_snapshot direto não registra execução
+        self.assertNotIn("copiesSync", status)
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
+        self.assertEqual(self.get("/api/status")["booksWithCopies"], 9)

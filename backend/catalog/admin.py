@@ -66,9 +66,9 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 
 @admin.register(Book)
 class BookAdmin(ReadOnlyAdmin):
-    list_display = ["title", "year", "area", "document_type", "copies_available", "copies_total",
-                    "loans_total", "is_active"]
-    list_filter = ["is_active", "area", "genres", "courses"]
+    list_display = ["title", "year", "area", "document_type", "copy_status", "copies_total",
+                    "copies_available", "loans_total", "is_active"]
+    list_filter = ["is_active", "copy_status", "area", "genres", "courses"]
     search_fields = ["id", "title", "isbn"]
     show_full_result_count = False
 

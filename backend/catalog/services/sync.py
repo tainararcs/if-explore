@@ -1,12 +1,13 @@
 """Sincronização do acervo com o PHL.
 
-Duas rotinas, de custos muito diferentes no servidor do campus:
+`sync_catalog` baixa o snapshot dos metadados (2 requisições: contagem e página
+única) e a situação resumida dos exemplares em lote (5 requisições do formato
+decorado, ver `phl_client.client.STATUS_TITLE_PREFIXES`, mais ~6 enquanto o PHL
+tiver o registro defeituoso que derruba esse formato), ~1,5 min no total, e aplica
+tudo numa transação. Roda a cada 6 h.
 
-* `sync_catalog`: snapshot completo dos metadados, 1 requisição (~10 s). Diária.
-* `sync_copies`: situação dos exemplares, 1 requisição por título (~0,7 s com a
-  pausa). Em rodízio, começando pelos títulos verificados há mais tempo.
-
-`refresh_copies` atualiza um único título e também serve à consulta ao vivo.
+A contagem exata de exemplares livres e os empréstimos só vêm da consulta ao vivo
+da página do livro (`catalog.services.availability`).
 """
 
 from __future__ import annotations
@@ -20,13 +21,13 @@ from typing import TypeVar
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import F
 from django.utils import timezone
 
 from catalog.models import (
     Author,
     Book,
     BookAuthor,
+    CopyStatus,
     Course,
     KnowledgeArea,
     LiteraryGenre,
@@ -35,7 +36,7 @@ from catalog.models import (
     SyncRun,
     SyncStatus,
 )
-from catalog.services import search_index
+from catalog.services import copy_status, search_index
 from catalog.services.classification import (
     CourseRule,
     GenreRule,
@@ -44,15 +45,15 @@ from catalog.services.classification import (
     resolve_genres,
 )
 from phl_client import Book as PhlBook
-from phl_client import Copy, Library, LibraryConnectionError, LibraryError
+from phl_client import Library
 from phl_client.client import MAX_PAGE_SIZE
 from phl_client.fields import Record
+from phl_client.parsers import CopyStatusItem
 from phl_client.text import first_text, normalize
 
 logger = logging.getLogger(__name__)
 
-# Campos do snapshot. Os de exemplares ficam de fora: vêm de outra consulta e não
-# podem ser apagados pela sincronização diária.
+# Campos do snapshot. Os exemplares ficam de fora: ver `COPY_BATCH_FIELDS`.
 SNAPSHOT_FIELDS = [
     "title", "subtitle", "contributors", "publisher", "city", "country", "year", "edition", "volume",
     "series", "pages", "physical_description", "isbn", "issn", "issue", "volume_year", "cdd", "cutter",
@@ -60,6 +61,10 @@ SNAPSHOT_FIELDS = [
     "bibliographic_level", "phl_course_codes", "tcc_course", "links", "cover_url", "cataloged_at", "raw",
     "area", "is_active", "synced_at",
 ]
+# Campos da situação em lote, gravados só quando o snapshot traz os exemplares. A
+# contagem exata e os empréstimos (`copies_available`, `loans_total`) vêm só da
+# consulta ao vivo e nunca são sobrescritos pela sincronização.
+COPY_BATCH_FIELDS = ["copies_total", "copy_statuses", "copy_status", "copies_synced_at"]
 BATCH_SIZE = 500
 # Uma execução "em andamento" mais antiga que isto é considerada abandonada
 # (processo morto) e não impede uma nova.
@@ -104,7 +109,11 @@ def make_library() -> Library:
 
 # ---- snapshot do catálogo
 def sync_catalog(library: Library | None = None, *, min_ratio: float | None = None) -> SyncRun:
-    """Baixa o acervo inteiro e aplica o snapshot. Registra a execução em `SyncRun`.
+    """Baixa o acervo inteiro e a situação dos exemplares e aplica o snapshot.
+    Registra a execução em `SyncRun`.
+
+    Se qualquer parte do download falhar, nada é aplicado: a próxima execução tenta
+    de novo.
 
     Raises:
         SyncError: Outra sincronização do catálogo em andamento, ou snapshot suspeito.
@@ -115,7 +124,9 @@ def sync_catalog(library: Library | None = None, *, min_ratio: float | None = No
     try:
         library = library or make_library()
         records = list(library.phl.search_all("$", mode="exp", page_size=MAX_PAGE_SIZE))
-        stats = apply_snapshot(records, min_ratio=settings.CATALOG_SYNC_MIN_RATIO if min_ratio is None else min_ratio)
+        statuses = list(library.phl.copy_statuses())
+        stats = apply_snapshot(records, statuses,
+                               min_ratio=settings.CATALOG_SYNC_MIN_RATIO if min_ratio is None else min_ratio)
     except Exception as error:
         _finish_run(run, SyncStatus.FAILED, error=str(error))
         raise
@@ -124,19 +135,26 @@ def sync_catalog(library: Library | None = None, *, min_ratio: float | None = No
     return run
 
 
-def apply_snapshot(records: Sequence[Record], *, min_ratio: float, now: datetime | None = None) -> dict[str, int]:
-    """Grava um snapshot do PHL: cria e atualiza livros, refaz autores, assuntos,
-    cursos e gêneros, desativa os títulos que saíram e reconstrói o índice de busca.
+def apply_snapshot(records: Sequence[Record], copy_statuses: Sequence[CopyStatusItem] | None = None, *,
+                   min_ratio: float, now: datetime | None = None) -> dict[str, int]:
+    """Grava um snapshot do PHL: cria e atualiza livros, grava a situação dos
+    exemplares, refaz autores, assuntos, cursos e gêneros, desativa os títulos que
+    saíram e reconstrói o índice de busca.
 
     Tudo numa transação: a API continua vendo a versão anterior até o fim.
 
     Args:
         records: Registros de `PhlClient.search_all`.
-        min_ratio: Fração mínima dos títulos ativos que o snapshot precisa ter.
+        copy_statuses: Itens de `PhlClient.copy_statuses`; None mantém os exemplares
+            gravados. Título do snapshot sem item fica sem exemplar: o formato
+            decorado omite o código justamente dos títulos sem exemplar.
+        min_ratio: Fração mínima dos títulos ativos que o snapshot precisa ter, e
+            dos registros do snapshot que a leitura dos exemplares precisa ter.
         now: Instante da sincronização (testes).
 
     Raises:
-        SyncError: Quando o snapshot tem bem menos títulos que o banco (resposta truncada).
+        SyncError: Quando o snapshot ou a leitura dos exemplares tem bem menos
+            títulos que o esperado (resposta truncada).
     """
     books = list({book.id: book for book in (PhlBook.from_record(record) for record in records
                                              if record.get("title_id"))}.values())
@@ -144,15 +162,25 @@ def apply_snapshot(records: Sequence[Record], *, min_ratio: float, now: datetime
     if active and len(books) < active * min_ratio:
         raise SyncError("snapshot com %d títulos, menos de %.0f%% dos %d ativos: parece truncado; nada foi aplicado"
                         % (len(books), min_ratio * 100, active))
+    if copy_statuses is not None and len(copy_statuses) < len(records) * min_ratio:
+        raise SyncError("situação dos exemplares com %d títulos, menos de %.0f%% dos %d do snapshot: "
+                        "parece truncada; nada foi aplicado" % (len(copy_statuses), min_ratio * 100, len(records)))
     taxonomy = Taxonomy.load()
     now = now or timezone.now()
     existing = set(Book.objects.values_list("id", flat=True))
+    rows = [_to_model(book, taxonomy, now) for book in books]
+    update_fields = SNAPSHOT_FIELDS
+    if copy_statuses is not None:
+        by_id = {item["title_id"]: item for item in copy_statuses if item["title_id"]}
+        for row in rows:
+            _set_copy_batch(row, by_id.get(row.id), now)
+        update_fields = SNAPSHOT_FIELDS + COPY_BATCH_FIELDS
 
     with transaction.atomic():
         author_ids = _upsert_names(Author, (name for book in books for name in book.authors))
         subject_ids = _upsert_names(Subject, (name for book in books for name in book.subjects))
-        Book.objects.bulk_create([_to_model(book, taxonomy, now) for book in books], batch_size=BATCH_SIZE,
-                                 update_conflicts=True, unique_fields=["id"], update_fields=SNAPSHOT_FIELDS)
+        Book.objects.bulk_create(rows, batch_size=BATCH_SIZE, update_conflicts=True, unique_fields=["id"],
+                                 update_fields=update_fields)
         _replace_relations(books, taxonomy, author_ids, subject_ids, now)
         deactivated = Book.objects.filter(is_active=True, synced_at__lt=now).update(is_active=False)
         indexed = search_index.rebuild()
@@ -160,6 +188,9 @@ def apply_snapshot(records: Sequence[Record], *, min_ratio: float, now: datetime
     created = sum(book.id not in existing for book in books)
     stats = {"records": len(records), "books": len(books), "created": created,
              "updated": len(books) - created, "deactivated": deactivated, "indexed": indexed}
+    if copy_statuses is not None:
+        for status in (CopyStatus.AVAILABLE, CopyStatus.UNCERTAIN, CopyStatus.NO_COPIES):
+            stats[status.value] = sum(row.copy_status == status for row in rows)
     logger.info("catálogo sincronizado: %s", stats)
     return stats
 
@@ -192,6 +223,14 @@ def _to_model(book: PhlBook, taxonomy: Taxonomy, now: datetime) -> Book:
     )
 
 
+def _set_copy_batch(book: Book, item: CopyStatusItem | None, now: datetime) -> None:
+    """Preenche a situação em lote de um livro; sem item, o título não tem exemplar."""
+    total, statuses = (item["total"], item["statuses"]) if item else (0, [])
+    book.copies_total, book.copy_statuses = total, statuses
+    book.copy_status = copy_status.from_batch(statuses, total)
+    book.copies_synced_at = now
+
+
 def _replace_relations(books: Sequence[PhlBook], taxonomy: Taxonomy, author_ids: dict[str, int],
                        subject_ids: dict[str, int], now: datetime) -> None:
     """Refaz autores, assuntos, cursos e gêneros dos livros deste snapshot.
@@ -217,76 +256,6 @@ def _replace_relations(books: Sequence[PhlBook], taxonomy: Taxonomy, author_ids:
     for model, rows in ((BookAuthor, authors), (book_subjects, subjects), (book_courses, courses),
                         (book_genres, genres)):
         model.objects.bulk_create(rows, batch_size=BATCH_SIZE)
-
-
-# ---- exemplares
-@dataclass(frozen=True)
-class CopiesSummary:
-    total: int
-    available: int
-    loans: int
-
-
-def refresh_copies(library: Library, book_id: str, now: datetime | None = None) -> CopiesSummary:
-    """Consulta os exemplares de um título no PHL e grava os totais no livro.
-
-    Raises:
-        LibraryError: O PHL falhou (inclui `LibraryConnectionError`).
-    """
-    copies = [Copy.from_row(row) for row in library.phl.copies(book_id)]
-    summary = CopiesSummary(len(copies), sum(copy.is_available for copy in copies),
-                            sum(copy.loans for copy in copies))
-    Book.objects.filter(id=book_id).update(copies_total=summary.total, copies_available=summary.available,
-                                           loans_total=summary.loans, copies_checked_at=now or timezone.now())
-    return summary
-
-
-def sync_copies(library: Library | None = None, *, limit: int | None = None,
-                book_ids: Sequence[str] | None = None) -> SyncRun:
-    """Rodízio de exemplares: verifica até `limit` títulos ativos, primeiro os nunca
-    verificados e depois os verificados há mais tempo.
-
-    Uma falha de conexão interrompe a execução (o servidor caiu: insistir só piora);
-    um erro num título isolado é contado e o rodízio segue.
-
-    Args:
-        limit: Títulos por execução; padrão `settings.COPIES_SYNC_BATCH`.
-        book_ids: Verifica só estes títulos, na ordem dada (ignora `limit`).
-
-    Raises:
-        SyncError: Outro rodízio em andamento.
-        LibraryConnectionError: O PHL ficou inacessível (a execução fica como falha).
-    """
-    run = _start_run(SyncKind.COPIES)
-    started = time.monotonic()
-    library = library or make_library()
-    if book_ids is None:
-        queue = list(Book.objects.filter(is_active=True)
-                     .order_by(F("copies_checked_at").asc(nulls_first=True), "id")
-                     .values_list("id", flat=True)[:limit or settings.COPIES_SYNC_BATCH])
-    else:
-        queue = list(book_ids)
-    stats = {"queued": len(queue), "checked": 0, "errors": 0}
-    try:
-        for book_id in queue:
-            try:
-                refresh_copies(library, book_id)
-                stats["checked"] += 1
-            except LibraryConnectionError:
-                raise
-            except LibraryError as error:
-                stats["errors"] += 1
-                logger.warning("exemplares de %s: %s", book_id, error)
-            if stats["checked"] and stats["checked"] % 100 == 0:
-                logger.info("exemplares: %d de %d verificados", stats["checked"], len(queue))
-    except Exception as error:
-        stats["seconds"] = round(time.monotonic() - started, 1)
-        _finish_run(run, SyncStatus.FAILED, stats, error=str(error))
-        raise
-    stats["seconds"] = round(time.monotonic() - started, 1)
-    _finish_run(run, SyncStatus.SUCCESS, stats)
-    logger.info("exemplares sincronizados: %s", stats)
-    return run
 
 
 # ---- registro das execuções
