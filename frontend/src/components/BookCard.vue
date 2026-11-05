@@ -25,16 +25,21 @@
         </span>
       </span>
     </div>
+    <!--
+      Título e autoria reservam sempre a mesma altura (2 linhas e 1 linha), mesmo
+      quando o texto é menor ou falta, para que os selos fiquem alinhados entre os cards.
+    -->
     <div class="flex min-w-0 flex-col gap-1">
-      <h3 class="line-clamp-2 text-small group-hover:underline sm:text-h3">
+      <h3 class="line-clamp-2 min-h-[2lh] text-small group-hover:underline sm:text-h3">
         {{ book.title }}
       </h3>
-      <p class="truncate text-caption text-text-muted sm:text-small">
+      <p class="min-h-lh truncate text-caption text-text-muted sm:text-small">
         {{ formatAuthors(book.authors) }}
       </p>
       <AvailabilityBadge
         class="mt-1"
         :book="book"
+        compact
       />
     </div>
   </RouterLink>

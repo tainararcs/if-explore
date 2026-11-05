@@ -55,6 +55,16 @@ export const ptBR = {
       noCopies: 'Sem exemplar físico',
       unknown: 'Consulte na biblioteca',
       copies: '{available} de {total} exemplar disponível | {available} de {total} exemplares disponíveis',
+      // Versões curtas para os cards, que precisam caber em uma linha.
+      short: {
+        available: 'Disponível',
+        libraryUse: 'Consulta local',
+        borrowed: 'Emprestado',
+        unavailable: 'Indisponível',
+        uncertain: 'A confirmar',
+        noCopies: 'Sem exemplar',
+        unknown: 'Sem informação',
+      },
     },
   },
   routes: {
