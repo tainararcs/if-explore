@@ -35,6 +35,13 @@
         class="mt-6 max-w-[640px]"
         @clear="clear"
       />
+      <RouterLink
+        class="mt-3 inline-flex min-h-11 items-center gap-2 text-small font-semibold"
+        :to="{ path: '/discover', query: query ? { q: query } : {} }"
+      >
+        <IconSparkle class="size-5" />
+        {{ t('home.discoverLink') }}
+      </RouterLink>
 
       <fieldset
         v-if="areas.length > 1"

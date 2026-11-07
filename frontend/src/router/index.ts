@@ -67,6 +67,11 @@ export const router = createRouter({
       beforeEnter: () => useReadingPreferences().hasPreferences.value || '/',
     },
     {
+      path: '/discover',
+      component: () => import('../features/discovery/views/DiscoveryView.vue'),
+      meta: { titleKey: 'routes.discover' },
+    },
+    {
       path: '/books/:id',
       component: () => import('../features/book-detail/views/BookDetailView.vue'),
       meta: { titleKey: 'routes.book' },
