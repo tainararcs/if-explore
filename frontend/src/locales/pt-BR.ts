@@ -205,6 +205,11 @@ export const ptBR = {
     tags: 'Assuntos e gêneros',
     related: 'Leituras relacionadas',
     moreFromAuthor: 'Mais de {author}',
+    explanation: {
+      title: 'Em poucas palavras',
+      loading: 'Gerando explicação do livro…',
+      note: 'Gerado por IA a partir da ficha do livro; pode conter imprecisões.',
+    },
     share: {
       action: 'Compartilhar',
       text: 'Encontrei “{title}” no acervo da Biblioteca Roberval Cardoso.',
