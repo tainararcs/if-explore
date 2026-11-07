@@ -139,9 +139,9 @@ is hidden without `callNumber`.
   book is about and who it helps (`GET /api/books/{id}/explanation`, see the
   `ai-discovery-api` skill), plus a small note "Gerado por IA a partir da ficha
   do livro; pode conter imprecisões."
-- Loaded after the book, never blocking the page: two skeleton lines while
-  loading; the section is hidden when `text` is `null` or the request fails.
-  Abort it when `:id` changes.
+- Requested in parallel with the book and never blocking the page: two
+  skeleton lines while loading; the section is hidden when `text` is `null` or
+  the request fails. Abort it when `:id` changes.
 - `getBookExplanation(id, signal)` in `book-detail-service.ts`,
   `useBookExplanation.ts` composable, `BookExplanation.vue` component; text with
   interpolation only.

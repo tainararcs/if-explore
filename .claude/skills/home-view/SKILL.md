@@ -27,6 +27,7 @@ AppHeader (sticky): [BrandMark] IF Explore            [✦ Ajustar preferências
 Greeting eyebrow + serif h1: "Suas recomendações"
 Short line: "Com base em <área 1>, <área 2> e nos títulos que você escolheu."
 Search bar (full width at base, max 640px at md+)
+[✦ Peça uma sugestão à IA]   (link to /discover, carries ?q= when searching)
 Area filter chips (horizontal scroll at base): Todas · <selected areas>
 ── default mode ──
 Shelf: "Escolhidos para você"
