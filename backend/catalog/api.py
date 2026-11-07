@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from typing import Literal
 
+from django.conf import settings
 from django.http import HttpRequest
 from ninja import Query, Router
 from ninja.errors import HttpError
+from ninja.throttling import AnonRateThrottle
 
 from catalog.models import Book, Course, KnowledgeArea, LiteraryGenre, SyncKind, SyncRun, SyncStatus
 from catalog.schemas import (
@@ -20,6 +22,10 @@ from catalog.schemas import (
     BookPageOut,
     BookSummaryOut,
     CourseOut,
+    DiscoveryIn,
+    DiscoveryItemOut,
+    DiscoveryOut,
+    ExplanationOut,
     GenreOut,
     ProfileIn,
     RecommendationsOut,
@@ -29,7 +35,7 @@ from catalog.schemas import (
     StatusOut,
     SyncOut,
 )
-from catalog.services import availability, books, recommendations
+from catalog.services import availability, books, discovery, recommendations
 
 router = Router()
 
@@ -37,6 +43,18 @@ BookType = Literal["book", "ebook", "audiobook", "thesis", "periodical"]
 MAX_IDS = 60
 MAX_PAGE_SIZE = 100
 MAX_QUERY_LENGTH = 200
+
+
+class DiscoveryThrottle(AnonRateThrottle):
+    """Limite por IP dos pedidos de descoberta, que sempre chamam o Gemini."""
+
+    scope = "discovery"
+
+
+class ExplanationThrottle(AnonRateThrottle):
+    """Limite por IP das explicações; mais folgado, porque quase todas vêm do banco."""
+
+    scope = "explanation"
 
 
 def _summaries(ids: list[str]) -> list[BookSummaryOut]:
@@ -147,6 +165,42 @@ def get_candidates(
 ) -> list[BookSummaryOut]:
     """Títulos para o visitante escolher no onboarding."""
     return _summaries(recommendations.onboarding_candidates(area, course, limit))
+
+
+# ---- descoberta com IA
+@router.post("/discovery", response=DiscoveryOut, by_alias=True, tags=["descoberta"], throttle=DiscoveryThrottle(settings.DISCOVERY_RATE))
+def post_discovery(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
+    """Até 6 títulos do acervo para um pedido em texto livre, com o motivo de cada um.
+
+    O Gemini escolhe só entre candidatos do acervo local; sem chave ou se a IA
+    falhar, a seleção é por regras (`source="rules"`). É POST porque o pedido vai
+    no corpo; nada do que o visitante envia é gravado.
+    """
+    profile = None
+    if body.profile is not None:
+        profile = recommendations.Profile(
+            area_ids=tuple(body.profile.area_ids), course_ids=tuple(body.profile.course_ids),
+            seed_book_ids=tuple(body.profile.seed_book_ids), genre_ids=tuple(body.profile.genre_ids))
+    result = discovery.discover(body.query, profile)
+    loaded = {book.id: book for book in books.load_in_order([pick.book_id for pick in result.picks])}
+    return DiscoveryOut(
+        source=result.source, message=result.message,
+        items=[DiscoveryItemOut(book=BookSummaryOut.from_model(loaded[pick.book_id]), reason=pick.reason)
+               for pick in result.picks if pick.book_id in loaded],
+    )
+
+
+@router.get("/books/{book_id}/explanation", response=ExplanationOut, by_alias=True, tags=["descoberta"],
+            throttle=ExplanationThrottle(settings.EXPLANATION_RATE))
+def get_explanation(request: HttpRequest, book_id: str) -> ExplanationOut:
+    """Explicação simplificada do livro gerada por IA, guardada após a primeira vez.
+
+    `text` é null quando não há sinopse nem assuntos, sem chave ou se a IA falhar.
+    """
+    explanation = discovery.explain(_active_book(book_id))
+    if explanation is None:
+        return ExplanationOut(text=None, generated_at=None)
+    return ExplanationOut(text=explanation.text, generated_at=explanation.created_at)
 
 
 # ---- status
