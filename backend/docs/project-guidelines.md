@@ -30,7 +30,7 @@ backend/
 |---|---|
 | `phl_client/` | Talk to the PHL catalog and turn its pages into typed data. Knows nothing about Django. |
 | `catalog/models.py` | Entities, constraints, and indexes. The ORM is the data access layer. |
-| `catalog/services/` | Rules: sync, classification, copy status, search, recommendations, live availability. |
+| `catalog/services/` | Rules: sync, classification, copy status, search, recommendations, live availability, AI discovery. |
 | `catalog/api.py` | Routes: validate parameters, call a service, convert to schemas. |
 | `catalog/schemas.py` | The JSON contract with the frontend. |
 | `catalog/admin.py` | Curation of the taxonomy; synced data is read-only. |
@@ -126,6 +126,15 @@ collection.
 - Raw SQL is acceptable where the ORM cannot express the query well (FTS5,
   affinity scoring); always pass values as parameters and take table names from
   `Model._meta.db_table`.
+- AI (Gemini) lives in `catalog/services/gemini.py` (REST client, standard
+  library only, raises only `GeminiError`) and `catalog/services/discovery.py`
+  (rules). The model only ranks and explains candidates selected from the local
+  collection; ids outside them are discarded, and any failure falls back to the
+  rule-based selection, so AI errors never become 5xx. Send only catalog data and
+  the visitor's request text, never preferences or identifiers; do not log
+  prompts. State the Gemini calls a change adds, like PHL requests.
+- Generated text that is expensive to repeat is cached in its own model
+  (`BookExplanation`), keyed by a hash of the data sent, never in synced fields.
 
 ## 7. API contract
 
@@ -138,7 +147,9 @@ collection.
 - Errors use `HttpError` with a Portuguese message: 404 for missing or inactive
   books, 422 for invalid parameters (Ninja validation).
 - Reading endpoints are `GET`; `POST` is used only when the input needs a body
-  and nothing is stored (`/api/recommendations`).
+  and nothing the visitor sends is stored (`/api/recommendations`,
+  `/api/discovery`). Routes that call Gemini are throttled per IP and answer
+  429 above the limit.
 - The frontend mirrors the contract in `frontend/src/models/book.ts` and
   validates responses in `frontend/src/services/catalog-parsers.ts`. Changing a
   schema means updating those files, the API tests, and the endpoint tables in
@@ -151,7 +162,8 @@ collection.
 - `phl_client` tests use saved pages from `phl_client/tests/fixtures/`.
 - `catalog` tests build the collection from those pages with `apply_snapshot`
   and replace the PHL with `FakeLibrary` (`catalog/tests/test_sync.py`). API
-  tests patch `catalog.services.availability.live_library`.
+  tests patch `catalog.services.availability.live_library`; AI tests patch
+  `catalog.services.gemini.client` with `FakeGemini` (`catalog/tests/test_discovery.py`).
 - Test observable behavior: stored data, API responses, and the requests made
   to the fake library. Add a regression test for every bug fix.
 
