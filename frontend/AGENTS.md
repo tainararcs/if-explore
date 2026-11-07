@@ -16,7 +16,7 @@ Use [docs/design-guidelines.md](docs/design-guidelines.md) as the source for
 visual identity, layout, components, and interaction rules. View-specific
 implementation guidance lives in the skills under `.claude/skills/` at the
 repository root (`welcome-view`, `taste-onboarding-view`, `home-view`,
-`book-detail-view`).
+`book-detail-view`, `discovery-view`).
 
 ## 2. Mandatory rules
 

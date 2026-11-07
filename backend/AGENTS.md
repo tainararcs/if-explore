@@ -13,6 +13,9 @@ organization, data, and API conventions. This file summarizes the operational
 rules to follow while working. Setup, commands, environment variables, and the
 API reference live in [README.md](README.md).
 
+The Gemini integration (AI discovery and book explanations) is specified in
+the `ai-discovery-api` skill under `.claude/skills/` at the repository root.
+
 The frontend has its own instructions in `frontend/AGENTS.md`. The API contract
 is shared: changing it means changing both sides (see the guidelines, §7).
 
