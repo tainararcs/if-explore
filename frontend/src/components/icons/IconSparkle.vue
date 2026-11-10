@@ -1,4 +1,4 @@
-<!-- Ícone de brilho, usado para recomendações. -->
+<!-- Ícone de brilho, usado para recomendações e para o que é gerado por IA. -->
 <template>
   <svg
     width="24"

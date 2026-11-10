@@ -1,0 +1,27 @@
+<!-- Ícone de controles deslizantes, usado para ajustar as preferências de leitura. -->
+<template>
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
+    <circle
+      cx="15"
+      cy="7"
+      r="2"
+    />
+    <circle
+      cx="9"
+      cy="17"
+      r="2"
+    />
+  </svg>
+</template>

@@ -149,14 +149,26 @@ def _profile_score(queryset: QuerySet[Book], profile: Profile, seed_subject_ids:
     ))
 
 
+def _seed_subject_ids(seed_book_ids: Sequence[str]) -> list[int]:
+    return list(Book.subjects.through.objects.filter(book_id__in=seed_book_ids)
+                .values_list("subject_id", flat=True).distinct())
+
+
+def profile_ranked_ids(profile: Profile, limit: int) -> list[str]:
+    """Livros recomendáveis mais próximos das preferências (mesma pontuação da
+    prateleira "para você"), sem os títulos escolhidos; vazio sem afinidade."""
+    pool = recommendable().exclude(id__in=profile.seed_book_ids)
+    scored = _profile_score(pool, profile, _seed_subject_ids(profile.seed_book_ids)).filter(score__gt=0)
+    return list(scored.order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:limit])
+
+
 def home_shelves(profile: Profile) -> list[Shelf]:
     """Prateleiras da home: "para você", "porque você escolheu" (até 3 títulos),
     "mais da área" e "por prazer" (gêneros). Só ficam as com pelo menos 3 livros, e
     os títulos escolhidos não aparecem."""
     seeds = list(Book.objects.filter(is_active=True, id__in=profile.seed_book_ids))
     seeds.sort(key=lambda book: profile.seed_book_ids.index(book.id))
-    seed_subject_ids = list(Book.subjects.through.objects.filter(book_id__in=[b.id for b in seeds])
-                            .values_list("subject_id", flat=True).distinct())
+    seed_subject_ids = _seed_subject_ids([book.id for book in seeds])
     pool = recommendable().exclude(id__in=profile.seed_book_ids)
     scored = _profile_score(pool, profile, seed_subject_ids)
 

@@ -94,7 +94,7 @@ Sticky action bar: hint/counter · [Primary]   (safe-area aware)
 - Keep draft selections in a feature composable (`useTasteOnboarding.ts`) that
   owns the step logic, validation (`canContinue`), and the final payload.
 - Pre-fill the draft from saved preferences when they exist (returning visitor,
-  or "Ajustar preferências" from the home, which links to `?step=areas`). Saved
+  or "Ajustar preferências" from the header, which links to `?step=areas`). Saved
   seed books are loaded with `getBooksByIds`; ids that left the collection are
   dropped.
 - Save only on "Me recomende", through `useReadingPreferences()`; abandoning the

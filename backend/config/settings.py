@@ -128,3 +128,16 @@ CATALOG_SYNC_MIN_RATIO = float(os.environ.get("CATALOG_SYNC_MIN_RATIO", "0.9"))
 # de novo no PHL, com este tempo limite (segundos) por tentativa.
 COPIES_LIVE_MAX_AGE_MINUTES = int(os.environ.get("COPIES_LIVE_MAX_AGE_MINUTES", "15"))
 PHL_LIVE_TIMEOUT = int(os.environ.get("PHL_LIVE_TIMEOUT", "5"))
+
+# ---- IA (Gemini): descoberta e explicações dos livros
+# Sem chave, a IA fica desligada e as rotas respondem com a seleção por regras.
+# A chave só existe no servidor; nunca a exponha ao frontend.
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
+# Tempo limite de cada chamada, em segundos: há uma pessoa esperando.
+GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "10"))
+# Limites por IP ("número/período": s, m, h ou d) dos pedidos de descoberta e das
+# explicações dos livros. O IP vem de X-Forwarded-For quando presente; atrás de um
+# proxy reverso, defina aqui NINJA_NUM_PROXIES para que o cabeçalho não seja forjável.
+DISCOVERY_RATE = os.environ.get("DISCOVERY_RATE", "10/m").strip()
+EXPLANATION_RATE = os.environ.get("EXPLANATION_RATE", "60/m").strip()

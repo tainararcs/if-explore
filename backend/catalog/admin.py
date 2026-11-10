@@ -2,13 +2,14 @@
 
 A taxonomia é editável: é onde a biblioteca confirma o mapeamento dos cursos e
 ajusta as regras de gênero. Livros e sincronizações são só leitura, porque vêm do
-PHL e seriam sobrescritos na próxima sincronização.
+PHL e seriam sobrescritos na próxima sincronização. As explicações geradas por
+IA podem ser apagadas (uma nova é gerada na próxima visita ao livro), não editadas.
 """
 
 from django.contrib import admin
 from django.http import HttpRequest
 
-from catalog.models import Book, Course, KnowledgeArea, LiteraryGenre, SyncRun
+from catalog.models import Book, BookExplanation, Course, KnowledgeArea, LiteraryGenre, SyncRun
 
 NEXT_SYNC_NOTE = "As mudanças valem para os livros a partir da próxima sincronização do catálogo."
 
@@ -71,6 +72,16 @@ class BookAdmin(ReadOnlyAdmin):
     list_filter = ["is_active", "copy_status", "area", "genres", "courses"]
     search_fields = ["id", "title", "isbn"]
     show_full_result_count = False
+
+
+@admin.register(BookExplanation)
+class BookExplanationAdmin(ReadOnlyAdmin):
+    list_display = ["book", "model", "created_at"]
+    search_fields = ["book__id", "book__title"]
+    list_select_related = ["book"]
+
+    def has_delete_permission(self, request: HttpRequest, obj: object | None = None) -> bool:
+        return super(ReadOnlyAdmin, self).has_delete_permission(request, obj)
 
 
 @admin.register(SyncRun)

@@ -10,10 +10,11 @@ import datetime as dt
 from typing import Literal
 
 from ninja import Schema
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
+from catalog.services.discovery import MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, normalize_query
 
 ShelfKind = Literal["forYou", "becauseYouChose", "moreFromArea", "forPleasure"]
 
@@ -205,6 +206,43 @@ class RecommendationsOut(CamelSchema):
     shelves: list[ShelfOut]
     #: Áreas escolhidas, usadas na saudação e no filtro.
     areas: list[AreaOut]
+
+
+# ---- descoberta com IA
+class DiscoveryIn(CamelSchema):
+    """Pedido em texto livre e, opcionalmente, as preferências salvas."""
+
+    query: str = Field(min_length=MIN_QUERY_LENGTH, max_length=MAX_QUERY_LENGTH)
+    profile: ProfileIn | None = None
+
+    @field_validator("query")
+    @classmethod
+    def _normalized_query(cls, value: str) -> str:
+        query = normalize_query(value)
+        if len(query) < MIN_QUERY_LENGTH:
+            raise ValueError("o pedido precisa ter pelo menos %d caracteres" % MIN_QUERY_LENGTH)
+        return query
+
+
+class DiscoveryItemOut(CamelSchema):
+    book: BookSummaryOut
+    #: Por que o livro atende ao pedido; null na seleção por regras.
+    reason: str | None
+
+
+class DiscoveryOut(CamelSchema):
+    #: "ai": escolhido pelo Gemini; "rules": a IA não respondeu e a seleção é por regras.
+    source: Literal["ai", "rules"]
+    #: Frase da IA para o visitante; null na seleção por regras.
+    message: str | None
+    items: list[DiscoveryItemOut]
+
+
+class ExplanationOut(CamelSchema):
+    """Explicação simplificada gerada por IA; `text` é null quando não há."""
+
+    text: str | None
+    generated_at: dt.datetime | None
 
 
 # ---- status

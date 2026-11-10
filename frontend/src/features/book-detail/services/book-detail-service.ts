@@ -1,5 +1,5 @@
 import { HttpClient } from '../../../lib/http/HttpClient'
-import { list, parseBook, parseRecord, parseString } from '../../../services/catalog-parsers'
+import { list, parseBook, parseNullableString, parseRecord, parseString } from '../../../services/catalog-parsers'
 import type { RelatedShelves } from '../models/related-books'
 
 const http = new HttpClient().instance
@@ -23,4 +23,19 @@ export async function getRelatedBooks(id: string): Promise<RelatedShelves> {
     }
   }
   return { sameAuthor, related: list(body.related, 'related.related', parseBook) }
+}
+
+/**
+ * Explicação simplificada do livro gerada por IA a partir da ficha, guardada
+ * pela API depois da primeira vez.
+ *
+ * @param id - Identificador do livro aberto.
+ * @param signal - Cancela a requisição quando o visitante troca de livro.
+ * @returns O texto, ou `null` quando não há explicação (sem dados ou IA indisponível).
+ */
+export async function getBookExplanation(id: string, signal?: AbortSignal): Promise<string | null> {
+  const { data } = await http.get<unknown>(`/books/${encodeURIComponent(id)}/explanation`, { signal })
+  const body = parseRecord(data, 'explanation')
+  const text = parseNullableString(body.text, 'explanation.text')
+  return text?.trim() ? text : null
 }

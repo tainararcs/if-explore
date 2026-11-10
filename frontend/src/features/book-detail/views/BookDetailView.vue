@@ -139,6 +139,12 @@
             </ul>
           </section>
 
+          <BookExplanation
+            class="mt-10"
+            :text="explanation"
+            :is-loading="isExplanationLoading"
+          />
+
           <BookRecord
             class="mt-10"
             :book="book"
@@ -204,10 +210,12 @@ import { useReadingPreferences } from '../../../composables/useReadingPreference
 import { formatSubject } from '../../../lib/catalog-format'
 import { pickCoverColor } from '../../../lib/cover-color'
 import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
+import BookExplanation from '../components/BookExplanation.vue'
 import BookHero from '../components/BookHero.vue'
 import BookRecord from '../components/BookRecord.vue'
 import BookShareButton from '../components/BookShareButton.vue'
 import { useBookDetail } from '../composables/useBookDetail'
+import { useBookExplanation } from '../composables/useBookExplanation'
 import { useScrolledPast } from '../composables/useScrolledPast'
 
 const MIN_RELATED = 3
@@ -224,6 +232,9 @@ const bookId = computed(() => {
 
 const { status, isRefreshing, book, areaName, courseNames, genreNames, shelves, reload } =
   useBookDetail(bookId)
+
+// A explicação da IA chega à parte e não atrasa a página; sem texto, a seção some.
+const { text: explanation, isLoading: isExplanationLoading } = useBookExplanation(bookId)
 
 const hero = useTemplateRef<InstanceType<typeof BookHero>>('hero')
 const actions = useTemplateRef<HTMLDivElement>('actions')

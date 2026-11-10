@@ -234,6 +234,27 @@ class BookAuthor(models.Model):
         constraints = [models.UniqueConstraint(fields=["book", "author"], name="unique_book_author")]
 
 
+class BookExplanation(models.Model):
+    """Explicação simplificada de um livro gerada pela IA, guardada para não chamar
+    o Gemini a cada visita. Não é um campo sincronizado: a sincronização não a
+    altera, e `source_hash` a invalida quando os dados usados mudam."""
+
+    book = models.OneToOneField(Book, models.CASCADE, primary_key=True, related_name="explanation",
+                                verbose_name="livro")
+    text = models.TextField("explicação")
+    #: Hash dos campos do livro enviados ao modelo.
+    source_hash = models.CharField(max_length=64)
+    model = models.CharField("modelo", max_length=100)
+    created_at = models.DateTimeField("gerada em")
+
+    class Meta:
+        verbose_name = "explicação gerada por IA"
+        verbose_name_plural = "explicações geradas por IA"
+
+    def __str__(self) -> str:
+        return str(self.book_id)
+
+
 class SyncKind(models.TextChoices):
     CATALOG = "catalog", "Catálogo"
 

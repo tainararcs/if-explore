@@ -1,18 +1,7 @@
 <!-- Homepage: busca no acervo e prateleiras de recomendações personalizadas. -->
 <template>
   <div>
-    <AppHeader sticky>
-      <template #actions>
-        <RouterLink
-          class="grid size-11 place-items-center rounded-[50%] text-primary hover:bg-surface-muted hover:text-primary"
-          :to="{ path: '/onboarding', query: { step: 'areas' } }"
-          :aria-label="t('home.adjustPreferences')"
-          :title="t('home.adjustPreferences')"
-        >
-          <IconSparkle />
-        </RouterLink>
-      </template>
-    </AppHeader>
+    <AppHeader sticky />
 
     <main class="container pt-8 pb-16 md:pt-12">
       <div>
@@ -145,7 +134,6 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
-import IconSparkle from '../../../components/icons/IconSparkle.vue'
 import SelectableChip from '../../../components/SelectableChip.vue'
 import BookShelf from '../../../components/BookShelf.vue'
 import SearchBar from '../components/SearchBar.vue'

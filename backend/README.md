@@ -12,6 +12,8 @@ sincronizada com o catálogo PHL do campus, e a classifica na taxonomia do IF Ex
 - [SQLite](https://www.sqlite.org/) em modo WAL, com [FTS5](https://www.sqlite.org/fts5.html) para a busca textual.
 - `phl_client`: cliente do catálogo PHL, sem dependências além da biblioteca padrão
   ([documentação](phl_client/api.html)).
+- [Gemini](https://ai.google.dev/gemini-api/docs): sugestões da descoberta e explicações
+  dos livros, chamado pela API REST com a biblioteca padrão (`catalog/services/gemini.py`).
 
 ## Instalação
 
@@ -70,6 +72,11 @@ ambiente do sistema (servidor, cron) têm prioridade sobre ele.
 | `COPIES_LIVE_MAX_AGE_MINUTES` | `15` | Na página de um livro, exemplares mais velhos que isto são consultados de novo no PHL. |
 | `PHL_LIVE_TIMEOUT` | `5` | Tempo limite, em segundos, dessa consulta ao vivo. |
 | `CATALOG_LOG_LEVEL` | `INFO` | Nível dos logs da sincronização. |
+| `GEMINI_API_KEY` | vazia | Chave da API Gemini. Vazia, a IA fica desligada e a descoberta usa só as regras. Nunca a exponha ao frontend. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Modelo usado nas duas rotas de IA. |
+| `GEMINI_TIMEOUT` | `10` | Tempo limite, em segundos, de cada chamada ao Gemini. |
+| `DISCOVERY_RATE` | `10/m` | Limite por IP de `POST /api/discovery` (`número/período`, com `s`, `m`, `h` ou `d`). |
+| `EXPLANATION_RATE` | `60/m` | Limite por IP de `GET /api/books/{id}/explanation`. |
 
 ## API
 
@@ -85,6 +92,8 @@ frontend, e valores ausentes saem como `null`.
 | `GET /api/books/{id}/related` | `{sameAuthor, related}`: outros livros de um autor em comum e os demais por afinidade. |
 | `POST /api/recommendations` | `{shelves, areas}` para o perfil do visitante (`{areaIds, courseIds, seedBookIds, genreIds}`). |
 | `GET /api/recommendations/candidates` | Títulos para escolher no onboarding (`area`, `course`, `limit`). |
+| `POST /api/discovery` | `{source, message, items: [{book, reason}]}`: até 6 títulos do acervo para um pedido em texto livre (`{query, profile?}`, 3 a 300 caracteres). |
+| `GET /api/books/{id}/explanation` | `{text, generatedAt}`: explicação simplificada do livro gerada por IA (`text` é `null` quando não há). |
 | `GET /api/status` | Tamanho do acervo local e as últimas sincronizações. |
 
 Parâmetros de `GET /api/books`:
@@ -120,6 +129,31 @@ As recomendações seguem as regras que o frontend usava com o acervo fictício 
 incluem livros, e-books, audiolivros e TCCs. Em empates, vêm primeiro os livros com
 capa e os com mais exemplares (a biblioteca compra mais exemplares dos títulos mais
 procurados, como a bibliografia dos cursos).
+
+### Descoberta com IA
+
+O Gemini nunca busca no catálogo: a API escolhe até 40 candidatos no acervo local
+(livros que casam com alguma palavra relevante do pedido e, se o visitante enviar o
+perfil, os mais próximos das preferências dele, sem os títulos que ele já escolheu) e
+o Gemini só ordena e explica esses candidatos. Ids fora deles são descartados. Sem
+chave, em erro, tempo esgotado, cota esgotada ou resposta inválida, a resposta vem
+com `source: "rules"`: os primeiros candidatos, sem `reason` e sem `message`.
+
+A explicação de um livro parte só da ficha (título, autores, área, assuntos, sinopse
+e notas); títulos sem sinopse nem assuntos não têm explicação. Ela é guardada em
+`BookExplanation` e gerada de novo quando a sincronização muda esses dados; no admin,
+apagar uma explicação faz a próxima visita gerar outra.
+
+| Rota | Chamadas ao Gemini | Requisições ao PHL |
+|---|---|---|
+| `POST /api/discovery` | 1 por pedido (0 sem candidatos ou sem chave) | 0 |
+| `GET /api/books/{id}/explanation` | 1 na primeira visita ao livro; depois 0 | 0 |
+
+Acima do limite por IP, as duas rotas respondem 429 com `Retry-After`. A contagem usa
+o cache do Django (memória local, por processo, na configuração atual). O IP vem de
+`X-Forwarded-For` quando o cabeçalho existe; atrás de um proxy reverso, defina
+`NINJA_NUM_PROXIES` em `config/settings.py`. Pedidos e prompts não são gravados nem
+vão para os logs.
 
 Em desenvolvimento, aponte o frontend para a API com um proxy do Vite (`/api` →
 `http://localhost:8000`), sem precisar de CORS.

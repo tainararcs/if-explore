@@ -12,6 +12,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--prefix", "frontend", "--", "--port", "4173", "--strictPort"],
       "port": 4173
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "backend/.venv/Scripts/python.exe",
+      "runtimeArgs": ["backend/manage.py", "runserver", "8000", "--noreload"],
+      "port": 8000
     }
   ]
 }
