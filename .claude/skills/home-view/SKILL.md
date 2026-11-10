@@ -23,11 +23,10 @@ placeholder `HomeView.vue`.
 ## 3. Layout
 
 ```
-AppHeader (sticky): [BrandMark] IF Explore            [✦ Ajustar preferências]
+AppHeader (sticky): [BrandMark] IF Explore  [✦ Pedir sugestão] [⚙ Ajustar preferências]
 Greeting eyebrow + serif h1: "Suas recomendações"
 Short line: "Com base em <área 1>, <área 2> e nos títulos que você escolheu."
 Search bar (full width at base, max 640px at md+)
-[✦ Peça uma sugestão à IA]   (link to /discover, carries ?q= when searching)
 Area filter chips (horizontal scroll at base): Todas · <selected areas>
 ── default mode ──
 Shelf: "Escolhidos para você"
@@ -38,7 +37,10 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
 "<n> resultados para “<query>”" + results grid
 ```
 
-- The ✦ action is an icon button with `aria-label="Ajustar preferências"` linking
+- "Pedir sugestão" is the header's highlighted button to `/discover` (see the
+  `discovery-view` skill); on the home it carries the search text as `?q=`.
+- The preferences action is an icon button (sliders icon, `IconAdjustments`)
+  with `aria-label="Ajustar preferências"` linking
   to `/onboarding?step=areas` (pre-filled).
 - Area filter chips narrow every shelf and the results; "Todas" is the default.
 - Do not show shelves that end up empty after filtering.

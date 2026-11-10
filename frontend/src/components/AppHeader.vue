@@ -1,6 +1,7 @@
 <!--
   Cabeçalho da aplicação: a marca leva às boas-vindas, a navegação principal
-  ("Recomendações" e "Sobre") e um espaço para ações contextuais da tela.
+  ("Recomendações" e "Sobre"), o botão em destaque da descoberta com IA e um
+  espaço para ações contextuais da tela.
   A partir de 600px os links ficam centralizados; abaixo disso vão para um
   menu em tela cheia (abaixo do cabeçalho), aberto pelo botão de três linhas.
 -->
@@ -78,6 +79,20 @@
         ícone de 24px), alinhando o último ícone à margem como a marca à esquerda.
       -->
       <div class="-me-2.5 flex items-center gap-1 justify-self-end sm:me-0 sm:gap-2">
+        <!--
+          Descoberta com IA, a ação principal do cabeçalho: botão preenchido com rótulo a
+          partir de 900px e só com o ícone abaixo disso. Some na própria tela da descoberta.
+        -->
+        <RouterLink
+          v-if="route.path !== '/discover'"
+          class="button button--primary button--small max-md:size-11 max-md:min-h-11 max-md:p-0"
+          :to="discoverLink"
+          :title="t('common.discover.label')"
+        >
+          <IconSparkle class="size-5 shrink-0" />
+          <!-- Abaixo de 900px o rótulo some da tela, mas continua sendo o nome do botão. -->
+          <span class="max-md:sr-only">{{ t('common.discover.action') }}</span>
+        </RouterLink>
         <slot name="actions" />
         <ThemeToggle />
         <button
@@ -104,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, useId, useTemplateRef, watch } from 'vue'
+import { computed, ref, useId, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { LIBRARY_CATALOG_URL } from '../lib/library-catalog'
@@ -112,6 +127,7 @@ import BrandMark from './BrandMark.vue'
 import IconClose from './icons/IconClose.vue'
 import IconExternalLink from './icons/IconExternalLink.vue'
 import IconMenu from './icons/IconMenu.vue'
+import IconSparkle from './icons/IconSparkle.vue'
 import ThemeToggle from './ThemeToggle.vue'
 
 interface Props {
@@ -132,6 +148,12 @@ const route = useRoute()
 const menuId = useId()
 const header = useTemplateRef<HTMLElement>('header')
 const menuButton = useTemplateRef<HTMLButtonElement>('menuButton')
+
+// Na home, o texto da busca vai junto como ponto de partida do pedido.
+const discoverLink = computed(() => {
+  const { q } = route.query
+  return { path: '/discover', query: route.path === '/home' && typeof q === 'string' && q ? { q } : {} }
+})
 
 const isMenuOpen = ref(false)
 // Posição do painel: logo abaixo do cabeçalho, onde quer que ele esteja na tela.

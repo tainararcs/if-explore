@@ -9,7 +9,7 @@
           :aria-label="t('home.adjustPreferences')"
           :title="t('home.adjustPreferences')"
         >
-          <IconSparkle />
+          <IconAdjustments />
         </RouterLink>
       </template>
     </AppHeader>
@@ -35,13 +35,6 @@
         class="mt-6 max-w-[640px]"
         @clear="clear"
       />
-      <RouterLink
-        class="mt-3 inline-flex min-h-11 items-center gap-2 text-small font-semibold"
-        :to="{ path: '/discover', query: query ? { q: query } : {} }"
-      >
-        <IconSparkle class="size-5" />
-        {{ t('home.discoverLink') }}
-      </RouterLink>
 
       <fieldset
         v-if="areas.length > 1"
@@ -152,7 +145,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
-import IconSparkle from '../../../components/icons/IconSparkle.vue'
+import IconAdjustments from '../../../components/icons/IconAdjustments.vue'
 import SelectableChip from '../../../components/SelectableChip.vue'
 import BookShelf from '../../../components/BookShelf.vue'
 import SearchBar from '../components/SearchBar.vue'
