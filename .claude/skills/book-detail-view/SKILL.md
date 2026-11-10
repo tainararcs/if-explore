@@ -57,7 +57,7 @@ sticky cover on desktop, swipeable shelf).
 Mobile (base):
 
 ```
-AppHeader: [BrandMark] IF Explore                 [theme toggle]
+AppHeader: [BrandMark] IF Explore   [Para você] [✦ Pergunte à IA]   [☰ menu]
 [← Voltar]
 ┌ band tinted with the cover color (full bleed) ┐
 │        Cover (~144px, centered, shadow)        │
