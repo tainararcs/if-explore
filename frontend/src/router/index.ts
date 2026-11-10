@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useReadingPreferences } from '../composables/useReadingPreferences'
 import { i18n } from '../lib/i18n'
+import { installTabTransition } from '../lib/tab-transition'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -93,6 +94,8 @@ export const router = createRouter({
     },
   ],
 })
+
+installTabTransition(router)
 
 router.afterEach((to) => {
   const appName = i18n.global.t('common.appName')

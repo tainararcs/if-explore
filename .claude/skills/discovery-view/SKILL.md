@@ -22,11 +22,9 @@ AI and only from the library collection.
 
 - Route `/discover`, lazy-loaded `features/discovery/views/DiscoveryView.vue`,
   `titleKey` "Peça uma sugestão". No preference guard: preferences are optional.
-- Header (`AppHeader`, every view): highlighted primary button "Pedir
-  sugestão" with the ✦ icon → `/discover`; label from 900px, icon only below
-  (label kept for screen readers, full "Peça uma sugestão à IA" as `title`);
-  hidden on `/discover`. On the home, the search text goes along
-  (`/discover?q=`).
+- Header (`AppHeader`, every view): the "Pergunte à IA" tab (✦ icon) next to
+  "Para você" → `/discover`, marked as current there. On the home, the search
+  text goes along (`/discover?q=`).
 - Back link "← Suas recomendações" (or "← Início" without preferences), same
   rule as the book page.
 

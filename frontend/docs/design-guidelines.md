@@ -284,28 +284,43 @@ Small pill with a dot plus text, `--text-caption` without uppercase:
 
 ### 7.7 Header (`AppHeader.vue`)
 
-Single header, no bottom navigation bar. Left: brand mark + "IF Explore",
-always a link to the welcome view (`/`). From `sm` (600px), center: the main navigation (`<nav>`, three-column grid so it stays centered
-on wide screens): "Recomendações" (`/home`, marked with
-`aria-current="page"`, primary color and underline when active) and "Sobre",
-a link to the about section of the welcome view (`/#about-section`). On hover,
-keyboard focus, and the active state, these links show a 2px underline that grows
-from the center and extends 4px past the text on each side, with no background. Below 600px the links move into a menu opened by a
-hamburger button at the far right (`aria-expanded`/`aria-controls`). The menu
-fills the screen below the header (fixed, above page content, page scroll
-locked), shows the links in larger type and a simple footer (library name,
-campus, link to the official site), and closes on navigation, Escape (focus
-returns to the button), or a tap outside the header. The header always sits
-above page content (`z-20`). Right: the highlighted "Pedir sugestão" button
-(filled primary, ✦ sparkle icon, link to `/discover`; from 900px it shows the
-label, below that only the icon with the label kept for screen readers; hidden
-on `/discover` itself; on the home it carries the search text as `?q=`), then
-the sliders "Ajustar preferências" icon button (link to
-`/onboarding?step=areas`, fixed on every view, `/onboarding` included), followed by the theme
-toggle, present on every view. The
-toggle shows the moon in light mode and the sun in dark mode, swapping them
-with a short rotate/scale/fade transition. Height 64px, `--color-surface` with no border,
-sticky on the home, static elsewhere.
+Single header, no bottom navigation bar. It shows the two ways to find a book
+as peers and keeps everything else in one menu.
+
+- Left: brand mark + "IF Explore", always a link to the welcome view (`/`).
+- Main navigation (`<nav>`): two tabs, "Para você" (library icon) and
+  "Pergunte à IA" (✦ sparkle icon, in `--color-primary`). "Para você" links to
+  `/home` with saved preferences and to `/onboarding` without them (`/home`
+  redirects visitors without preferences); it is current on `/home` and
+  `/onboarding`. "Pergunte à IA" links to `/discover` (on the home it carries the
+  search text as `?q=`) and is current there. The current tab gets
+  `aria-current="page"` and a `--color-primary-soft` pill with
+  `--color-on-primary-soft` text; other views (welcome, book) have no current
+  tab. Current state follows the path, not the query (custom `RouterLink`s).
+  From `sm` (600px) the tabs sit centered in a three-column grid on the header
+  row; below that they take a second, full-width row as a two-column track on
+  `--color-surface-muted`, always visible (no hamburger navigation).
+- Right: the menu button (three lines, `HeaderMenu.vue`, `aria-expanded`/
+  `aria-controls`), a disclosure, not an ARIA menu. Its panel drops below the
+  button (`--color-surface`, border, `--shadow-md`, max 18rem wide) and holds:
+  "Ajustar preferências" ("Definir preferências" without saved preferences, link
+  to `/onboarding?step=areas`), "Tema escuro" (`ThemeToggle.vue`, a
+  `role="switch"` row with an on/off track), and, after a divider, "Sobre o IF
+  Explore" (`/#about-section`). It closes on navigation, Escape (focus returns to
+  the button), a tap outside, or focus leaving the panel.
+- Switching tabs is animated with the View Transitions API
+  (`src/lib/tab-transition.ts`, CSS at the end of `src/index.css`), only between
+  the two tabs' views (`/home` or `/onboarding` and `/discover`): the header stays
+  still, the current-tab pill slides to the other tab under the labels, and the
+  page slides toward the chosen tab ("Para você" is left, "Pergunte à IA" right;
+  browser back/forward follow the same direction). Duration `--duration-page`
+  (350ms) with `--ease-standard`. With `prefers-reduced-motion: reduce` the page
+  only crossfades and the pill jumps. Browsers without the API, and every other
+  navigation, stay instant.
+
+Height 64px from `sm` (two rows below it), `--color-surface` with no border,
+always above page content (`z-20`), sticky on the home, discovery, and book
+pages, static elsewhere.
 
 ### 7.7.1 Footer (`AppFooter.vue`)
 

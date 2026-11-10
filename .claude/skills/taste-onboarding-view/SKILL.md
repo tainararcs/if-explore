@@ -72,7 +72,7 @@ without an area) redirect to the first incomplete step with `router.replace`.
 Focus mode: no app navigation, minimal header.
 
 ```
-AppHeader: [BrandMark] IF Explore                 [theme toggle]
+AppHeader: [BrandMark] IF Explore   [Para você] [✦ Pergunte à IA]   [☰ menu]
 [← Voltar]  [progress bar]  "Passo 1 de 3"
 Step title (serif, h1 — focus moves here on step change)
 Helper text
