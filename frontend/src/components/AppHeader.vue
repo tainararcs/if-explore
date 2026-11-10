@@ -1,7 +1,7 @@
 <!--
   Cabeçalho da aplicação: a marca leva às boas-vindas, a navegação principal
-  ("Recomendações" e "Sobre"), o botão em destaque da descoberta com IA e um
-  espaço para ações contextuais da tela.
+  ("Recomendações" e "Sobre"), o botão em destaque da descoberta com IA e o
+  atalho para ajustar as preferências de leitura.
   A partir de 600px os links ficam centralizados; abaixo disso vão para um
   menu em tela cheia (abaixo do cabeçalho), aberto pelo botão de três linhas.
 -->
@@ -93,7 +93,15 @@
           <!-- Abaixo de 900px o rótulo some da tela, mas continua sendo o nome do botão. -->
           <span class="max-md:sr-only">{{ t('common.discover.action') }}</span>
         </RouterLink>
-        <slot name="actions" />
+        <!-- Ajustar preferências: fixo em todas as telas; no onboarding, volta ao primeiro passo. -->
+        <RouterLink
+          class="grid size-11 place-items-center rounded-[50%] text-primary hover:bg-surface-muted hover:text-primary"
+          :to="{ path: '/onboarding', query: { step: 'areas' } }"
+          :aria-label="t('common.adjustPreferences')"
+          :title="t('common.adjustPreferences')"
+        >
+          <IconAdjustments />
+        </RouterLink>
         <ThemeToggle />
         <button
           ref="menuButton"
@@ -124,6 +132,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { LIBRARY_CATALOG_URL } from '../lib/library-catalog'
 import BrandMark from './BrandMark.vue'
+import IconAdjustments from './icons/IconAdjustments.vue'
 import IconClose from './icons/IconClose.vue'
 import IconExternalLink from './icons/IconExternalLink.vue'
 import IconMenu from './icons/IconMenu.vue'
@@ -138,10 +147,6 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   sticky: false,
 })
-
-defineSlots<{
-  actions?: () => unknown
-}>()
 
 const { t } = useI18n()
 const route = useRoute()

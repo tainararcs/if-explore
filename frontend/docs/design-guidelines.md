@@ -300,9 +300,9 @@ above page content (`z-20`). Right: the highlighted "Pedir sugestão" button
 (filled primary, ✦ sparkle icon, link to `/discover`; from 900px it shows the
 label, below that only the icon with the label kept for screen readers; hidden
 on `/discover` itself; on the home it carries the search text as `?q=`), then
-icon-only contextual actions passed through a slot (for example the sliders
-"Ajustar preferências" icon button on the home), followed by the theme toggle,
-present on every view. The
+the sliders "Ajustar preferências" icon button (link to
+`/onboarding?step=areas`, fixed on every view, `/onboarding` included), followed by the theme
+toggle, present on every view. The
 toggle shows the moon in light mode and the sun in dark mode, swapping them
 with a short rotate/scale/fade transition. Height 64px, `--color-surface` with no border,
 sticky on the home, static elsewhere.

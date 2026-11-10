@@ -7,6 +7,7 @@ export const ptBR = {
     libraryName: 'Biblioteca Roberval Cardoso',
     institution: 'IF Sudeste MG – Campus Barbacena',
     brandHomeLabel: 'IF Explore, boas-vindas',
+    adjustPreferences: 'Ajustar preferências',
     discover: {
       action: 'Pedir sugestão',
       label: 'Peça uma sugestão à IA',
@@ -171,7 +172,6 @@ export const ptBR = {
     eyebrow: 'Para você',
     title: 'Suas recomendações',
     basis: 'Com base em {areas} e nos títulos que você escolheu.',
-    adjustPreferences: 'Ajustar preferências',
     filterLegend: 'Filtrar por área',
     allAreas: 'Todas',
     loading: 'Carregando recomendações…',

@@ -39,8 +39,8 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
 
 - "Pedir sugestão" is the header's highlighted button to `/discover` (see the
   `discovery-view` skill); on the home it carries the search text as `?q=`.
-- The preferences action is an icon button (sliders icon, `IconAdjustments`)
-  with `aria-label="Ajustar preferências"` linking
+- "Ajustar preferências" is a fixed header icon button (sliders icon,
+  `IconAdjustments`, fixed in `AppHeader` on every view) linking
   to `/onboarding?step=areas` (pre-filled).
 - Area filter chips narrow every shelf and the results; "Todas" is the default.
 - Do not show shelves that end up empty after filtering.
