@@ -8,21 +8,20 @@ export const ptBR = {
     institution: 'IF Sudeste MG – Campus Barbacena',
     brandHomeLabel: 'IF Explore, boas-vindas',
     adjustPreferences: 'Ajustar preferências',
-    discover: {
-      action: 'Pedir sugestão',
-      label: 'Peça uma sugestão à IA',
-    },
+    definePreferences: 'Definir preferências',
     nav: {
       label: 'Navegação principal',
-      recommendations: 'Recomendações',
-      about: 'Sobre',
-      openMenu: 'Abrir menu',
-      closeMenu: 'Fechar menu',
+      forYou: 'Para você',
+      discover: 'Pergunte à IA',
+    },
+    menu: {
+      open: 'Abrir menu',
+      close: 'Fechar menu',
+      about: 'Sobre o IF Explore',
     },
     opensInNewTab: '(abre em nova aba)',
     exploreBook: 'Explorar',
     scrollToTop: 'Voltar ao início da página',
-    officialSite: 'Acessar o site oficial da biblioteca',
     footer: {
       description:
         'Recomendações de leitura a partir do acervo da Biblioteca Roberval Cardoso, de acordo com a sua área de estudo e o seu gosto.',
@@ -42,8 +41,7 @@ export const ptBR = {
     },
     coverLabel: 'Capa de {title}, de {author}',
     theme: {
-      useLight: 'Ativar tema claro',
-      useDark: 'Ativar tema escuro',
+      dark: 'Tema escuro',
     },
     shelf: {
       previous: 'Ver livros anteriores',

@@ -147,6 +147,8 @@
 
     --duration-fast: 150ms;
     --duration-base: 250ms;
+    /* Troca de tela entre as abas do cabeçalho. */
+    --duration-page: 350ms;
 
     color-scheme: light dark;
     font-family: var(--font-body);
@@ -369,6 +371,112 @@
   @media (prefers-reduced-motion: no-preference) {
     .button:active:not(:disabled) {
       transform: scale(0.97);
+    }
+  }
+}
+
+/*
+ * Troca entre as abas do cabeçalho ("Para você" e "Pergunte à IA"), animada pela
+ * View Transitions API (src/lib/tab-transition.ts). O cabeçalho fica parado, o destaque
+ * da aba desliza até a outra posição e o restante da tela desliza para o lado da aba
+ * escolhida, conforme data-tab-direction. Os rótulos das abas têm nomes próprios para
+ * ficar acima do destaque enquanto ele se move.
+ */
+@layer base {
+  .app-header {
+    view-transition-name: app-header;
+  }
+
+  .header-tab-indicator {
+    view-transition-name: header-tab-indicator;
+  }
+
+  .header-tab-label--for-you {
+    view-transition-name: header-tab-label-for-you;
+  }
+
+  .header-tab-label--discover {
+    view-transition-name: header-tab-label-discover;
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: var(--duration-page);
+    animation-timing-function: var(--ease-standard);
+  }
+
+  /* O cabeçalho não se move: só os rótulos trocam de cor. */
+  ::view-transition-group(app-header) {
+    animation: none;
+  }
+
+  /*
+   * Ordem das camadas: o navegador empilha os grupos pela ordem do DOM antigo, o que
+   * deixaria o destaque sobre o rótulo da aba à esquerda ao voltar. Fixa-se rótulos
+   * acima do destaque, e ambos acima do cabeçalho.
+   */
+  ::view-transition-group(header-tab-indicator) {
+    z-index: 1;
+  }
+
+  ::view-transition-group(header-tab-label-for-you),
+  ::view-transition-group(header-tab-label-discover) {
+    z-index: 2;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :root[data-tab-direction]::view-transition-old(root),
+    :root[data-tab-direction]::view-transition-new(root) {
+      animation-duration: var(--duration-page);
+      animation-timing-function: var(--ease-standard);
+      animation-fill-mode: both;
+      mix-blend-mode: normal;
+    }
+
+    :root[data-tab-direction='forward']::view-transition-old(root) {
+      animation-name: tab-slide-out-to-start;
+    }
+
+    :root[data-tab-direction='forward']::view-transition-new(root) {
+      animation-name: tab-slide-in-from-end;
+    }
+
+    :root[data-tab-direction='back']::view-transition-old(root) {
+      animation-name: tab-slide-out-to-end;
+    }
+
+    :root[data-tab-direction='back']::view-transition-new(root) {
+      animation-name: tab-slide-in-from-start;
+    }
+  }
+
+  /* Com movimento reduzido, a tela só esmaece e o destaque troca de lugar sem deslizar. */
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(header-tab-indicator) {
+      animation: none;
+    }
+  }
+
+  @keyframes tab-slide-out-to-start {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes tab-slide-in-from-end {
+    from {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes tab-slide-out-to-end {
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes tab-slide-in-from-start {
+    from {
+      transform: translateX(-100%);
     }
   }
 }
