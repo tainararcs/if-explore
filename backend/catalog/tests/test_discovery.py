@@ -125,6 +125,28 @@ class DiscoveryApiTests(GeminiTestCase):
         self.assertEqual(result["source"], "rules")
         self.assertNotIn("000000000000", self.ids(result))
 
+    def test_more_suggestions_exclude_the_ones_already_shown(self) -> None:
+        fake = self.use(FakeGemini(enabled=False))
+        first = self.ids(self.discover())
+        shown = first[:2]
+        second = self.ids(self.discover(excludeIds=shown))
+        self.assertTrue(second)
+        self.assertFalse(set(shown) & set(second))
+        # sem outros candidatos no acervo de teste, a lista vem vazia (o frontend avisa que acabou)
+        self.assertEqual(self.ids(self.discover(excludeIds=first + second)), [])
+        self.assertEqual(fake.prompts, [])
+
+    def test_excluded_ids_never_reach_gemini(self) -> None:
+        fake = self.use(FakeGemini({"mensagem": "", "recomendacoes": [{"id": PYTHON_BOOK, "motivo": "de novo"}]}))
+        result = self.discover(excludeIds=[PYTHON_BOOK])
+        self.assertNotIn(PYTHON_BOOK, [book["id"] for book in json.loads(fake.prompts[0])["livros"]])
+        # o Gemini insistiu num livro já mostrado: a escolha é descartada e vale a seleção por regras
+        self.assertEqual(result["source"], "rules")
+        self.assertNotIn(PYTHON_BOOK, self.ids(result))
+
+    def test_too_many_excluded_ids_are_rejected(self) -> None:
+        self.discover(excludeIds=[str(n) for n in range(discovery.MAX_EXCLUDED + 1)], status=422)
+
     def test_invalid_query_is_rejected(self) -> None:
         for query in ("py", "   a   ", "x" * 301):
             with self.subTest(query=query):

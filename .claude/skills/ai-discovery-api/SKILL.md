@@ -109,7 +109,7 @@ PHL load: **0 requests**. Gemini load: **1 call per discovery request**.
 
 | Method | Path | Body / response |
 |---|---|---|
-| `POST` | `/api/discovery` | In `DiscoveryIn {query, profile?: ProfileIn}` → `DiscoveryOut {source: "ai" \| "rules", message: str \| null, items: [{book: BookSummaryOut, reason: str \| null}]}` |
+| `POST` | `/api/discovery` | In `DiscoveryIn {query, profile?: ProfileIn, excludeIds?: str[] (≤ 60)}` → `DiscoveryOut {source: "ai" \| "rules", message: str \| null, items: [{book: BookSummaryOut, reason: str \| null}]}` |
 | `GET` | `/api/books/{id}/explanation` | `ExplanationOut {text: str \| null, generatedAt: datetime \| null}`; 404 for missing or inactive books |
 
 - `POST` because the request goes in the body and nothing the visitor sends is

@@ -14,7 +14,7 @@ from pydantic import ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
-from catalog.services.discovery import MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, normalize_query
+from catalog.services.discovery import MAX_EXCLUDED, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, normalize_query
 
 ShelfKind = Literal["forYou", "becauseYouChose", "moreFromArea", "forPleasure"]
 
@@ -210,10 +210,12 @@ class RecommendationsOut(CamelSchema):
 
 # ---- descoberta com IA
 class DiscoveryIn(CamelSchema):
-    """Pedido em texto livre e, opcionalmente, as preferências salvas."""
+    """Pedido em texto livre e, opcionalmente, as preferências salvas e os livros
+    já sugeridos (para pedir outras sugestões)."""
 
     query: str = Field(min_length=MIN_QUERY_LENGTH, max_length=MAX_QUERY_LENGTH)
     profile: ProfileIn | None = None
+    exclude_ids: list[str] = Field(default_factory=list, max_length=MAX_EXCLUDED)
 
     @field_validator("query")
     @classmethod
