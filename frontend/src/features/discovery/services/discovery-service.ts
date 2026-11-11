@@ -39,6 +39,7 @@ function parseItem(value: unknown, path: string): DiscoveryItem {
  *
  * @param query - Pedido do visitante, já normalizado.
  * @param profile - Preferências salvas, quando o visitante quer considerá-las.
+ * @param excludeIds - Livros já sugeridos, para pedir outras sugestões.
  * @param signal - Cancela a requisição quando um novo pedido é feito.
  * @returns Origem, mensagem e até seis livros com o motivo de cada um.
  * @throws RateLimitedError quando a API recusa por excesso de pedidos.
@@ -47,10 +48,12 @@ function parseItem(value: unknown, path: string): DiscoveryItem {
 export async function discover(
   query: string,
   profile: DiscoveryProfile | null,
+  excludeIds: readonly string[] = [],
   signal?: AbortSignal,
 ): Promise<DiscoveryResult> {
   const body = {
     query,
+    ...(excludeIds.length > 0 ? { excludeIds } : {}),
     ...(profile
       ? {
           profile: {

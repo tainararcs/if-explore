@@ -25,67 +25,83 @@ AI and only from the library collection.
 - Header (`AppHeader`, every view): the "Pergunte à IA" tab (✦ icon) next to
   "Para você" → `/discover`, marked as current there. On the home, the search
   text goes along (`/discover?q=`).
-- Back link "← Suas recomendações" (or "← Início" without preferences), same
-  rule as the book page.
+- No back link: `/discover` is a peer tab of the home, like it.
 
 ## 3. Layout
 
+Full container width, like the home and the welcome view.
+
 ```
-AppHeader
-[← Suas recomendações]
-Serif h1: "Peça uma sugestão"
-Lead: "Conte o que você procura e a IA escolhe títulos do acervo do campus."
-┌ form ──────────────────────────────────────────┐
-│ <label> O que você quer ler?                    │
-│ [textarea, 3 rows, max 300]          120/300    │
-│ Ideias: (chips) Algo leve para as férias ·      │
-│   Introdução à programação · Clássicos ...      │
-│ [x] Considerar minhas preferências (if saved)   │
-│ [ Sugerir leituras ]                            │
-└─────────────────────────────────────────────────┘
-── results (aria-live="polite") ──
-Message from the AI (when present), muted paragraph
-List of up to 6 result items
-Note: "Sugestões geradas por IA a partir do acervo. Confira os dados na página do livro."
+AppHeader (sticky, "Pergunte à IA" tab current)
+Eyebrow "Descoberta com IA" + serif h1 "Peça uma sugestão" + lead
+┌ aside (md+: 300–380px, sticky) ┐ ┌ results (rest of the width) ───────────────┐
+│ form: textarea + counter,       │ │ idle (md+ only): dashed panel explaining    │
+│   [x] preferences (if saved),   │ │   what appears there                        │
+│   [ ✦ Sugerir leituras ]        │ │ loading: step messages + 4 skeleton cards   │
+│ Pedidos recentes   [Limpar]     │ │ "Sugestões para “…”"        [Compartilhar]  │
+│   ⟲ last requests (max 5)       │ │ AI message or rules notice                  │
+│ Ideias para começar (chips)     │ │ result cards, one per row                   │
+└─────────────────────────────────┘ │ [ ✦ Mostrar outras sugestões ]              │
+                                    │ AI note                                     │
+                                    └─────────────────────────────────────────────┘
 ```
 
-- Max width ~720px, centered; results use the full content width at `md+`.
-- Idea chips fill the textarea (do not submit); keyboard reachable.
+- From `md`, the aside is sticky below the header and scrolls inside itself when
+  taller than the screen. Below `md`, one column: aside, then results.
+- Mobile: after a request the aside collapses into `DiscoveryQuerySummary`
+  ("Seu pedido" + the text + "Editar"), so the results show right away; "Editar"
+  reopens the form and focuses the textarea. From `md` the form never collapses.
+- Recent requests repeat the request on click; idea chips fill the textarea
+  (do not submit) and focus it.
 - Enter submits, Shift+Enter breaks a line; the button is the primary action.
 
 ## 4. Result item — `DiscoveryResultItem.vue`
 
-Horizontal card that is a `RouterLink` to `/books/:id` (accessible name = title):
-`BookCover` (~88px) on the left; title (serif), authors (`formatAuthors`),
-`AvailabilityBadge`; below, the reason under a small label "Por que esta
-leitura". Without a reason (fallback), omit the label and the paragraph. Stack
-vertically below `sm` only if the cover would squeeze the text.
+`<article>` card: `BookCover` (~88px) on the left; eyebrow with area name and
+year; title (serif) as the `RouterLink` to `/books/:id`, stretched over the whole
+card with `::after`; authors (`formatAuthors`); `AvailabilityBadge`; the reason
+under "Por que esta leitura" (omitted without a reason); and, when the book has
+a call number, "Na estante <callNumber>" with a "Copiar" button
+(`useClipboardFeedback`) layered above the stretched link, so there is no control
+inside a link.
 
 ## 5. States
 
-- Idle: form only, ideas visible.
-- Loading: submit shows progress, 3 skeleton items, results region `aria-busy`.
-  A new submit cancels the previous request (`AbortController`).
-- `source = "rules"`: notice above the list (`role="status"`): "A IA está
-  indisponível agora; mostramos títulos do acervo ligados ao seu pedido."
-- Empty `items`: empty state with tips (use other words, be less specific) and
-  a link to the home search.
-- Error: message with retry (`role="alert"`); 429 gets its own text ("Muitos
-  pedidos em pouco tempo. Tente de novo em um minuto.").
+- Idle: form, recent requests, and ideas; on `md+` the results column shows the
+  dashed explanation panel.
+- Loading (`DiscoveryLoading`): visual step messages every ~1.2s ("Lendo seu
+  pedido…", "Procurando no acervo…", "Escolhendo as melhores leituras…",
+  "Explicando cada escolha…", stopping at the last), one screen reader message,
+  3 skeleton cards; results region `aria-busy`. A new submit cancels the previous
+  request (`AbortController`).
+- `source = "rules"` (of the latest batch): notice above the list
+  (`role="status"`).
+- Empty `items`: empty state with tips and a link to the home search.
+- Error: message with retry (`role="alert"`); 429 gets its own text.
+- "Mostrar outras sugestões" sends the same request with `excludeIds` (all books
+  shown so far, up to 60) and appends the new batch; an empty batch shows "Não há
+  outras sugestões no acervo para este pedido." and hides the button.
+- "Compartilhar" (shared `ShareButton`, small) shares or copies the page link;
+  `?q=` reproduces the request.
 - After results arrive, move focus to the results heading.
 
 ## 6. Data
 
-- `features/discovery/services/discovery-service.ts`: `discover(query, profile?,
-  signal?)` posts to `/discovery` and validates the body with the shared parsers
-  (`parseBook`, `parseNullableString`, `parseRecord`, `list`); `source` is a
-  literal union checked at runtime. A 429 becomes a typed `RateLimitedError`.
-- `features/discovery/models/discovery.ts`: `DiscoveryResult` (`source`,
-  `message`, `items: { book: Book; reason: string | null }[]`).
+- `features/discovery/services/discovery-service.ts`: `discover(query, profile,
+  excludeIds, signal?)` posts to `/discovery` and validates the body with the
+  shared parsers; `source` is a literal union checked at runtime. A 429 becomes a
+  typed `RateLimitedError`.
+- `features/discovery/services/recent-requests-storage.ts`: last 5 requests in
+  `localStorage` (`if-explore:discovery-recent`), deduplicated ignoring case,
+  tolerant to blocked storage.
 - `features/discovery/composables/useDiscovery.ts`: state as a discriminated
-  union (`idle | loading | success | error`), cancellation, retry.
+  union (`idle | loading | success | error`), `moreStatus` for extra batches,
+  recent requests, cancellation, retry. The last result (with its extra batches)
+  stays in memory, so coming back from a book shows it without a new request.
 - Query synced to `?q=` with `router.replace`; a URL with `q` submits once on
   load, so shared links work. The profile comes from `useReadingPreferences`.
+- Area names come from `getKnowledgeAreas` (cached); without them the card shows
+  only the year.
 - AI text is rendered with interpolation only (never `v-html`).
 
 ## 7. Structure
@@ -93,14 +109,19 @@ vertically below `sm` only if the cover would squeeze the text.
 ```
 src/features/discovery/
 ├── views/DiscoveryView.vue
-├── components/DiscoveryForm.vue        (textarea, counter, ideas, preference toggle; defineModel)
+├── components/DiscoveryForm.vue          (textarea, counter, preference toggle; defineModel; exposes focus)
+├── components/DiscoveryStarters.vue      (recent requests and idea chips)
+├── components/DiscoveryQuerySummary.vue  (collapsed request on mobile)
+├── components/DiscoveryLoading.vue       (step messages and skeletons)
 ├── components/DiscoveryResultItem.vue
 ├── composables/useDiscovery.ts
 ├── services/discovery-service.ts
+├── services/recent-requests-storage.ts
 └── models/discovery.ts
-src/router/index.ts                     (/discover)
-src/locales/pt-BR.ts                    (discovery.*)
-src/features/home/views/HomeView.vue    (entry link)
+src/components/ShareButton.vue            (shared with the book page)
+src/components/icons/IconHistory.vue
+src/router/index.ts                       (/discover)
+src/locales/pt-BR.ts                      (discovery.*, common.share.*)
 ```
 
 ## 8. Done when
@@ -109,8 +130,8 @@ src/features/home/views/HomeView.vue    (entry link)
   the fallback notice and items appear; with the API down, the error state.
 - Every item opens its book page; back returns to the discovery with the same
   results (`?q=`).
-- Keyboard and screen reader flow: label → textarea → ideas → submit → status →
-  results; no horizontal scroll at 360px; correct at 1440px; light and dark pass
-  contrast.
+- Keyboard and screen reader flow: label → textarea → submit → recent requests →
+  ideas → status → results → more; no horizontal scroll at 360px; at 1440px the
+  aside and results fill the container; light and dark pass contrast.
 - No hardcoded interface text; `npm run lint`, `npm run typecheck`, and
   `npm run build` pass.
