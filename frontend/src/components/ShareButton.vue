@@ -1,11 +1,14 @@
 <!--
-  Compartilha o link do livro: usa o compartilhamento nativo quando o navegador
-  oferece (celulares) e, nos demais casos, copia o link.
+  Compartilha o link da página atual: usa o compartilhamento nativo quando o
+  navegador oferece (celulares) e, nos demais casos, copia o link.
 -->
 <template>
+  <!-- Classes e atributos de quem usa o componente vão para o botão, não para o anúncio ao lado. -->
   <button
+    v-bind="$attrs"
     type="button"
-    class="button button--secondary"
+    class="button"
+    :class="small ? 'button--ghost button--small' : 'button--secondary'"
     @click="share"
   >
     <IconCheck
@@ -27,32 +30,40 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import IconCheck from '../../../components/icons/IconCheck.vue'
-import IconShare from '../../../components/icons/IconShare.vue'
-import { useClipboardFeedback } from '../../../composables/useClipboardFeedback'
+import { useClipboardFeedback } from '../composables/useClipboardFeedback'
+import IconCheck from './icons/IconCheck.vue'
+import IconShare from './icons/IconShare.vue'
 
 interface Props {
-  /** Título do livro, usado no texto do compartilhamento. */
+  /** Título enviado ao compartilhamento nativo. */
   title: string
+  /** Texto que acompanha o link no compartilhamento nativo. */
+  text: string
+  /** Versão discreta (botão fantasma pequeno), para ações secundárias. */
+  small?: boolean
 }
 
-const props = defineProps<Props>()
+defineOptions({ inheritAttrs: false })
+
+const props = withDefaults(defineProps<Props>(), {
+  small: false,
+})
 
 const { t } = useI18n()
 const { state: copyState, copy } = useClipboardFeedback()
 
 const label = computed(() => {
   if (copyState.value === 'copied') {
-    return t('bookDetail.share.copied')
+    return t('common.share.copied')
   }
-  return copyState.value === 'failed' ? t('bookDetail.share.failed') : t('bookDetail.share.action')
+  return copyState.value === 'failed' ? t('common.share.failed') : t('common.share.action')
 })
 
 async function share(): Promise<void> {
   const url = window.location.href
   if (typeof navigator.share === 'function') {
     try {
-      await navigator.share({ title: props.title, text: t('bookDetail.share.text', { title: props.title }), url })
+      await navigator.share({ title: props.title, text: props.text, url })
       return
     } catch (error) {
       // Cancelar a folha de compartilhamento não é erro; outras falhas caem na cópia.

@@ -19,6 +19,11 @@ export const ptBR = {
       close: 'Fechar menu',
       about: 'Sobre o IF Explore',
     },
+    share: {
+      action: 'Compartilhar',
+      copied: 'Link copiado',
+      failed: 'Não foi possível copiar o link',
+    },
     opensInNewTab: '(abre em nova aba)',
     exploreBook: 'Explorar',
     scrollToTop: 'Voltar ao início da página',
@@ -211,12 +216,7 @@ export const ptBR = {
       loading: 'Gerando explicação do livro…',
       note: 'Gerado por IA a partir da ficha do livro; pode conter imprecisões.',
     },
-    share: {
-      action: 'Compartilhar',
-      text: 'Encontrei “{title}” no acervo da Biblioteca Roberval Cardoso.',
-      copied: 'Link copiado',
-      failed: 'Não foi possível copiar o link',
-    },
+    shareText: 'Encontrei “{title}” no acervo da Biblioteca Roberval Cardoso.',
     notFound: {
       title: 'Livro não encontrado',
       text: 'Este livro não está no acervo ou o link está incompleto.',

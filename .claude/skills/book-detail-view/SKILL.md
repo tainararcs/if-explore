@@ -124,7 +124,8 @@ is hidden without `callNumber`.
   aba"). Check whether the PHL catalog accepts a search URL by title; if it
   does, build it from the title with `encodeURIComponent` in a pure function;
   otherwise link to the catalog home already used on the welcome view.
-- Secondary "Compartilhar" (`BookShareButton.vue`): native Web Share when
+- Secondary "Compartilhar" (shared `src/components/ShareButton.vue`, also used
+  by the discovery results): native Web Share when
   available, otherwise copies the link, with the same temporary label feedback
   as "Copiar localização" (`useClipboardFeedback`).
 - Mobile only: once the actions scroll out of view (`useScrolledPast`), a fixed
