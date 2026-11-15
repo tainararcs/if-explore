@@ -7,7 +7,7 @@ como no tipo `Book` do frontend. Valores ausentes saem como `null`.
 from __future__ import annotations
 
 import datetime as dt
-from typing import Literal
+from typing import Annotated, Literal
 
 from ninja import Schema
 from pydantic import ConfigDict, Field, field_validator
@@ -17,6 +17,8 @@ from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenr
 from catalog.services.discovery import MAX_EXCLUDED, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, normalize_query
 
 ShelfKind = Literal["forYou", "becauseYouChose", "moreFromArea", "forPleasure"]
+#: Id de livro vindo do cliente: o mesmo tamanho máximo de `Book.id`.
+BookIdIn = Annotated[str, Field(max_length=Book._meta.get_field("id").max_length)]
 
 
 class CamelSchema(Schema):
@@ -215,7 +217,7 @@ class DiscoveryIn(CamelSchema):
 
     query: str = Field(min_length=MIN_QUERY_LENGTH, max_length=MAX_QUERY_LENGTH)
     profile: ProfileIn | None = None
-    exclude_ids: list[str] = Field(default_factory=list, max_length=MAX_EXCLUDED)
+    exclude_ids: list[BookIdIn] = Field(default_factory=list, max_length=MAX_EXCLUDED)
 
     @field_validator("query")
     @classmethod

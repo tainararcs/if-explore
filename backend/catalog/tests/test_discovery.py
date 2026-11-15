@@ -144,8 +144,9 @@ class DiscoveryApiTests(GeminiTestCase):
         self.assertEqual(result["source"], "rules")
         self.assertNotIn(PYTHON_BOOK, self.ids(result))
 
-    def test_too_many_excluded_ids_are_rejected(self) -> None:
+    def test_too_many_or_too_long_excluded_ids_are_rejected(self) -> None:
         self.discover(excludeIds=[str(n) for n in range(discovery.MAX_EXCLUDED + 1)], status=422)
+        self.discover(excludeIds=["9" * 21], status=422)
 
     def test_invalid_query_is_rejected(self) -> None:
         for query in ("py", "   a   ", "x" * 301):
