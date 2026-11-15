@@ -8,11 +8,11 @@ e evitam ter de manter gatilhos de atualização.
 from __future__ import annotations
 
 import re
-import unicodedata
 
 from django.db import connection
 
 from catalog.models import Author, Book, BookAuthor, Subject
+from phl_client.text import normalize
 
 FTS_TABLE = "catalog_book_fts"
 # Pesos do bm25 por coluna: book_id (não indexada), título, autores, assuntos,
@@ -84,11 +84,6 @@ REQUEST_STOPWORDS = frozenset("""
 """.split())
 
 
-def _normalize(word: str) -> str:
-    return "".join(char for char in unicodedata.normalize("NFKD", word.lower())
-                   if not unicodedata.combining(char))
-
-
 def any_term_query(text: str) -> str | None:
     """Converte um pedido em linguagem natural numa consulta FTS5 que casa com
     **qualquer** palavra relevante, cada uma também como início de palavra.
@@ -101,7 +96,7 @@ def any_term_query(text: str) -> str | None:
         A consulta, ou None quando não sobra nenhuma palavra relevante.
     """
     words = [word for word in re.findall(r"\w+", text)
-             if len(word) >= 3 and _normalize(word) not in REQUEST_STOPWORDS]
+             if len(word) >= 3 and normalize(word) not in REQUEST_STOPWORDS]
     terms = list(dict.fromkeys('"%s"*' % word.replace('"', '""') for word in words))
     return " OR ".join(terms) or None
 
