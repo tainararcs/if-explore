@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios'
-import { HttpClient } from '../../../lib/http/HttpClient'
+import { http } from '../../../lib/http-client'
 import {
   ApiContractError,
   list,
@@ -9,8 +9,6 @@ import {
   parseString,
 } from '../../../services/catalog-parsers'
 import type { DiscoveryItem, DiscoveryProfile, DiscoveryResult, DiscoverySource } from '../models/discovery'
-
-const http = new HttpClient().instance
 
 /** A API recusou o pedido por excesso de pedidos em pouco tempo (HTTP 429). */
 export class RateLimitedError extends Error {

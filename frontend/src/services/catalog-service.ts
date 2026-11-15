@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios'
-import { HttpClient } from '../lib/http/HttpClient'
+import { http } from '../lib/http-client'
 import type { Book, BookDetail } from '../models/book'
 import type { Course, KnowledgeArea, LiteraryGenre } from '../models/taxonomy'
 import {
@@ -11,8 +11,6 @@ import {
   parseGenre,
   type BookPage,
 } from './catalog-parsers'
-
-const http = new HttpClient().instance
 
 /** Limite de ids por consulta aceito pela API. */
 const MAX_IDS_PER_REQUEST = 60

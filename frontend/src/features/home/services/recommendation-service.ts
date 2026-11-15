@@ -1,4 +1,4 @@
-import { HttpClient } from '../../../lib/http/HttpClient'
+import { http } from '../../../lib/http-client'
 import {
   ApiContractError,
   list,
@@ -9,8 +9,6 @@ import {
   parseString,
 } from '../../../services/catalog-parsers'
 import type { HomeRecommendations, RecommendationProfile, Shelf, ShelfKind } from '../models/recommendation'
-
-const http = new HttpClient().instance
 
 const SHELF_KINDS: readonly ShelfKind[] = ['forYou', 'becauseYouChose', 'moreFromArea', 'forPleasure']
 
