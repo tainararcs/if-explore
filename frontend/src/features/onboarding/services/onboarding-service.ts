@@ -3,7 +3,7 @@ import type { Book } from '../../../models/book'
 import { list, parseBook } from '../../../services/catalog-parsers'
 
 /** Quantos títulos o visitante vê para escolher. */
-export const CANDIDATE_LIMIT = 60
+const CANDIDATE_LIMIT = 60
 
 /**
  * Títulos para o visitante escolher: primeiro os dos cursos marcados, depois os
