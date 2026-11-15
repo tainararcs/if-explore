@@ -19,7 +19,7 @@
         {{ t('discovery.lead') }}
       </p>
 
-      <div class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 md:mt-8 md:grid-cols-[minmax(300px,340px)_minmax(0,1fr)] md:gap-10 lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-12">
+      <div class="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 md:mt-8 md:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] md:gap-10 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-12">
         <div class="discovery__aside md:sticky md:self-start">
           <DiscoveryQuerySummary
             v-if="isCollapsed"
@@ -28,7 +28,7 @@
             @edit="edit"
           />
           <div
-            class="flex flex-col gap-6"
+            class="flex flex-col gap-3"
             :class="{ 'max-md:hidden': isCollapsed }"
           >
             <DiscoveryForm
@@ -294,17 +294,10 @@ watch(
 </script>
 
 <style scoped>
-/*
-  A partir de 900px, a coluna do pedido acompanha a rolagem logo abaixo do
-  cabeçalho fixo; se for mais alta que a tela (muitos pedidos recentes), rola
-  por dentro em vez de esconder o final.
-*/
+/* A partir de 900px, a coluna do pedido acompanha a rolagem logo abaixo do cabeçalho fixo. */
 @media (min-width: 900px) {
   .discovery__aside {
     top: calc(var(--header-height) + var(--space-5));
-    max-height: calc(100dvh - var(--header-height) - 2 * var(--space-5));
-    overflow-x: hidden;
-    overflow-y: auto;
   }
 }
 </style>

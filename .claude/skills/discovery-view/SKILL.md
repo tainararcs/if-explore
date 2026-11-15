@@ -34,25 +34,27 @@ Full container width, like the home and the welcome view.
 ```
 AppHeader (sticky, "Pergunte à IA" tab current)
 Eyebrow "Descoberta com IA" + serif h1 "Peça uma sugestão" + lead
-┌ aside (md+: 300–380px, sticky) ┐ ┌ results (rest of the width) ───────────────┐
-│ form: textarea + counter,       │ │ idle (md+ only): dashed panel explaining    │
-│   [x] preferences (if saved),   │ │   what appears there                        │
-│   [ ✦ Sugerir leituras ]        │ │ loading: step messages + 4 skeleton cards   │
-│ Pedidos recentes   [Limpar]     │ │ "Sugestões para “…”"        [Compartilhar]  │
-│   ⟲ last requests (max 5)       │ │ AI message or rules notice                  │
-│ Ideias para começar (chips)     │ │ result cards, one per row                   │
-└─────────────────────────────────┘ │ [ ✦ Mostrar outras sugestões ]              │
-                                    │ AI note                                     │
-                                    └─────────────────────────────────────────────┘
+┌ aside (md+: 280–340px, sticky) ┐ ┌ results (rest of the width) ───────────────┐
+│ form card (compact): small      │ │ idle (md+ only): dashed panel explaining    │
+│   label, textarea (14px from    │ │   what appears there                        │
+│   md, 16px below), counter,     │ │ loading: step messages + 3 skeleton cards   │
+│   [x] preferences (caption),    │ │ "Sugestões para “…”"        [Compartilhar]  │
+│   [ ✦ Sugerir leituras ] small  │ │ AI message or rules notice                  │
+│ Experimente: idea · idea · …    │ │ result cards, one per row                   │
+│ ⟲ Pedidos recentes (n) ⌄        │ │ [ ✦ Mostrar outras sugestões ]              │
+│   (closed <details>)            │ │ AI note                                     │
+└─────────────────────────────────┘ └─────────────────────────────────────────────┘
 ```
 
-- From `md`, the aside is sticky below the header and scrolls inside itself when
-  taller than the screen. Below `md`, one column: aside, then results.
+- From `md`, the aside is sticky below the header; it stays short (no inner
+  scroll). Below `md`, one column: aside, then results.
 - Mobile: after a request the aside collapses into `DiscoveryQuerySummary`
   ("Seu pedido" + the text + "Editar"), so the results show right away; "Editar"
   reopens the form and focuses the textarea. From `md` the form never collapses.
-- Recent requests repeat the request on click; idea chips fill the textarea
-  (do not submit) and focus it.
+- Shortcuts are secondary (`DiscoveryStarters`, caption size, no boxes): ideas
+  are a wrapped line of text links that fill the textarea (do not submit) and
+  focus it; recent requests sit in a closed `<details>` "Pedidos recentes (n)"
+  that repeats a request on click and offers "Limpar recentes".
 - Enter submits, Shift+Enter breaks a line; the button is the primary action.
 
 ## 4. Result item — `DiscoveryResultItem.vue`

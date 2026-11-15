@@ -249,7 +249,7 @@ export const ptBR = {
     label: 'O que você quer ler?',
     placeholder: 'Ex.: um romance curto para ler nas férias',
     counter: '{n}/{max} caracteres',
-    ideasLabel: 'Ideias para começar',
+    ideasLabel: 'Experimente:',
     ideas: {
       light: 'Algo leve para ler nas férias',
       programming: 'Introdução à programação',
@@ -257,8 +257,8 @@ export const ptBR = {
       health: 'Alimentação saudável no dia a dia',
     },
     recent: {
-      title: 'Pedidos recentes',
-      clear: 'Limpar',
+      title: 'Pedidos recentes ({n})',
+      clear: 'Limpar recentes',
       repeat: 'Repetir o pedido “{request}”',
     },
     summary: {

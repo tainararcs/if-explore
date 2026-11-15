@@ -1,21 +1,22 @@
 <!-- Formulário do pedido à IA: texto livre com contador e opção de considerar as preferências. -->
 <template>
   <form
-    class="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4 sm:p-6"
+    class="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:p-5"
     @submit.prevent="emit('submit')"
   >
     <div class="flex flex-col gap-2">
       <label
         :for="fieldId"
-        class="font-semibold"
+        class="text-small font-semibold"
       >
         {{ t('discovery.label') }}
       </label>
+      <!-- No celular o texto fica em 16px: abaixo disso o iOS amplia a página ao focar o campo. -->
       <textarea
         :id="fieldId"
         ref="field"
         v-model="query"
-        class="min-h-28 w-full resize-y rounded-md border-[1.5px] border-border-strong bg-bg p-3 text-text [font:inherit] transition-[border-color] duration-(--duration-fast) ease-standard placeholder:text-text-muted hover:border-primary-hover focus-visible:border-primary focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-primary/30"
+        class="min-h-24 w-full resize-y rounded-md border-[1.5px] border-border-strong bg-bg p-3 font-body text-body text-text md:text-small transition-[border-color] duration-(--duration-fast) ease-standard placeholder:text-text-muted hover:border-primary-hover focus-visible:border-primary focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-primary/30"
         rows="3"
         :maxlength="MAX_QUERY_LENGTH"
         enterkeyhint="send"
@@ -33,22 +34,22 @@
 
     <label
       v-if="showPreferenceToggle"
-      class="flex cursor-pointer items-center gap-3 text-small"
+      class="flex min-h-8 cursor-pointer items-center gap-2 text-caption text-text-muted"
     >
       <input
         v-model="usePreferences"
         type="checkbox"
-        class="size-5 shrink-0 accent-primary"
+        class="m-0 size-4 shrink-0 accent-primary"
       >
       {{ t('discovery.usePreferences') }}
     </label>
 
     <button
       type="submit"
-      class="button button--primary w-full"
+      class="button button--primary button--small w-full"
       :disabled="!canSubmit"
     >
-      <IconSparkle class="size-5" />
+      <IconSparkle class="size-4" />
       {{ isLoading ? t('discovery.submitting') : t('discovery.submit') }}
     </button>
   </form>
