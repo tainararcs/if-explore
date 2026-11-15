@@ -389,6 +389,7 @@ result.save(path) -> Path</code></div>
   <li><b>Empréstimos só em total.</b> Não há datas nem histórico por pessoa.</li>
   <li><b>Nomes de cursos não são publicados</b> pelo servidor, só os códigos. A exceção são os TCCs, que trazem o nome do curso em <code>tcc_course</code>.</li>
   <li><b>Disponibilidade custa uma requisição por livro.</b> Para listas grandes, filtre antes e consulte depois.</li>
+  <li><b>Sem link fixo por título.</b> Toda página do OPAC depende de uma sessão que expira. <code>library.phl.record_page_url(id)</code> abre uma sessão nova (1 requisição) e devolve o endereço da ficha para abrir no navegador; gere-o na hora do clique, não o guarde.</li>
 </ul>
 
 <h2 id="ex-busca">Exemplo · Buscar no acervo</h2>

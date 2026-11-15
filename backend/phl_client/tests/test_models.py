@@ -155,6 +155,23 @@ class LibraryTests(unittest.TestCase):
                 call()
         self.assertEqual(library.requests, [])
 
+    def test_record_page_url_opens_a_fresh_session(self) -> None:
+        library = FakeServerLibrary()
+        fetched: list[str] = []
+
+        def fetch(url: str, attempts: int = 2, use_cache: bool = True) -> str:
+            fetched.append(url)
+            return '<frame src="/cgi-bin/wxis.exe?IsisScript=phl82/003.xis&opc=busca&tmp=/tmp/fileNEW">'
+
+        library.phl.fetch = fetch  # type: ignore[method-assign]
+        url = library.phl.record_page_url("000004")
+        self.assertEqual(len(fetched), 1)  # só a abertura da sessão
+        self.assertEqual(url, BASE_URL + "/cgi-bin/wxis.exe?IsisScript=phl82%2F003.xis&opc=decorado"
+                         "&pft=decorado&bool=exp&exp=TIT%3D000004&tmp=%2Ftmp%2FfileNEW")
+        with self.assertRaises(ValueError):
+            library.phl.record_page_url("1 + TIT=$")
+        self.assertEqual(len(fetched), 1)
+
     def test_copy_statuses_one_request_per_prefix_group(self) -> None:
         library = FakeServerLibrary()
         library.pages["decorado"] = "decorated_statuses.html"

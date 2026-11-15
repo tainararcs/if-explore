@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Literal
 
 from django.conf import settings
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
 from ninja import Query, Router
 from ninja.errors import HttpError
 from ninja.throttling import AnonRateThrottle
@@ -35,7 +35,7 @@ from catalog.schemas import (
     StatusOut,
     SyncOut,
 )
-from catalog.services import availability, books, discovery, recommendations
+from catalog.services import availability, books, catalog_link, discovery, recommendations
 
 router = Router()
 
@@ -55,6 +55,12 @@ class ExplanationThrottle(AnonRateThrottle):
     """Limite por IP das explicações; mais folgado, porque quase todas vêm do banco."""
 
     scope = "explanation"
+
+
+class CatalogLinkThrottle(AnonRateThrottle):
+    """Limite por IP dos links para o catálogo, que sempre abrem uma sessão no PHL."""
+
+    scope = "catalog-link"
 
 
 def _summaries(ids: list[str]) -> list[BookSummaryOut]:
@@ -134,6 +140,18 @@ def get_related(request: HttpRequest, book_id: str) -> RelatedOut:
         author, author_ids = result.same_author
         same_author = SameAuthorOut(author=author, books=_summaries(author_ids))
     return RelatedOut(same_author=same_author, related=_summaries(result.related_ids))
+
+
+@router.get("/books/{book_id}/catalog", tags=["livros"], throttle=CatalogLinkThrottle(settings.CATALOG_LINK_RATE))
+def open_in_catalog(request: HttpRequest, book_id: str) -> HttpResponseRedirect:
+    """Redireciona (302) para a ficha do livro no catálogo oficial da biblioteca.
+
+    O catálogo não tem link fixo por título, então cada clique abre uma sessão no
+    PHL (1 requisição). Se o PHL falhar, redireciona para a página inicial dele.
+    """
+    if not Book.objects.filter(id=book_id, is_active=True).exists():
+        raise HttpError(404, "livro não encontrado")
+    return HttpResponseRedirect(catalog_link.record_url(book_id))
 
 
 # ---- recomendações

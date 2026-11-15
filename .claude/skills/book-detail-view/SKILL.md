@@ -121,9 +121,10 @@ is hidden without `callNumber`.
 
 - Primary: "Ver no acervo da biblioteca" — external link (`target="_blank"`,
   `rel="noopener noreferrer"`, external icon + visually hidden "abre em nova
-  aba"). Check whether the PHL catalog accepts a search URL by title; if it
-  does, build it from the title with `encodeURIComponent` in a pure function;
-  otherwise link to the catalog home already used on the welcome view.
+  aba") to `libraryRecordUrl(book.id)` (`src/lib/library-catalog.ts`). The PHL
+  has no stable URL per title (every page needs a temporary session), so the
+  link points to `GET /api/books/{id}/catalog`, which opens a session on click
+  and redirects to the book's record (catalog home when the PHL fails).
 - Secondary "Compartilhar" (shared `src/components/ShareButton.vue`, also used
   by the discovery results): native Web Share when
   available, otherwise copies the link, with the same temporary label feedback
@@ -183,7 +184,7 @@ src/features/book-detail/
     ├── BookHero.vue                  (band, sticky cover, title, availability; slot for the rest)
     └── BookRecord.vue                (ficha técnica + copy location)
 src/lib/cover-color.ts                (moved from BookCover)
-src/lib/library-catalog.ts            (catalog home URL; PHL has no stable search URL)
+src/lib/library-catalog.ts            (catalog home URL and libraryRecordUrl → API redirect)
 src/components/BookShelf.vue, BookCard.vue, AvailabilityBadge.vue   (shared)
 ```
 
