@@ -49,8 +49,8 @@ sticky cover on desktop, swipeable shelf).
   parallel. A failure in related books alone must not fail the page: hide the
   shelves instead.
 - Fields the catalog lacks are `null`; hide them (no placeholders). Never invent
-  ISBNs: the API sends only what the catalog has, and the future Google Books
-  integration will skip books without one.
+  ISBNs: the API sends only what the catalog has, and the Google Books preview
+  skips books without one.
 
 ## 4. Layout
 
@@ -132,8 +132,15 @@ is hidden without `callNumber`.
 - Mobile only: once the actions scroll out of view (`useScrolledPast`), a fixed
   bottom bar keeps "Ver no acervo da biblioteca" at hand; it slides in/out with
   motion allowed and the main area reserves space so it never covers content.
-- Reserved secondary slot for "Prévia" (Google Books). Do **not** render it
-  until that integration exists; the layout must not leave an empty gap.
+- Secondary "Ler prévia" (Google Books, optional), between the catalog link and
+  "Compartilhar": `useBookPreview` asks `findBookPreview(isbn)`
+  (`features/book-detail/services/google-books-service.ts`) for an embeddable
+  volume (`viewability` `PARTIAL`/`ALL_PAGES` and `embeddable`) — 1 request to
+  the Google Books API per page visit, none without `VITE_GOOGLE_BOOKS_API_KEY`
+  or without ISBN. Any failure (429 included) just hides the button, so the
+  layout never leaves a gap. `BookPreview.vue` opens a native modal `<dialog>`
+  and mounts the Google Livros embedded reader `<iframe>` only while it is
+  open, with the "Prévia fornecida pelo Google Livros" attribution.
 
 ### Simplified explanation ("Em poucas palavras")
 
@@ -179,10 +186,13 @@ src/features/book-detail/
 ├── views/BookDetailView.vue
 ├── composables/useBookDetail.ts      (load by id, related books, status)
 ├── services/book-detail-service.ts   (GET /api/books/{id}/related)
+├── services/google-books-service.ts (optional Google Books preview lookup by ISBN)
+├── composables/useBookPreview.ts     (preview lookup, cancelled on book change)
 ├── models/related-books.ts           (RelatedShelves type)
 └── components/
     ├── BookHero.vue                  (band, sticky cover, title, availability; slot for the rest)
-    └── BookRecord.vue                (ficha técnica + copy location)
+    ├── BookRecord.vue                (ficha técnica + copy location)
+    └── BookPreview.vue               ("Ler prévia" button + dialog with the Google Livros reader)
 src/lib/cover-color.ts                (moved from BookCover)
 src/lib/library-catalog.ts            (catalog home URL and libraryRecordUrl → API redirect)
 src/components/BookShelf.vue, BookCard.vue, AvailabilityBadge.vue   (shared)
