@@ -1,17 +1,6 @@
 import type { Book } from '../../../models/book'
 import type { KnowledgeArea } from '../../../models/taxonomy'
 
-/**
- * Perfil usado para recomendar, compatível com as preferências salvas
- * (inclusive na forma somente leitura exposta pelo composable).
- */
-export interface RecommendationProfile {
-  areaIds: readonly string[]
-  courseIds: readonly string[]
-  seedBookIds: readonly string[]
-  genreIds: readonly string[]
-}
-
 /** Tipos de prateleira; cada um define como o título é apresentado. */
 export type ShelfKind = 'forYou' | 'becauseYouChose' | 'moreFromArea' | 'forPleasure'
 

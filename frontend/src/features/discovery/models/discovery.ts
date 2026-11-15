@@ -27,17 +27,6 @@ export interface DiscoveryResult {
 }
 
 /**
- * Preferências enviadas junto com o pedido, compatíveis com as salvas no
- * navegador (inclusive na forma somente leitura exposta pelo composable).
- */
-export interface DiscoveryProfile {
-  areaIds: readonly string[]
-  courseIds: readonly string[]
-  seedBookIds: readonly string[]
-  genreIds: readonly string[]
-}
-
-/**
  * Junta espaços repetidos e remove os das pontas, como a API faz antes de
  * validar o tamanho do pedido.
  */
