@@ -81,12 +81,12 @@
           :key="shelf"
           aria-hidden="true"
         >
-          <span class="home__pulse mb-4 block h-7 w-[min(280px,70%)] rounded-sm bg-surface-muted" />
+          <span class="skeleton mb-4 h-7 w-[min(280px,70%)] rounded-sm" />
           <div class="flex gap-4 overflow-hidden">
             <span
               v-for="item in 6"
               :key="item"
-              class="home__pulse aspect-[2/3] flex-[0_0_132px] rounded-cover bg-surface-muted md:basis-[160px]"
+              class="skeleton aspect-[2/3] flex-[0_0_132px] rounded-cover md:basis-[160px]"
             />
           </div>
         </div>
@@ -199,17 +199,3 @@ function retry(): void {
   }
 }
 </script>
-
-<style scoped>
-@media (prefers-reduced-motion: no-preference) {
-  .home__pulse {
-    animation: pulse 1.2s ease-in-out infinite alternate;
-  }
-}
-
-@keyframes pulse {
-  to {
-    opacity: 0.5;
-  }
-}
-</style>

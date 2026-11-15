@@ -54,22 +54,14 @@
       >
         <span class="text-caption text-text-muted">{{ t('discovery.location') }}</span>
         <span class="font-display text-body">{{ item.book.callNumber }}</span>
-        <button
-          type="button"
-          class="button button--ghost button--small -ms-1 min-h-11 px-2"
-          :aria-label="copyState === 'idle' ? t('discovery.copyLocation', { title: item.book.title }) : copyLabel"
-          @click="copyLocation"
-        >
-          <IconCheck
-            v-if="copyState === 'copied'"
-            class="size-4"
-          />
-          {{ copyLabel }}
-        </button>
-        <span
-          class="sr-only"
-          aria-live="polite"
-        >{{ copyState === 'idle' ? '' : copyLabel }}</span>
+        <CopyButton
+          class="-ms-1 px-2"
+          :text="item.book.callNumber"
+          :label="t('discovery.copy')"
+          :copied-label="t('discovery.copied')"
+          :failed-label="t('discovery.copyFailed')"
+          :accessible-label="t('discovery.copyLocation', { title: item.book.title })"
+        />
       </div>
     </div>
   </article>
@@ -80,8 +72,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AvailabilityBadge from '../../../components/AvailabilityBadge.vue'
 import BookCover from '../../../components/BookCover.vue'
-import IconCheck from '../../../components/icons/IconCheck.vue'
-import { useClipboardFeedback } from '../../../composables/useClipboardFeedback'
+import CopyButton from '../../../components/CopyButton.vue'
 import { formatAuthors } from '../../../lib/catalog-format'
 import type { DiscoveryItem } from '../models/discovery'
 
@@ -96,22 +87,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const { t } = useI18n()
-const { state: copyState, copy } = useClipboardFeedback()
 
 const meta = computed(() =>
   [props.areaName, props.item.book.year ?? null].filter((part) => part !== null && part !== '').join(' · '),
 )
-
-const copyLabel = computed(() => {
-  if (copyState.value === 'copied') {
-    return t('discovery.copied')
-  }
-  return copyState.value === 'failed' ? t('discovery.copyFailed') : t('discovery.copy')
-})
-
-function copyLocation(): void {
-  if (props.item.book.callNumber) {
-    void copy(props.item.book.callNumber)
-  }
-}
 </script>

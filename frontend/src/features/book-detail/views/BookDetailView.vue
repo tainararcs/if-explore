@@ -327,17 +327,6 @@ watch(
   }
 }
 
-.skeleton {
-  display: block;
-  background: var(--color-surface-muted);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .skeleton {
-    animation: pulse 1.2s ease-in-out infinite alternate;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .catalog-bar-enter-active,
   .catalog-bar-leave-active {
@@ -347,12 +336,6 @@ watch(
   .catalog-bar-enter-from,
   .catalog-bar-leave-to {
     transform: translateY(100%);
-  }
-}
-
-@keyframes pulse {
-  to {
-    opacity: 0.5;
   }
 }
 </style>

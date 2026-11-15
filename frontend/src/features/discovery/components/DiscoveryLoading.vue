@@ -30,11 +30,11 @@
         :key="item"
         class="grid grid-cols-[88px_minmax(0,1fr)] gap-4 rounded-md border border-border bg-surface p-3 sm:p-4"
       >
-        <span class="discovery-loading__pulse aspect-[2/3] rounded-cover bg-surface-muted" />
+        <span class="skeleton aspect-[2/3] rounded-cover" />
         <div class="flex flex-col gap-2">
-          <span class="discovery-loading__pulse h-6 w-4/5 rounded-sm bg-surface-muted" />
-          <span class="discovery-loading__pulse h-4 w-1/2 rounded-sm bg-surface-muted" />
-          <span class="discovery-loading__pulse mt-3 h-12 w-full rounded-sm bg-surface-muted" />
+          <span class="skeleton h-6 w-4/5 rounded-sm" />
+          <span class="skeleton h-4 w-1/2 rounded-sm" />
+          <span class="skeleton mt-3 h-12 w-full rounded-sm" />
         </div>
       </div>
     </div>
@@ -70,10 +70,6 @@ onUnmounted(() => window.clearInterval(timer))
 
 <style scoped>
 @media (prefers-reduced-motion: no-preference) {
-  .discovery-loading__pulse {
-    animation: pulse 1.2s ease-in-out infinite alternate;
-  }
-
   .discovery-loading__icon {
     animation: spin 2.4s linear infinite;
   }
@@ -93,12 +89,6 @@ onUnmounted(() => window.clearInterval(timer))
   .discovery-step-leave-to {
     opacity: 0;
     transform: translateY(-4px);
-  }
-}
-
-@keyframes pulse {
-  to {
-    opacity: 0.5;
   }
 }
 
