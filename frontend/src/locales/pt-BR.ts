@@ -295,6 +295,7 @@ export const ptBR = {
       action: 'Mostrar outras sugestões',
       loading: 'Buscando outras sugestões…',
       exhausted: 'Não há outras sugestões no acervo para este pedido.',
+      limit: 'Você já viu todas as sugestões possíveis para este pedido. Mude o texto para ver outros livros.',
       error: 'Não foi possível buscar outras sugestões. Tente de novo.',
     },
     aiNote: 'Sugestões geradas por IA a partir do acervo. Confira os dados na página do livro.',

@@ -23,12 +23,18 @@ export type DiscoveryState =
   | { status: 'success'; result: DiscoveryResult }
   | { status: 'error'; rateLimited: boolean }
 
-/** Estado do pedido de outras sugestões para o mesmo texto. */
-export type MoreStatus = 'idle' | 'loading' | 'exhausted' | 'error' | 'rateLimited'
+/**
+ * Estado do pedido de outras sugestões para o mesmo texto: `exhausted` quando o
+ * acervo não tem mais candidatos; `limit` quando já foram mostrados tantos livros
+ * quanto a API aceita excluir (`MAX_EXCLUDED`).
+ */
+export type MoreStatus = 'idle' | 'loading' | 'exhausted' | 'limit' | 'error' | 'rateLimited'
 
 interface CachedDiscovery {
   query: string
   withProfile: boolean
+  /** Data das preferências usadas; outra data significa preferências alteradas desde então. */
+  preferencesUpdatedAt: string | null
   result: DiscoveryResult
   moreStatus: MoreStatus
 }
@@ -77,13 +83,14 @@ export function useDiscovery() {
   )
   // O botão continua visível (desabilitado) enquanto as outras sugestões chegam.
   const canLoadMore = computed(
-    () => shownIds.value.length > 0 && shownIds.value.length < MAX_EXCLUDED && moreStatus.value !== 'exhausted',
+    () => shownIds.value.length > 0 && moreStatus.value !== 'exhausted' && moreStatus.value !== 'limit',
   )
 
   function remember(result: DiscoveryResult): void {
     lastResult = {
       query: submittedQuery.value,
       withProfile: submittedProfile !== null,
+      preferencesUpdatedAt: preferences.value?.updatedAt ?? null,
       result,
       moreStatus: moreStatus.value,
     }
@@ -113,10 +120,14 @@ export function useDiscovery() {
     }
   }
 
-  /** Envia o texto digitado e registra o pedido na URL. */
-  function submit(): void {
+  /**
+   * Envia o texto digitado e registra o pedido na URL.
+   *
+   * @returns `false` quando o texto não tem o tamanho aceito e nada foi enviado.
+   */
+  function submit(): boolean {
     if (!canSubmit.value) {
-      return
+      return false
     }
     const query = normalizeQuery(input.value)
     input.value = query
@@ -124,12 +135,21 @@ export function useDiscovery() {
       void router.replace({ query: { ...route.query, q: query } })
     }
     void run(query)
+    return true
   }
 
-  /** Repete um pedido recente (ou uma ideia pronta) sem precisar digitar. */
-  function submitText(text: string): void {
+  /**
+   * Repete um pedido recente. Se as sugestões dele já estão na tela, só as
+   * mantém, sem chamar a IA de novo.
+   *
+   * @returns `false` quando o texto não tem o tamanho aceito e nada foi enviado.
+   */
+  function submitText(text: string): boolean {
     input.value = text
-    submit()
+    if (state.value.status === 'success' && normalizeQuery(text) === submittedQuery.value) {
+      return true
+    }
+    return submit()
   }
 
   function retry(): void {
@@ -156,7 +176,8 @@ export function useDiscovery() {
       // A origem passa a ser a do último lote: o aviso de seleção por regras vale para os novos livros.
       const merged: DiscoveryResult = { ...current, source: next.source, items: [...current.items, ...next.items] }
       state.value = { status: 'success', result: merged }
-      moreStatus.value = 'idle'
+      // A API só aceita excluir até MAX_EXCLUDED livros; a partir daí não há como pedir mais.
+      moreStatus.value = merged.items.length >= MAX_EXCLUDED ? 'limit' : 'idle'
       remember(merged)
     } catch (error) {
       if (!isCancel(error)) {
@@ -184,12 +205,17 @@ export function useDiscovery() {
 
   onMounted(() => {
     const query = normalizeQuery(input.value)
-    if (lastResult?.query === query) {
+    // Só reaproveita o resultado guardado se as preferências não mudaram desde o pedido.
+    const cached =
+      lastResult?.query === query && lastResult.preferencesUpdatedAt === (preferences.value?.updatedAt ?? null)
+        ? lastResult
+        : null
+    if (cached) {
       submittedQuery.value = query
-      usePreferences.value = lastResult.withProfile || !hasPreferences.value
-      submittedProfile = lastResult.withProfile ? preferences.value : null
-      moreStatus.value = lastResult.moreStatus === 'exhausted' ? 'exhausted' : 'idle'
-      state.value = { status: 'success', result: lastResult.result }
+      usePreferences.value = cached.withProfile || !hasPreferences.value
+      submittedProfile = cached.withProfile ? preferences.value : null
+      moreStatus.value = cached.moreStatus === 'exhausted' || cached.moreStatus === 'limit' ? cached.moreStatus : 'idle'
+      state.value = { status: 'success', result: cached.result }
     } else if (isValidQuery(query)) {
       submit()
     }

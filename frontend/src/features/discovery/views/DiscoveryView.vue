@@ -49,9 +49,12 @@
           </div>
         </div>
 
+        <!--
+          Sem aria-live na seção inteira: ao chegar, o foco vai para o título das
+          sugestões, e as mensagens curtas (carregando, aviso, erro) têm role próprio.
+        -->
         <section
           class="min-w-0"
-          aria-live="polite"
           :aria-busy="isLoading"
           :aria-label="t('discovery.resultsLabel')"
         >
@@ -176,11 +179,11 @@
                   {{ t('discovery.more.loading') }}
                 </p>
                 <p
-                  v-else-if="moreStatus === 'exhausted'"
+                  v-else-if="moreStatus === 'exhausted' || moreStatus === 'limit'"
                   class="m-0 text-small text-text-muted"
                   role="status"
                 >
-                  {{ t('discovery.more.exhausted') }}
+                  {{ moreStatus === 'limit' ? t('discovery.more.limit') : t('discovery.more.exhausted') }}
                 </p>
                 <p
                   v-else-if="moreStatus === 'error' || moreStatus === 'rateLimited'"
@@ -262,14 +265,17 @@ onMounted(() => {
     .catch(() => undefined)
 })
 
+// O formulário só volta a virar resumo quando o pedido foi aceito; com texto inválido, ele fica aberto.
 function send(): void {
-  isEditing.value = false
-  submit()
+  if (submit()) {
+    isEditing.value = false
+  }
 }
 
 function repeat(request: string): void {
-  isEditing.value = false
-  submitText(request)
+  if (submitText(request)) {
+    isEditing.value = false
+  }
 }
 
 function useIdea(idea: string): void {
