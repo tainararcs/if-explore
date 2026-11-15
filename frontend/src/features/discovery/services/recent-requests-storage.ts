@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'if-explore:discovery-recent'
 
 /** Quantos pedidos recentes ficam guardados. */
-export const MAX_RECENT_REQUESTS = 5
+const MAX_RECENT_REQUESTS = 5
 
 /**
  * Lê os pedidos recentes guardados no navegador, do mais novo ao mais antigo.

@@ -14,7 +14,7 @@ from pydantic import ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
-from catalog.services.discovery import MAX_EXCLUDED, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, normalize_query
+from catalog.services.discovery import MAX_EXCLUDED, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, Source, normalize_query
 
 ShelfKind = Literal["forYou", "becauseYouChose", "moreFromArea", "forPleasure"]
 #: Id de livro vindo do cliente: o mesmo tamanho máximo de `Book.id`.
@@ -236,7 +236,7 @@ class DiscoveryItemOut(CamelSchema):
 
 class DiscoveryOut(CamelSchema):
     #: "ai": escolhido pelo Gemini; "rules": a IA não respondeu e a seleção é por regras.
-    source: Literal["ai", "rules"]
+    source: Source
     #: Frase da IA para o visitante; null na seleção por regras.
     message: str | None
     items: list[DiscoveryItemOut]

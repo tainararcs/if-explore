@@ -1,7 +1,7 @@
 import type { Book } from '../../../models/book'
 
 /** Tamanho aceito para o pedido, depois de juntar os espaços (o mesmo da API). */
-export const MIN_QUERY_LENGTH = 3
+const MIN_QUERY_LENGTH = 3
 export const MAX_QUERY_LENGTH = 300
 /** Livros já mostrados que um pedido de outras sugestões pode excluir (o mesmo da API). */
 export const MAX_EXCLUDED = 60
@@ -24,17 +24,6 @@ export interface DiscoveryResult {
   /** Frase da IA para o visitante; `null` na seleção por regras. */
   message: string | null
   items: DiscoveryItem[]
-}
-
-/**
- * Preferências enviadas junto com o pedido, compatíveis com as salvas no
- * navegador (inclusive na forma somente leitura exposta pelo composable).
- */
-export interface DiscoveryProfile {
-  areaIds: readonly string[]
-  courseIds: readonly string[]
-  seedBookIds: readonly string[]
-  genreIds: readonly string[]
 }
 
 /**

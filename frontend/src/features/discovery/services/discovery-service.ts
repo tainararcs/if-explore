@@ -1,5 +1,5 @@
 import { isAxiosError } from 'axios'
-import { HttpClient } from '../../../lib/http/HttpClient'
+import { http } from '../../../lib/http-client'
 import {
   ApiContractError,
   list,
@@ -8,9 +8,8 @@ import {
   parseRecord,
   parseString,
 } from '../../../services/catalog-parsers'
-import type { DiscoveryItem, DiscoveryProfile, DiscoveryResult, DiscoverySource } from '../models/discovery'
-
-const http = new HttpClient().instance
+import { toProfileBody, type PreferenceProfile } from '../../../models/reading-preferences'
+import type { DiscoveryItem, DiscoveryResult, DiscoverySource } from '../models/discovery'
 
 /** A API recusou o pedido por excesso de pedidos em pouco tempo (HTTP 429). */
 export class RateLimitedError extends Error {
@@ -47,23 +46,14 @@ function parseItem(value: unknown, path: string): DiscoveryItem {
  */
 export async function discover(
   query: string,
-  profile: DiscoveryProfile | null,
+  profile: PreferenceProfile | null,
   excludeIds: readonly string[] = [],
   signal?: AbortSignal,
 ): Promise<DiscoveryResult> {
   const body = {
     query,
     ...(excludeIds.length > 0 ? { excludeIds } : {}),
-    ...(profile
-      ? {
-          profile: {
-            areaIds: profile.areaIds,
-            courseIds: profile.courseIds,
-            seedBookIds: profile.seedBookIds,
-            genreIds: profile.genreIds,
-          },
-        }
-      : {}),
+    ...(profile ? { profile: toProfileBody(profile) } : {}),
   }
   try {
     const { data } = await http.post<unknown>('/discovery', body, { signal })

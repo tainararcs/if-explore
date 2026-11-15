@@ -1,4 +1,4 @@
-import { HttpClient } from '../../../lib/http/HttpClient'
+import { http } from '../../../lib/http-client'
 import {
   ApiContractError,
   list,
@@ -8,9 +8,8 @@ import {
   parseRecord,
   parseString,
 } from '../../../services/catalog-parsers'
-import type { HomeRecommendations, RecommendationProfile, Shelf, ShelfKind } from '../models/recommendation'
-
-const http = new HttpClient().instance
+import { toProfileBody, type PreferenceProfile } from '../../../models/reading-preferences'
+import type { HomeRecommendations, Shelf, ShelfKind } from '../models/recommendation'
 
 const SHELF_KINDS: readonly ShelfKind[] = ['forYou', 'becauseYouChose', 'moreFromArea', 'forPleasure']
 
@@ -41,14 +40,9 @@ function parseShelf(value: unknown, path: string): Shelf {
  * @returns Prateleiras (só as com livros suficientes) e as áreas escolhidas.
  */
 export async function getHomeRecommendations(
-  profile: RecommendationProfile,
+  profile: PreferenceProfile,
 ): Promise<HomeRecommendations> {
-  const { data } = await http.post<unknown>('/recommendations', {
-    areaIds: profile.areaIds,
-    courseIds: profile.courseIds,
-    seedBookIds: profile.seedBookIds,
-    genreIds: profile.genreIds,
-  })
+  const { data } = await http.post<unknown>('/recommendations', toProfileBody(profile))
   const body = parseRecord(data, 'recommendations')
   return {
     shelves: list(body.shelves, 'recommendations.shelves', parseShelf),

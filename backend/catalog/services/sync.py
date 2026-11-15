@@ -206,7 +206,8 @@ def _upsert_names(model: type[NamedModel], names: Iterable[str]) -> dict[str, in
 
 
 def _to_model(book: PhlBook, taxonomy: Taxonomy, now: datetime) -> Book:
-    area = resolve_area(first_text(book.raw.get("knowledge_area")) or "", book.cdd or "", taxonomy.cnpq_to_area)
+    cnpq_area = first_text(book.raw.get("knowledge_area")) or ""
+    area = resolve_area(cnpq_area, book.cdd or "", taxonomy.cnpq_to_area)
     return Book(
         id=book.id, title=book.title, subtitle=book.subtitle or "", contributors=book.contributors or "",
         publisher=book.publisher or "", city=book.city or "", country=book.country or "", year=book.year,
@@ -215,7 +216,7 @@ def _to_model(book: PhlBook, taxonomy: Taxonomy, now: datetime) -> Book:
         issue=book.issue or "", volume_year=book.volume_year or "", cdd=book.cdd or "",
         cutter=book.cutter or "", synopsis=book.synopsis or "", notes=book.notes, remarks=book.remarks or "",
         languages=book.languages, medium=book.medium or "",
-        cnpq_area=first_text(book.raw.get("knowledge_area")) or "", document_type=book.document_type or "",
+        cnpq_area=cnpq_area, document_type=book.document_type or "",
         bibliographic_level=book.bibliographic_level or "", phl_course_codes=book.course_codes,
         tcc_course=book.tcc_course or "", links=list(book.links), cover_url=book.cover_url or "",
         cataloged_at=book.cataloged_at, raw=book.raw,

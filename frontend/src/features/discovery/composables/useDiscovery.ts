@@ -2,13 +2,8 @@ import { isCancel } from 'axios'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
-import {
-  isValidQuery,
-  MAX_EXCLUDED,
-  normalizeQuery,
-  type DiscoveryProfile,
-  type DiscoveryResult,
-} from '../models/discovery'
+import type { PreferenceProfile } from '../../../models/reading-preferences'
+import { isValidQuery, MAX_EXCLUDED, normalizeQuery, type DiscoveryResult } from '../models/discovery'
 import { discover, RateLimitedError } from '../services/discovery-service'
 import {
   addRecentRequest,
@@ -74,7 +69,7 @@ export function useDiscovery() {
 
   let controller: AbortController | null = null
   // As outras sugestões seguem a escolha de preferências feita no pedido original.
-  let submittedProfile: DiscoveryProfile | null = null
+  let submittedProfile: PreferenceProfile | null = null
 
   const canSubmit = computed(() => isValidQuery(input.value))
   const isLoading = computed(() => state.value.status === 'loading')

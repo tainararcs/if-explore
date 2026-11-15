@@ -1,11 +1,9 @@
-import { HttpClient } from '../../../lib/http/HttpClient'
+import { http } from '../../../lib/http-client'
 import type { Book } from '../../../models/book'
 import { list, parseBook } from '../../../services/catalog-parsers'
 
-const http = new HttpClient().instance
-
 /** Quantos títulos o visitante vê para escolher. */
-export const CANDIDATE_LIMIT = 60
+const CANDIDATE_LIMIT = 60
 
 /**
  * Títulos para o visitante escolher: primeiro os dos cursos marcados, depois os

@@ -8,11 +8,11 @@ e evitam ter de manter gatilhos de atualização.
 from __future__ import annotations
 
 import re
-import unicodedata
 
 from django.db import connection
 
 from catalog.models import Author, Book, BookAuthor, Subject
+from phl_client.text import normalize
 
 FTS_TABLE = "catalog_book_fts"
 # Pesos do bm25 por coluna: book_id (não indexada), título, autores, assuntos,
@@ -66,10 +66,10 @@ def to_match_query(text: str) -> str | None:
     return " AND ".join(terms) or None
 
 
-def ranked_ids(text: str, limit: int = 50, offset: int = 0) -> list[str]:
+def ranked_ids(text: str, limit: int = 50) -> list[str]:
     """Ids dos livros ativos que casam com o texto, do mais relevante ao menos (bm25)."""
     query = to_match_query(text)
-    return [] if query is None else _ranked(query, limit, offset)
+    return [] if query is None else _ranked(query, limit)
 
 
 # Palavras que não ajudam a achar livros num pedido em linguagem natural
@@ -84,11 +84,6 @@ REQUEST_STOPWORDS = frozenset("""
 """.split())
 
 
-def _normalize(word: str) -> str:
-    return "".join(char for char in unicodedata.normalize("NFKD", word.lower())
-                   if not unicodedata.combining(char))
-
-
 def any_term_query(text: str) -> str | None:
     """Converte um pedido em linguagem natural numa consulta FTS5 que casa com
     **qualquer** palavra relevante, cada uma também como início de palavra.
@@ -101,7 +96,7 @@ def any_term_query(text: str) -> str | None:
         A consulta, ou None quando não sobra nenhuma palavra relevante.
     """
     words = [word for word in re.findall(r"\w+", text)
-             if len(word) >= 3 and _normalize(word) not in REQUEST_STOPWORDS]
+             if len(word) >= 3 and normalize(word) not in REQUEST_STOPWORDS]
     terms = list(dict.fromkeys('"%s"*' % word.replace('"', '""') for word in words))
     return " OR ".join(terms) or None
 
@@ -110,15 +105,15 @@ def ranked_any_ids(text: str, limit: int = 30) -> list[str]:
     """Ids dos livros ativos que casam com alguma palavra relevante do pedido
     (`any_term_query`), do mais relevante ao menos (bm25)."""
     query = any_term_query(text)
-    return [] if query is None else _ranked(query, limit, 0)
+    return [] if query is None else _ranked(query, limit)
 
 
-def _ranked(query: str, limit: int, offset: int) -> list[str]:
+def _ranked(query: str, limit: int) -> list[str]:
     weights = ", ".join(str(weight) for weight in BM25_WEIGHTS)
     with connection.cursor() as cursor:
         cursor.execute(
             f"SELECT book_id FROM {FTS_TABLE} WHERE {FTS_TABLE} MATCH %s "
-            f"ORDER BY bm25({FTS_TABLE}, {weights}) LIMIT %s OFFSET %s",
-            [query, limit, offset],
+            f"ORDER BY bm25({FTS_TABLE}, {weights}) LIMIT %s",
+            [query, limit],
         )
         return [row[0] for row in cursor.fetchall()]

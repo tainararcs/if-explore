@@ -1,8 +1,6 @@
-import { HttpClient } from '../../../lib/http/HttpClient'
+import { http } from '../../../lib/http-client'
 import { list, parseBook, parseNullableString, parseRecord, parseString } from '../../../services/catalog-parsers'
 import type { RelatedShelves } from '../models/related-books'
-
-const http = new HttpClient().instance
 
 /**
  * Leituras relacionadas a um livro, calculadas pela API sobre o acervo inteiro.
