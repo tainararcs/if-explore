@@ -17,21 +17,12 @@
         </dt>
         <dd class="m-0 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
           <span class="font-display text-h3">{{ book.callNumber }}</span>
-          <button
-            type="button"
-            class="button button--ghost button--small"
-            @click="copyLocation"
-          >
-            <IconCheck
-              v-if="copyState === 'copied'"
-              class="size-4"
-            />
-            {{ copyLabel }}
-          </button>
-          <span
-            class="sr-only"
-            aria-live="polite"
-          >{{ copyState === 'idle' ? '' : copyLabel }}</span>
+          <CopyButton
+            :text="book.callNumber"
+            :label="t('bookDetail.record.copy')"
+            :copied-label="t('bookDetail.record.copied')"
+            :failed-label="t('bookDetail.record.copyFailed')"
+          />
         </dd>
       </div>
       <div
@@ -73,9 +64,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import CopyButton from '../../../components/CopyButton.vue'
 import ExternalLink from '../../../components/ExternalLink.vue'
-import IconCheck from '../../../components/icons/IconCheck.vue'
-import { useClipboardFeedback } from '../../../composables/useClipboardFeedback'
 import type { BookCopies, BookDetail } from '../../../models/book'
 
 interface Props {
@@ -90,17 +80,6 @@ const props = defineProps<Props>()
 
 const { t } = useI18n()
 const numberFormat = new Intl.NumberFormat('pt-BR')
-
-const { state: copyState, copy } = useClipboardFeedback()
-
-const copyLabel = computed(() => {
-  if (copyState.value === 'copied') {
-    return t('bookDetail.record.copied')
-  }
-  return copyState.value === 'failed'
-    ? t('bookDetail.record.copyFailed')
-    : t('bookDetail.record.copy')
-})
 
 const items = computed(() => {
   const { book } = props
@@ -137,11 +116,5 @@ function copiesText(copies: BookCopies | null): string | null {
   return available === null
     ? t('bookDetail.record.copiesTotal', { n: total }, total)
     : t('bookDetail.record.copiesValue', { available, total })
-}
-
-function copyLocation(): void {
-  if (props.book.callNumber) {
-    void copy(props.book.callNumber)
-  }
 }
 </script>

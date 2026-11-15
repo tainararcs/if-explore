@@ -271,6 +271,22 @@
     color: var(--color-text-muted);
   }
 
+  /*
+    Bloco provisório das telas em carregamento: fundo neutro que pulsa devagar,
+    só quando o visitante não pediu movimento reduzido. Tamanho e forma vêm dos
+    utilitários de quem usa.
+  */
+  .skeleton {
+    display: block;
+    background-color: var(--color-surface-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .skeleton {
+      animation: skeleton-pulse 1.2s ease-in-out infinite alternate;
+    }
+  }
+
   /* Botões: aplicáveis a <button>, <a> e <RouterLink>. */
   .button {
     display: inline-flex;
@@ -478,5 +494,11 @@
     from {
       transform: translateX(-100%);
     }
+  }
+}
+
+@keyframes skeleton-pulse {
+  to {
+    opacity: 0.5;
   }
 }

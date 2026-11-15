@@ -18,11 +18,11 @@
     >
       <span class="sr-only">{{ t('bookDetail.explanation.loading') }}</span>
       <span
-        class="book-explanation__pulse block h-4 w-full rounded-sm bg-surface-muted"
+        class="skeleton h-4 w-full rounded-sm"
         aria-hidden="true"
       />
       <span
-        class="book-explanation__pulse block h-4 w-3/4 rounded-sm bg-surface-muted"
+        class="skeleton h-4 w-3/4 rounded-sm"
         aria-hidden="true"
       />
     </div>
@@ -50,17 +50,3 @@ defineProps<Props>()
 
 const { t } = useI18n()
 </script>
-
-<style scoped>
-@media (prefers-reduced-motion: no-preference) {
-  .book-explanation__pulse {
-    animation: pulse 1.2s ease-in-out infinite alternate;
-  }
-}
-
-@keyframes pulse {
-  to {
-    opacity: 0.5;
-  }
-}
-</style>

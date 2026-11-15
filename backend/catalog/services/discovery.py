@@ -34,6 +34,8 @@ MAX_CANDIDATES = 40
 TEXT_CANDIDATES = 30
 PROFILE_CANDIDATES = 15
 MAX_PICKS = 6
+# Livros já mostrados que um novo pedido ("outras sugestões") pode excluir.
+MAX_EXCLUDED = 60
 MAX_SUBJECTS = 8
 SYNOPSIS_CHARS = 400
 REASON_CHARS = 280
@@ -120,25 +122,29 @@ def _cut(text: str, limit: int) -> str:
 
 
 # ---- candidatos
-def select_candidates(query: str, profile: Profile | None) -> list[Book]:
+def select_candidates(query: str, profile: Profile | None, exclude_ids: Sequence[str] = ()) -> list[Book]:
     """Livros do acervo que o Gemini pode sugerir para o pedido.
 
     Primeiro os que casam com alguma palavra relevante do pedido (bm25), depois os
-    mais próximos das preferências do visitante, sem repetir e sem os títulos que
-    ele já escolheu; só tipos recomendáveis e no máximo `MAX_CANDIDATES`.
+    mais próximos das preferências do visitante, sem repetir, sem os títulos que
+    ele já escolheu e sem `exclude_ids` (sugestões já mostradas); só tipos
+    recomendáveis e no máximo `MAX_CANDIDATES`.
 
     Returns:
         Os livros com as relações carregadas, na ordem de prioridade.
     """
-    matched = search_index.ranked_any_ids(query, limit=TEXT_CANDIDATES * 2)
-    pool = recommendable()
+    excluded = set(exclude_ids)
+    # Busca a mais o que será excluído, para que pedir outras sugestões não esvazie a lista.
+    matched = search_index.ranked_any_ids(query, limit=TEXT_CANDIDATES * 2 + len(excluded))
+    pool = recommendable().exclude(id__in=excluded)
     if profile is not None:
         # quem já escolheu um título no onboarding não precisa recebê-lo de novo
         pool = pool.exclude(id__in=profile.seed_book_ids)
     allowed = set(pool.filter(id__in=matched).values_list("id", flat=True))
     ids = [book_id for book_id in matched if book_id in allowed][:TEXT_CANDIDATES]
     if profile is not None:
-        ids += profile_ranked_ids(profile, PROFILE_CANDIDATES)
+        ranked = profile_ranked_ids(profile, PROFILE_CANDIDATES + len(excluded))
+        ids += [book_id for book_id in ranked if book_id not in excluded][:PROFILE_CANDIDATES]
     return books.load_in_order(list(dict.fromkeys(ids))[:MAX_CANDIDATES])
 
 
@@ -204,13 +210,15 @@ def rule_based(candidates: Sequence[Book]) -> Discovery:
     return Discovery("rules", None, [Pick(book.id, None) for book in candidates[:MAX_PICKS]])
 
 
-def discover(query: str, profile: Profile | None = None) -> Discovery:
+def discover(query: str, profile: Profile | None = None, exclude_ids: Sequence[str] = ()) -> Discovery:
     """Sugestões do acervo para um pedido em texto livre.
 
     Args:
         query: Pedido do visitante, já validado (`MIN_QUERY_LENGTH` a
             `MAX_QUERY_LENGTH` caracteres).
         profile: Preferências salvas, quando o visitante quer que sejam usadas.
+        exclude_ids: Livros já sugeridos, para pedir outras sugestões
+            (até `MAX_EXCLUDED`).
 
     Returns:
         As escolhas do Gemini (`source="ai"`) ou, sem chave, em qualquer falha ou
@@ -218,7 +226,7 @@ def discover(query: str, profile: Profile | None = None) -> Discovery:
         candidatos no acervo, a lista vem vazia e o Gemini não é chamado.
     """
     query = normalize_query(query)
-    candidates = select_candidates(query, profile)
+    candidates = select_candidates(query, profile, exclude_ids)
     if not candidates:
         return Discovery("rules", None, [])
     ai = gemini.client()

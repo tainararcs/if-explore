@@ -92,7 +92,7 @@ frontend, e valores ausentes saem como `null`.
 | `GET /api/books/{id}/related` | `{sameAuthor, related}`: outros livros de um autor em comum e os demais por afinidade. |
 | `POST /api/recommendations` | `{shelves, areas}` para o perfil do visitante (`{areaIds, courseIds, seedBookIds, genreIds}`). |
 | `GET /api/recommendations/candidates` | Títulos para escolher no onboarding (`area`, `course`, `limit`). |
-| `POST /api/discovery` | `{source, message, items: [{book, reason}]}`: até 6 títulos do acervo para um pedido em texto livre (`{query, profile?}`, 3 a 300 caracteres). |
+| `POST /api/discovery` | `{source, message, items: [{book, reason}]}`: até 6 títulos do acervo para um pedido em texto livre (`{query, profile?, excludeIds?}`, 3 a 300 caracteres; `excludeIds`, até 60, tira dos candidatos os livros já mostrados, para pedir outras sugestões). |
 | `GET /api/books/{id}/explanation` | `{text, generatedAt}`: explicação simplificada do livro gerada por IA (`text` é `null` quando não há). |
 | `GET /api/status` | Tamanho do acervo local e as últimas sincronizações. |
 

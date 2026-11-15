@@ -3,6 +3,8 @@ import type { Book } from '../../../models/book'
 /** Tamanho aceito para o pedido, depois de juntar os espaços (o mesmo da API). */
 export const MIN_QUERY_LENGTH = 3
 export const MAX_QUERY_LENGTH = 300
+/** Livros já mostrados que um pedido de outras sugestões pode excluir (o mesmo da API). */
+export const MAX_EXCLUDED = 60
 
 /**
  * Origem das sugestões: `ai` quando o Gemini escolheu entre os candidatos do

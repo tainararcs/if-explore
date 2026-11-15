@@ -23,14 +23,14 @@
       >
         <span class="sr-only">{{ t('onboarding.loading') }}</span>
         <div
-          class="onboarding__skeleton flex flex-wrap gap-2"
+          class="flex flex-wrap gap-2"
           aria-hidden="true"
         >
-          <span class="mb-6 h-10 basis-full rounded-sm bg-surface-muted" />
+          <span class="skeleton mb-6 h-10 basis-full rounded-sm" />
           <span
             v-for="index in 8"
             :key="index"
-            class="h-11 w-32 rounded-pill bg-surface-muted nth-[3n]:w-[180px]"
+            class="skeleton h-11 w-32 rounded-pill nth-[3n]:w-[180px]"
           />
         </div>
       </div>
@@ -283,10 +283,6 @@ onMounted(load)
 
 <style scoped>
 @media (prefers-reduced-motion: no-preference) {
-  .onboarding__skeleton > * {
-    animation: pulse 1.2s ease-in-out infinite alternate;
-  }
-
   /* Troca de passo: desliza na direção da navegação. */
   .step-forward-enter-active,
   .step-forward-leave-active,
@@ -307,12 +303,6 @@ onMounted(load)
   .step-back-enter-from {
     opacity: 0;
     transform: translateX(-12px);
-  }
-}
-
-@keyframes pulse {
-  to {
-    opacity: 0.5;
   }
 }
 </style>

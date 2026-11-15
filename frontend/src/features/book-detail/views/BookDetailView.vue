@@ -104,7 +104,10 @@
               <IconExternalLink class="size-5" />
               <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
             </a>
-            <BookShareButton :title="book.title" />
+            <ShareButton
+              :title="book.title"
+              :text="t('bookDetail.shareText', { title: book.title })"
+            />
           </div>
 
           <section
@@ -206,6 +209,7 @@ import BookShelf from '../../../components/BookShelf.vue'
 import IconArrowLeft from '../../../components/icons/IconArrowLeft.vue'
 import IconExternalLink from '../../../components/icons/IconExternalLink.vue'
 import IconLibrary from '../../../components/icons/IconLibrary.vue'
+import ShareButton from '../../../components/ShareButton.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
 import { formatSubject } from '../../../lib/catalog-format'
 import { pickCoverColor } from '../../../lib/cover-color'
@@ -213,7 +217,6 @@ import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
 import BookExplanation from '../components/BookExplanation.vue'
 import BookHero from '../components/BookHero.vue'
 import BookRecord from '../components/BookRecord.vue'
-import BookShareButton from '../components/BookShareButton.vue'
 import { useBookDetail } from '../composables/useBookDetail'
 import { useBookExplanation } from '../composables/useBookExplanation'
 import { useScrolledPast } from '../composables/useScrolledPast'
@@ -324,17 +327,6 @@ watch(
   }
 }
 
-.skeleton {
-  display: block;
-  background: var(--color-surface-muted);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .skeleton {
-    animation: pulse 1.2s ease-in-out infinite alternate;
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .catalog-bar-enter-active,
   .catalog-bar-leave-active {
@@ -344,12 +336,6 @@ watch(
   .catalog-bar-enter-from,
   .catalog-bar-leave-to {
     transform: translateY(100%);
-  }
-}
-
-@keyframes pulse {
-  to {
-    opacity: 0.5;
   }
 }
 </style>

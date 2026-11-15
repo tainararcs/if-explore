@@ -181,7 +181,7 @@ def post_discovery(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
         profile = recommendations.Profile(
             area_ids=tuple(body.profile.area_ids), course_ids=tuple(body.profile.course_ids),
             seed_book_ids=tuple(body.profile.seed_book_ids), genre_ids=tuple(body.profile.genre_ids))
-    result = discovery.discover(body.query, profile)
+    result = discovery.discover(body.query, profile, body.exclude_ids)
     loaded = {book.id: book for book in books.load_in_order([pick.book_id for pick in result.picks])}
     return DiscoveryOut(
         source=result.source, message=result.message,
