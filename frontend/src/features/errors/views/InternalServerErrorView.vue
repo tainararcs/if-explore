@@ -1,4 +1,11 @@
-<!-- Exibe a mensagem para erros internos do servidor. -->
+<!-- Exibe o aviso para erros internos do servidor. -->
 <template>
-  <h1>500 - Internal server error</h1>
+  <ErrorPage
+    :code="500"
+    kind="serverError"
+  />
 </template>
+
+<script setup lang="ts">
+import ErrorPage from '../components/ErrorPage.vue'
+</script>
