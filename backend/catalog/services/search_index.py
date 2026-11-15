@@ -66,10 +66,10 @@ def to_match_query(text: str) -> str | None:
     return " AND ".join(terms) or None
 
 
-def ranked_ids(text: str, limit: int = 50, offset: int = 0) -> list[str]:
+def ranked_ids(text: str, limit: int = 50) -> list[str]:
     """Ids dos livros ativos que casam com o texto, do mais relevante ao menos (bm25)."""
     query = to_match_query(text)
-    return [] if query is None else _ranked(query, limit, offset)
+    return [] if query is None else _ranked(query, limit)
 
 
 # Palavras que não ajudam a achar livros num pedido em linguagem natural
@@ -105,15 +105,15 @@ def ranked_any_ids(text: str, limit: int = 30) -> list[str]:
     """Ids dos livros ativos que casam com alguma palavra relevante do pedido
     (`any_term_query`), do mais relevante ao menos (bm25)."""
     query = any_term_query(text)
-    return [] if query is None else _ranked(query, limit, 0)
+    return [] if query is None else _ranked(query, limit)
 
 
-def _ranked(query: str, limit: int, offset: int) -> list[str]:
+def _ranked(query: str, limit: int) -> list[str]:
     weights = ", ".join(str(weight) for weight in BM25_WEIGHTS)
     with connection.cursor() as cursor:
         cursor.execute(
             f"SELECT book_id FROM {FTS_TABLE} WHERE {FTS_TABLE} MATCH %s "
-            f"ORDER BY bm25({FTS_TABLE}, {weights}) LIMIT %s OFFSET %s",
-            [query, limit, offset],
+            f"ORDER BY bm25({FTS_TABLE}, {weights}) LIMIT %s",
+            [query, limit],
         )
         return [row[0] for row in cursor.fetchall()]
