@@ -67,6 +67,12 @@ def _summaries(ids: list[str]) -> list[BookSummaryOut]:
     return [BookSummaryOut.from_model(book) for book in books.load_in_order(ids)]
 
 
+def _profile(profile: ProfileIn) -> recommendations.Profile:
+    return recommendations.Profile(
+        area_ids=tuple(profile.area_ids), course_ids=tuple(profile.course_ids),
+        seed_book_ids=tuple(profile.seed_book_ids), genre_ids=tuple(profile.genre_ids))
+
+
 def _active_book(book_id: str) -> Book:
     book = books.with_relations(Book.objects.filter(id=book_id, is_active=True)).first()
     if book is None:
@@ -161,9 +167,7 @@ def get_recommendations(request: HttpRequest, profile: ProfileIn) -> Recommendat
 
     É POST porque o perfil vai no corpo; não grava nada.
     """
-    shelves = recommendations.home_shelves(recommendations.Profile(
-        area_ids=tuple(profile.area_ids), course_ids=tuple(profile.course_ids),
-        seed_book_ids=tuple(profile.seed_book_ids), genre_ids=tuple(profile.genre_ids)))
+    shelves = recommendations.home_shelves(_profile(profile))
     loaded = {book.id: book for book in books.load_in_order(
         list(dict.fromkeys(book_id for shelf in shelves for book_id in shelf.book_ids)))}
     return RecommendationsOut(
@@ -194,11 +198,7 @@ def post_discovery(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
     falhar, a seleção é por regras (`source="rules"`). É POST porque o pedido vai
     no corpo; nada do que o visitante envia é gravado.
     """
-    profile = None
-    if body.profile is not None:
-        profile = recommendations.Profile(
-            area_ids=tuple(body.profile.area_ids), course_ids=tuple(body.profile.course_ids),
-            seed_book_ids=tuple(body.profile.seed_book_ids), genre_ids=tuple(body.profile.genre_ids))
+    profile = None if body.profile is None else _profile(body.profile)
     result = discovery.discover(body.query, profile, body.exclude_ids)
     loaded = {book.id: book for book in books.load_in_order([pick.book_id for pick in result.picks])}
     return DiscoveryOut(
