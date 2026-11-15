@@ -1,10 +1,8 @@
 """Relacionados, prateleiras da home e candidatos do onboarding.
 
-Mesmas regras que o frontend usava com o acervo fictício (`related-books.ts`,
-`recommendation-service.ts`, `onboarding-draft.ts`), agora calculadas no banco
-sobre o acervo real. Só entram tipos que fazem sentido recomendar (livros, e-books,
-audiolivros e TCCs). Em empates, vêm primeiro os livros com capa e os mais
-emprestados.
+Calculados no banco sobre o acervo inteiro; o frontend só exibe o resultado. Só
+entram tipos que fazem sentido recomendar (livros, e-books, audiolivros e TCCs).
+Em empates, vêm primeiro os livros com capa e os com mais exemplares.
 """
 
 from __future__ import annotations
@@ -44,7 +42,8 @@ MAX_AFFINITY_CANDIDATES = 200
 
 @dataclass(frozen=True)
 class Profile:
-    """Preferências do visitante (ids já validados contra o banco não são exigidos)."""
+    """Preferências do visitante. Os ids não precisam existir no banco: os
+    desconhecidos são ignorados."""
 
     area_ids: tuple[str, ...] = ()
     course_ids: tuple[str, ...] = ()
