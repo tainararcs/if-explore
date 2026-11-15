@@ -152,3 +152,5 @@ GEMINI_TIMEOUT = int(os.environ.get("GEMINI_TIMEOUT", "10"))
 # proxy reverso, defina aqui NINJA_NUM_PROXIES para que o cabeçalho não seja forjável.
 DISCOVERY_RATE = os.environ.get("DISCOVERY_RATE", "10/m").strip()
 EXPLANATION_RATE = os.environ.get("EXPLANATION_RATE", "60/m").strip()
+# Limite por IP dos links para a ficha no catálogo; cada um abre uma sessão no PHL.
+CATALOG_LINK_RATE = os.environ.get("CATALOG_LINK_RATE", "30/m").strip()

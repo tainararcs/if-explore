@@ -76,6 +76,25 @@ class Transport:
                 raise
         raise AssertionError("inalcançável")
 
+    @property
+    def home_url(self) -> str:
+        """Página inicial do site do catálogo, que encaminha para o OPAC."""
+        return self.base + "/"
+
+    def page_url(self, params: Mapping[str, str]) -> str:
+        """URL de uma consulta para uma pessoa abrir no navegador, com a sessão atual.
+
+        Não faz requisição. A sessão do PHL expira; para um link que alguém vai
+        abrir agora, chame `open_session` antes.
+
+        Raises:
+            LibraryError: Quando ainda não há sessão.
+        """
+        if self.session is None:
+            raise LibraryError("sem sessão aberta no catálogo: chame open_session antes")
+        query = {**params, "tmp": self.session}
+        return self.cgi + "?" + urllib.parse.urlencode(query, encoding="iso-8859-1", errors="replace")
+
     def fetch(self, url: str, attempts: int = 2, use_cache: bool = True) -> str:
         """Baixa uma URL e devolve o texto, com cache, novas tentativas e pausa.
 

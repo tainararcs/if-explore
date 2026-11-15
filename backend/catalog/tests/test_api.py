@@ -150,6 +150,25 @@ class BookDetailTests(ApiTestCase):
         self.get("/api/books/%s" % PYTHON_BOOK, status=404)
         self.assertNotIn(PYTHON_BOOK, [b["id"] for b in self.get("/api/books?q=python")["items"]])
 
+    def test_catalog_link_redirects_to_the_record(self) -> None:
+        with patch.object(self.library.phl, "open_session",
+                          side_effect=lambda: setattr(self.library.phl, "session", "/tmp/fileNEW")) as open_session:
+            self.library.phl.script_dir = "phl82"
+            response = self.client.get("/api/books/%s/catalog" % PYTHON_BOOK, HTTP_HOST="localhost")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(open_session.call_count, 1)
+        self.assertIn("exp=TIT%%3D%s&" % PYTHON_BOOK, response["Location"])
+        self.assertTrue(response["Location"].endswith("tmp=%2Ftmp%2FfileNEW"))
+
+    def test_catalog_link_falls_back_to_the_catalog_home(self) -> None:
+        with patch.object(self.library.phl, "open_session", side_effect=LibraryConnectionError("fora do ar")),                 self.assertLogs("catalog.services.catalog_link", "WARNING"):
+            response = self.client.get("/api/books/%s/catalog" % PYTHON_BOOK, HTTP_HOST="localhost")
+        self.assertEqual((response.status_code, response["Location"]),
+                         (302, "https://biblioteca.barbacena.ifsudestemg.edu.br/"))
+
+    def test_catalog_link_of_missing_book(self) -> None:
+        self.get("/api/books/naoexiste/catalog", status=404)
+
     def test_related_by_shared_subjects(self) -> None:
         related = self.get("/api/books/%s/related" % PYTHON_BOOK)
         ids = [b["id"] for b in related["related"]]

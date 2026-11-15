@@ -79,6 +79,7 @@ ambiente do sistema (servidor, cron) têm prioridade sobre ele.
 | `GEMINI_TIMEOUT` | `10` | Tempo limite, em segundos, de cada chamada ao Gemini. |
 | `DISCOVERY_RATE` | `10/m` | Limite por IP de `POST /api/discovery` (`número/período`, com `s`, `m`, `h` ou `d`). |
 | `EXPLANATION_RATE` | `60/m` | Limite por IP de `GET /api/books/{id}/explanation`. |
+| `CATALOG_LINK_RATE` | `30/m` | Limite por IP de `GET /api/books/{id}/catalog`. |
 
 ## API
 
@@ -92,6 +93,7 @@ frontend, e valores ausentes saem como `null`.
 | `GET /api/books` | Busca e lista livros, paginados (`{items, total, page, pageSize}`). |
 | `GET /api/books/{id}` | Um livro completo; os exemplares são consultados ao vivo no PHL se a última consulta tiver mais de 15 min. |
 | `GET /api/books/{id}/related` | `{sameAuthor, related}`: outros livros de um autor em comum e os demais por afinidade. |
+| `GET /api/books/{id}/catalog` | Redireciona (302) para a ficha do livro no catálogo oficial da biblioteca. O PHL não tem link fixo por título, então cada clique abre uma sessão nele (1 requisição); se ele falhar, redireciona para a página inicial do catálogo. |
 | `POST /api/recommendations` | `{shelves, areas}` para o perfil do visitante (`{areaIds, courseIds, seedBookIds, genreIds}`). |
 | `GET /api/recommendations/candidates` | Títulos para escolher no onboarding (`area`, `course`, `limit`). |
 | `POST /api/discovery` | `{source, message, items: [{book, reason}]}`: até 6 títulos do acervo para um pedido em texto livre (`{query, profile?, excludeIds?}`, 3 a 300 caracteres; `excludeIds`, até 60, tira dos candidatos os livros já mostrados, para pedir outras sugestões). |

@@ -96,7 +96,7 @@
           >
             <a
               class="button button--primary"
-              :href="LIBRARY_CATALOG_URL"
+              :href="catalogUrl"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -185,7 +185,7 @@
         <div class="container">
           <a
             class="button button--primary w-full"
-            :href="LIBRARY_CATALOG_URL"
+            :href="catalogUrl"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -213,7 +213,7 @@ import ShareButton from '../../../components/ShareButton.vue'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
 import { formatSubject } from '../../../lib/catalog-format'
 import { pickCoverColor } from '../../../lib/cover-color'
-import { LIBRARY_CATALOG_URL } from '../../../lib/library-catalog'
+import { libraryRecordUrl } from '../../../lib/library-catalog'
 import BookExplanation from '../components/BookExplanation.vue'
 import BookHero from '../components/BookHero.vue'
 import BookRecord from '../components/BookRecord.vue'
@@ -248,6 +248,8 @@ const showCatalogBar = computed(() => status.value === 'ready' && scrolledPastAc
 
 // A faixa começa logo abaixo do cabeçalho, atrás do "Voltar", só quando há livro.
 const bandTone = computed(() => (book.value ? pickCoverColor(book.value.id) : null))
+
+const catalogUrl = computed(() => libraryRecordUrl(bookId.value))
 
 const fallbackPath = computed(() => (hasPreferences.value ? '/home' : '/'))
 

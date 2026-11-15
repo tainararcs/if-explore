@@ -213,6 +213,23 @@ class PhlClient(Transport):
                        if not entry_date(record).endswith("00") and start <= entry_date(record) <= end),
                       key=entry_date)
 
+    def record_page_url(self, title_id: str) -> str:
+        """Endereço da ficha de um título no OPAC, para uma pessoa abrir no navegador.
+
+        O OPAC não tem link fixo por título: toda página depende de uma sessão que
+        expira. Por isso abre uma sessão nova (1 requisição) e devolve a busca pelo
+        código do título no formato da tela do catálogo, com capa e situação.
+
+        Raises:
+            ValueError: Código de título inválido (só dígitos).
+            LibraryError: O PHL falhou (inclui `LibraryConnectionError`).
+        """
+        if not re.fullmatch(r"[0-9]+", title_id):
+            raise ValueError("código de título inválido: %r" % title_id)
+        self.open_session()
+        return self.page_url({"IsisScript": self.script, "opc": "decorado", "pft": "decorado",
+                              "bool": "exp", "exp": "TIT=%s" % title_id})
+
     # ---- exemplares e referências
     def copies(self, title_id: str, library: str = LIBRARY_CODE,
                include_borrower: bool = False) -> list[CopyRow]:
