@@ -53,6 +53,7 @@ As variáveis do frontend estão descritas em [`.env.example`](.env.example). Co
 | Variável | Padrão | Uso |
 |---|---|---|
 | `VITE_API_BASE_URL` | `/api` | Endereço base da API usado pelo navegador. Fixado no build e público; em outro domínio, inclua a origem do frontend em `CORS_ALLOWED_ORIGINS` no backend. |
+| `VITE_GOOGLE_BOOKS_API_KEY` | vazia | Opcional: liga a prévia de leitura do Google Livros na página do livro (uma consulta por ISBN ao abrir a página; o leitor só carrega no clique). Pública no bundle: use uma chave de navegador restrita à Books API e aos domínios do site. Sem ela, nada é enviado ao Google. |
 | `API_PROXY_TARGET` | `http://localhost:8000` | Só em desenvolvimento: destino do proxy do Vite para `/api`. Não vai para o navegador. |
 
 ```bash

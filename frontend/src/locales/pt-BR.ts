@@ -232,6 +232,13 @@ export const ptBR = {
       loading: 'Gerando explicação do livro…',
       note: 'Gerado por IA a partir da ficha do livro; pode conter imprecisões.',
     },
+    preview: {
+      action: 'Ler prévia',
+      title: 'Prévia de “{title}”',
+      source: 'Prévia fornecida pelo Google Livros.',
+      close: 'Fechar prévia',
+      frameTitle: 'Leitor do Google Livros com a prévia de “{title}”',
+    },
     shareText: 'Encontrei “{title}” no acervo da Biblioteca Roberval Cardoso.',
     notFound: {
       title: 'Livro não encontrado',

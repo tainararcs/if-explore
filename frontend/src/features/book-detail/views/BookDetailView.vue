@@ -104,6 +104,11 @@
               <IconExternalLink class="size-5" />
               <span class="sr-only">{{ t('common.opensInNewTab') }}</span>
             </a>
+            <BookPreview
+              v-if="preview"
+              :embed-url="preview.embedUrl"
+              :book-title="book.title"
+            />
             <ShareButton
               :title="book.title"
               :text="t('bookDetail.shareText', { title: book.title })"
@@ -216,9 +221,11 @@ import { pickCoverColor } from '../../../lib/cover-color'
 import { libraryRecordUrl } from '../../../lib/library-catalog'
 import BookExplanation from '../components/BookExplanation.vue'
 import BookHero from '../components/BookHero.vue'
+import BookPreview from '../components/BookPreview.vue'
 import BookRecord from '../components/BookRecord.vue'
 import { useBookDetail } from '../composables/useBookDetail'
 import { useBookExplanation } from '../composables/useBookExplanation'
+import { useBookPreview } from '../composables/useBookPreview'
 import { useScrolledPast } from '../composables/useScrolledPast'
 
 const MIN_RELATED = 3
@@ -238,6 +245,9 @@ const { status, isRefreshing, book, areaName, courseNames, genreNames, shelves, 
 
 // A explicação da IA chega à parte e não atrasa a página; sem texto, a seção some.
 const { text: explanation, isLoading: isExplanationLoading } = useBookExplanation(bookId)
+
+// A prévia do Google Livros é opcional: o botão só aparece quando há uma embutível.
+const { preview } = useBookPreview(computed(() => book.value?.isbn ?? null))
 
 const hero = useTemplateRef<InstanceType<typeof BookHero>>('hero')
 const actions = useTemplateRef<HTMLDivElement>('actions')
