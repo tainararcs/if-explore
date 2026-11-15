@@ -22,6 +22,7 @@ function normalizeApiBaseUrl(value: string | undefined): string {
 /**
  * Endereço base da API do projeto. Por padrão `/api`, no mesmo domínio do
  * frontend (proxy do Vite em desenvolvimento, proxy reverso em produção).
- * Um endereço em outro domínio exige CORS habilitado no backend.
+ * Um endereço em outro domínio exige incluir a origem do frontend em
+ * `CORS_ALLOWED_ORIGINS` no backend.
  */
 export const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL)

@@ -9,6 +9,7 @@ sincronizada com o catálogo PHL do campus, e a classifica na taxonomia do IF Ex
 - [Python](https://www.python.org/) 3.12 ou mais novo.
 - [Django 5.2 LTS](https://docs.djangoproject.com/en/5.2/): ORM, migrações, admin e comandos de sincronização.
 - [Django Ninja](https://django-ninja.dev/): rotas da API, validação com Pydantic e documentação OpenAPI.
+- [django-cors-headers](https://github.com/adamchainz/django-cors-headers): CORS da API para um frontend em outro domínio.
 - [SQLite](https://www.sqlite.org/) em modo WAL, com [FTS5](https://www.sqlite.org/fts5.html) para a busca textual.
 - `phl_client`: cliente do catálogo PHL, sem dependências além da biblioteca padrão
   ([documentação](phl_client/api.html)).
@@ -65,6 +66,7 @@ ambiente do sistema (servidor, cron) têm prioridade sobre ele.
 | `DJANGO_DEBUG` | `true` | Desligue em produção. |
 | `DJANGO_SECRET_KEY` | chave de desenvolvimento | Obrigatória com `DJANGO_DEBUG=false`. |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` | Hosts aceitos, separados por vírgula. |
+| `CORS_ALLOWED_ORIGINS` | vazio (CORS desligado) | Origens do frontend em outro domínio (`https://host[:porta]`), separadas por vírgula. Só para `/api/`, sem cookies. |
 | `SQLITE_PATH` | `backend/db.sqlite3` | Arquivo do banco. |
 | `PHL_CATALOG_URL` | catálogo do campus | Site do PHL. |
 | `PHL_PAUSE` | `0.5` | Pausa entre requisições ao PHL, em segundos. |
@@ -156,7 +158,8 @@ o cache do Django (memória local, por processo, na configuração atual). O IP 
 vão para os logs.
 
 Em desenvolvimento, aponte o frontend para a API com um proxy do Vite (`/api` →
-`http://localhost:8000`), sem precisar de CORS.
+`http://localhost:8000`), sem precisar de CORS. Se o frontend for servido em outro
+domínio (`VITE_API_BASE_URL` no frontend), inclua a origem dele em `CORS_ALLOWED_ORIGINS`.
 
 ## Sincronização com o PHL
 

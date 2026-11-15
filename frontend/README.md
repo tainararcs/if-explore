@@ -52,7 +52,7 @@ As variáveis do frontend estão descritas em [`.env.example`](.env.example). Co
 
 | Variável | Padrão | Uso |
 |---|---|---|
-| `VITE_API_BASE_URL` | `/api` | Endereço base da API usado pelo navegador. Fixado no build e público; em outro domínio, exige CORS no backend. |
+| `VITE_API_BASE_URL` | `/api` | Endereço base da API usado pelo navegador. Fixado no build e público; em outro domínio, inclua a origem do frontend em `CORS_ALLOWED_ORIGINS` no backend. |
 | `API_PROXY_TARGET` | `http://localhost:8000` | Só em desenvolvimento: destino do proxy do Vite para `/api`. Não vai para o navegador. |
 
 ```bash

@@ -150,6 +150,8 @@ collection.
   and nothing the visitor sends is stored (`/api/recommendations`,
   `/api/discovery`). Routes that call Gemini are throttled per IP and answer
   429 above the limit.
+- CORS is off by default (frontend on the same domain). Origins come only from
+  `CORS_ALLOWED_ORIGINS`, apply only to `/api/`, and never allow credentials.
 - The frontend mirrors the contract in `frontend/src/models/book.ts` and
   validates responses in `frontend/src/services/catalog-parsers.ts`. Changing a
   schema means updating those files, the API tests, and the endpoint tables in

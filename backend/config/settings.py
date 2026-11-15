@@ -46,12 +46,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "catalog",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # Antes do CommonMiddleware, para responder também às requisições de preflight.
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -60,6 +63,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
+
+# ---- CORS
+# Origens (esquema://host[:porta]) do frontend servido em outro domínio, separadas por
+# vírgula. Vazio (padrão) desliga o CORS: o frontend chama a API no mesmo domínio.
+# Vale só para /api/ (o admin fica de fora) e sem cookies, pois a API é pública e anônima.
+CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
+CORS_URLS_REGEX = r"^/api/.*$"
+CORS_ALLOW_CREDENTIALS = False
 
 TEMPLATES = [
     {

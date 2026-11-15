@@ -1,5 +1,7 @@
 Django==5.2.18
 django-ninja==1.7.3
+# CORS da API para um frontend em outro domínio (config/settings.py).
+django-cors-headers==4.9.0
 # Lê o backend/.env ao iniciar (config/settings.py).
 python-dotenv==1.2.4
 # Base de fusos horários para o zoneinfo no Windows (no Linux vem do sistema).
