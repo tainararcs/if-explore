@@ -1,8 +1,9 @@
 import axios, { type AxiosInstance } from 'axios'
 
+import { API_BASE_URL } from '../env'
+
 const sharedAxiosInstance = axios.create({
-  // A API fica no mesmo domínio (proxy do Vite em desenvolvimento, proxy reverso em produção).
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   timeout: 15_000,
   headers: {
     Accept: 'application/json',
