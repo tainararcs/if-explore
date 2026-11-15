@@ -85,6 +85,22 @@ export const ptBR = {
     serverError: 'Erro interno',
     notFound: 'Página não encontrada',
   },
+  errors: {
+    code: 'Erro {code}',
+    back: 'Voltar',
+    forbidden: {
+      title: 'Acesso negado',
+      text: 'Você não tem permissão para ver esta página.',
+    },
+    serverError: {
+      title: 'Algo deu errado',
+      text: 'Tivemos um problema do nosso lado. Tente de novo em alguns instantes.',
+    },
+    notFound: {
+      title: 'Página não encontrada',
+      text: 'O endereço pode ter mudado ou não existe mais.',
+    },
+  },
   welcome: {
     eyebrow: 'Biblioteca Roberval Cardoso · IF Sudeste MG – Barbacena',
     title: 'Sua próxima leitura já está {emphasis} do campus.',
