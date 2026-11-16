@@ -53,8 +53,8 @@ Os padrões servem para desenvolvimento, então o `.env` é opcional. Para mudar
 cp .env.example .env
 ```
 
-Todas as variáveis estão comentadas no [`.env.example`](.env.example). As que mais
-importam:
+Todas as variáveis e seus padrões estão no [`.env.example`](.env.example). As que
+mais importam:
 
 | Variável | Para quê |
 |---|---|
