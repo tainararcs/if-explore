@@ -1,115 +1,83 @@
-# IF Explore - Frontend
+# IF Explore · Frontend
 
-## Stack
+Interface do IF Explore: descoberta de leituras no acervo da biblioteca do campus,
+com recomendações a partir das preferências do visitante.
 
-- [Vue 3](https://vuejs.org/): base da interface, com componentes escritos pela Composition API.
-- [TypeScript](https://www.typescriptlang.org/): linguagem de todo o código, com tipagem estática.
-- [Vite](https://vite.dev/): servidor de desenvolvimento e build de produção.
-- [Vue Router](https://router.vuejs.org/): navegação entre as telas.
-- [Vue I18n](https://vue-i18n.intlify.dev/): internacionalização dos textos.
-- [Axios](https://axios-http.com/): comunicação com a API.
-- [ESLint](https://eslint.org/) e [vue-tsc](https://github.com/vuejs/language-tools): verificação de qualidade e de tipos do código.
+## Tecnologias
 
-## Requisitos 
+- **Vue 3** (Composition API) e **TypeScript**
+- **Vite**: servidor de desenvolvimento e build
+- **Vue Router** e **Vue I18n** (pt-BR)
+- **Tailwind CSS v4** sobre os tokens de design do projeto
+- **Axios**: chamadas à API
+- **ESLint** e **vue-tsc**: lint e tipos
 
-Para rodar o projeto localmente, você precisará ter o [Node.js](https://nodejs.org/) instalado em sua máquina.
-Preferencialmente, utilize a versão 24.22.0 LTS (Long Term Support) do Node.js.
+## Como executar
 
-## Instalação
+Requer **Node.js 24.22.0**. A partir de `frontend/`:
 
-Para instalar as dependências do projeto, siga os passos abaixo:
-
-1. Clone o repositório do projeto:
-   ```bash
-   git clone https://github.com/tainararcs/if-explore.git
-   ```
-2. Navegue até o diretório do frontend:
-   ```bash
-    cd if-explore/frontend
-    ```
-3. Instale as dependências:
-   ```bash
-    npm install
-    ```
-
-## Rodando o projeto em modo de desenvolvimento
-
-Para iniciar o projeto em modo de desenvolvimento, execute o seguinte comando:
+```bash
+npm install
+```
 
 ```bash
 npm run dev
 ```
 
-A aplicação estará disponível em [http://localhost:5173](http://localhost:5173).
+A aplicação abre em <http://localhost:5173>. Os dados vêm da API em `backend/`
+(veja o [README do backend](../backend/README.md)): em desenvolvimento, o Vite
+repassa `/api` para `http://localhost:8000`, sem precisar de CORS. Sem a API, as
+telas mostram um erro com a opção de tentar de novo.
 
-Os dados do acervo vêm da API do projeto, em `backend/` (veja o
-[README do backend](../backend/README.md) para instalar, criar o banco e sincronizar o
-acervo). Com a API rodando em `http://localhost:8000`, o servidor do Vite repassa as
-chamadas a `/api` para ela, sem precisar de CORS.
+### Configuração
 
-As variáveis do frontend estão descritas em [`.env.example`](.env.example). Copie-o para
-`.env.local` (ignorado pelo git) e ajuste o que precisar:
+Opcional. Copie o [`.env.example`](.env.example) para `.env.local` e ajuste:
 
-| Variável | Padrão | Uso |
+| Variável | Padrão | Para quê |
 |---|---|---|
-| `VITE_API_BASE_URL` | `/api` | Endereço base da API usado pelo navegador. Fixado no build e público; em outro domínio, inclua a origem do frontend em `CORS_ALLOWED_ORIGINS` no backend. |
-| `API_PROXY_TARGET` | `http://localhost:8000` | Só em desenvolvimento: destino do proxy do Vite para `/api`. Não vai para o navegador. |
+| `VITE_API_BASE_URL` | `/api` | Endereço da API no navegador. Fica público no build. |
+| `API_PROXY_TARGET` | `http://localhost:8000` | Destino do proxy do Vite, só em desenvolvimento. |
 
-```bash
-API_PROXY_TARGET=http://localhost:8001
-```
+### Scripts
 
-No código, leia a configuração por `src/lib/env.ts`, não por `import.meta.env` direto.
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Checa os tipos e gera o build de produção |
+| `npm run preview` | Serve o build localmente |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Checagem de tipos, incluindo os `.vue` |
 
-Sem a API, as telas mostram a mensagem de erro com a opção de tentar novamente.
+## Estrutura
 
-## Compilando o projeto para produção
-
-Para compilar o projeto para produção, execute o seguinte comando:
-
-```bash
-npm run build
-```
-
-## Servindo a aplicação compilada
-
-Para servir a aplicação compilada, utilize o seguinte comando:
-
-```bash
-npm run preview
-```
-
-## Validando o código com ESLint
-
-Para validar o código do projeto utilizando o ESLint, execute o seguinte comando:
-
-```bash
-npm run lint
-```
-
-## Verificando os tipos
-
-Para verificar os tipos do projeto, incluindo os arquivos `.vue`, execute o seguinte comando:
-
-```bash
-npm run typecheck
-```
-
-## Arquitetura e organização do código
-
-O código é organizado por funcionalidade: cada feature agrupa suas próprias views, componentes, serviços e modelos, e apenas o que é compartilhado entre features fica nos diretórios globais de `src/`.
-
-```
+```text
 frontend/
-├── docs/                   # Diretrizes do projeto
-├── public/                 # Arquivos públicos (favicon, etc.)
-└── src/                    # Código-fonte do projeto
-    ├── features/           # Código organizado por funcionalidade (views, components, services, etc.)
-    ├── lib/                # Utilitários e configurações compartilhadas
-    ├── router/             # Rotas da aplicação
-    ├── App.vue             # Componente raiz
-    ├── index.css           # Estilos globais
-    └── main.ts             # Ponto de entrada da aplicação
+├── docs/                # diretrizes de projeto e de design
+├── public/
+└── src/
+    ├── features/        # uma pasta por tela: welcome, onboarding, home,
+    │                    # book-detail, discovery, errors
+    ├── components/      # componentes compartilhados
+    ├── composables/     # estado reativo compartilhado
+    ├── services/        # acesso à API e validação das respostas
+    ├── models/          # contratos (espelham o backend)
+    ├── locales/         # textos da interface
+    ├── lib/             # utilitários e configuração
+    ├── router/
+    └── index.css        # tokens de design e estilos base
 ```
 
-A organização completa e as convenções estão descritas em [docs/project-guidelines.md](docs/project-guidelines.md).
+## Detalhes importantes
+
+- **Contrato com a API:** `src/models/book.ts` espelha os schemas do backend, e
+  `src/services/catalog-parsers.ts` valida cada resposta. Mudou a API, mude os dois.
+- **Regras ficam no backend:** busca, ranking e recomendações vêm prontos da API; a
+  disponibilidade é mostrada como `copies.status`, sem interpretação no frontend.
+- **Preferências locais:** o perfil de leitura fica só no navegador
+  (`localStorage`) e vai no corpo das chamadas de recomendação.
+- **Configuração:** leia variáveis por `src/lib/env.ts`, não por `import.meta.env`.
+  Nada com prefixo `VITE_` pode ser segredo.
+- **Textos:** toda string da interface vai em `src/locales/pt-BR.ts`.
+
+Convenções de código em [docs/project-guidelines.md](docs/project-guidelines.md) e
+de visual em [docs/design-guidelines.md](docs/design-guidelines.md).
