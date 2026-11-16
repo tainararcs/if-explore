@@ -6,8 +6,9 @@ import { list, parseBook } from '../../../services/catalog-parsers'
 const CANDIDATE_LIMIT = 60
 
 /**
- * Títulos para o visitante escolher: primeiro os dos cursos marcados, depois os
- * das áreas; a API completa com outros títulos quando sobram poucos.
+ * Títulos para o visitante escolher: as áreas escolhidas (e as dos cursos
+ * marcados) se intercalam na lista e, dentro de cada área, os livros dos cursos
+ * marcados vêm primeiro; a API completa com outros títulos quando sobram poucos.
  *
  * @param areaIds - Áreas escolhidas.
  * @param courseIds - Cursos escolhidos.

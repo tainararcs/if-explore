@@ -182,7 +182,7 @@ def get_recommendations(request: HttpRequest, profile: ProfileIn) -> Recommendat
 def get_candidates(
     request: HttpRequest,
     area: list[str] = Query([], description="Áreas escolhidas."),
-    course: list[str] = Query([], description="Cursos escolhidos; vêm antes das áreas."),
+    course: list[str] = Query([], description="Cursos escolhidos; seus livros vêm primeiro dentro de cada área."),
     limit: int = Query(48, ge=1, le=MAX_PAGE_SIZE),
 ) -> list[BookSummaryOut]:
     """Títulos para o visitante escolher no onboarding."""
