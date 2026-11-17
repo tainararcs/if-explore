@@ -37,6 +37,7 @@ Opcional. Copie o [`.env.example`](.env.example) para `.env.local` e ajuste:
 |---|---|---|
 | `VITE_API_BASE_URL` | `/api` | Endereço da API no navegador. Fica público no build. |
 | `API_PROXY_TARGET` | `http://localhost:8000` | Destino do proxy do Vite, só em desenvolvimento. |
+| `WATCH_POLLING` | `false` | `true` verifica os arquivos periodicamente; usado no Docker, onde os eventos do host não chegam. |
 
 ### Scripts
 

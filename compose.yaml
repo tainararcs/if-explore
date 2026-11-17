@@ -1,0 +1,55 @@
+# Ambiente de desenvolvimento opcional: API e interface com um comando.
+# Uso e primeira sincronização do acervo: veja o README na raiz.
+name: if-explore
+
+services:
+  api:
+    build: ./backend
+    environment:
+      # Banco num volume do Docker: SQLite em WAL não trava bem sobre pastas do host.
+      SQLITE_PATH: /data/db.sqlite3
+      # "api" é o Host que chega pelo proxy do Vite.
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,api
+    volumes:
+      - ./backend:/app
+      - db:/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/status')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  web:
+    build: ./frontend
+    environment:
+      API_PROXY_TARGET: http://api:8000
+      # Eventos de arquivo do host não chegam ao container no Windows e no macOS.
+      WATCH_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      # Mantém os módulos instalados na imagem (binários do Linux), não os do host.
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+  # Sincronização a cada 6 h, opcional: docker compose --profile sync up
+  sync:
+    build: ./backend
+    profiles: [sync]
+    environment:
+      SQLITE_PATH: /data/db.sqlite3
+    volumes:
+      - ./backend:/app
+      - db:/data
+    command: ["sh", "-c", "while true; do python manage.py sync_catalog; sleep 21600; done"]
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  db:
