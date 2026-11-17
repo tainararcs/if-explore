@@ -18,6 +18,9 @@ export default defineConfig(({ mode }) => {
     // Em desenvolvimento, /api vai para o backend Django; em produção, o proxy reverso
     // serve a API no mesmo domínio.
     server: {
+      // No Docker com o código montado do host, os eventos de arquivo não chegam ao
+      // container: WATCH_POLLING=true troca por verificação periódica.
+      watch: env.WATCH_POLLING === 'true' ? { usePolling: true, interval: 300 } : undefined,
       proxy: {
         '/api': {
           target: env.API_PROXY_TARGET || 'http://localhost:8000',

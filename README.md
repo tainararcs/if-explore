@@ -47,6 +47,44 @@ Abra <http://localhost:5173>. O Vite repassa `/api` para o backend em
 `localhost:8000`. Ambiente virtual, variáveis e agendamento da sincronização estão
 nos READMEs de cada parte.
 
+### Com Docker (opcional)
+
+Com Docker e Docker Compose instalados, a API e a interface sobem juntas a partir da
+raiz, com recarga automática ao editar o código:
+
+```bash
+docker compose up --build
+```
+
+Abra <http://localhost:5173>. A API fica em <http://localhost:8000> e aplica as
+migrações a cada início. O banco fica no volume `if-explore_db`, separado do
+`backend/db.sqlite3` local, e começa vazio. Para baixar o acervo pela primeira vez
+(cerca de 1 min e meio), com os containers no ar:
+
+```bash
+docker compose exec api python manage.py sync_catalog
+```
+
+Ou, para reaproveitar o banco local, com o `runserver` local parado:
+
+```bash
+docker compose cp backend/db.sqlite3 api:/data/db.sqlite3
+```
+
+Para sincronizar a cada 6 h enquanto os containers rodam:
+
+```bash
+docker compose --profile sync up --build
+```
+
+As variáveis do `backend/.env` continuam valendo (a chave do Gemini, por exemplo).
+Depois de mudar `package.json` ou `requirements.txt`, recrie as imagens e os
+`node_modules` do container:
+
+```bash
+docker compose up --build --renew-anon-volumes
+```
+
 ## Estrutura
 
 ```text
