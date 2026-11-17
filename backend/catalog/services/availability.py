@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from django.conf import settings
+from django.db import OperationalError
 from django.utils import timezone
 
 from catalog.models import Book
@@ -74,7 +75,9 @@ def refresh_if_stale(book: Book) -> bool:
     """Atualiza os exemplares do livro no PHL se estiverem velhos.
 
     Se o PHL falhar, mantém o dado guardado: a página não deve quebrar porque o
-    catálogo do campus está lento ou fora do ar.
+    catálogo do campus está lento ou fora do ar. O mesmo vale para o banco travado
+    pela sincronização, que grava numa transação longa e, no SQLite, impede outro
+    escritor até terminar.
 
     Returns:
         True quando o livro foi atualizado (recarregue-o do banco).
@@ -85,5 +88,8 @@ def refresh_if_stale(book: Book) -> bool:
         refresh_copies(live_library(), book.id)
     except LibraryError as error:
         logger.warning("disponibilidade ao vivo de %s indisponível: %s", book.id, error)
+        return False
+    except OperationalError as error:
+        logger.warning("disponibilidade ao vivo de %s não gravada: %s", book.id, error)
         return False
     return True
