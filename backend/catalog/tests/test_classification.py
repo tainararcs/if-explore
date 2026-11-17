@@ -5,6 +5,7 @@ from unittest import TestCase
 from catalog.services.classification import (
     CourseRule,
     GenreRule,
+    cdd_class,
     cdd_digits,
     resolve_area,
     resolve_courses,
@@ -21,8 +22,24 @@ class AreaTests(TestCase):
         self.assertEqual(cdd_digits("005.133 PYTHON"), "005133")
         self.assertEqual(cdd_digits(""), "")
 
+    def test_cdd_class_drops_collection_prefix_and_author_mark(self) -> None:
+        cases = {"CE / B 869.33": "B869.33", "LIJ /B028.5": "B028.5", "R / CE / 636 / D 569z": "636",
+                 "Cb863": "863", "B 869.1 / E 24d": "B869.1", "005.133 PYTHON": "005.133", "": ""}
+        for cdd, expected in cases.items():
+            with self.subTest(cdd=cdd):
+                self.assertEqual(cdd_class(cdd), expected)
+
     def test_computing_cdd_wins_over_cnpq(self) -> None:
         self.assertEqual(resolve_area("6", "005.13", CNPQ), "technology")
+
+    def test_agricultural_cdd_wins_over_cnpq(self) -> None:
+        cases = {"636.3": "2", "R / CE 636": "4", "631.2": "3", "664": "3", "636.089": "4"}
+        for cdd, cnpq in cases.items():
+            with self.subTest(cdd=cdd):
+                self.assertEqual(resolve_area(cnpq, cdd, CNPQ), "agricultural-sciences")
+
+    def test_nutrition_cdd_keeps_cnpq(self) -> None:
+        self.assertEqual(resolve_area("4", "641.5", CNPQ), "health-sciences")
 
     def test_cnpq_code_when_cdd_is_not_computing(self) -> None:
         self.assertEqual(resolve_area("4", "613.2", CNPQ), "health-sciences")
@@ -78,6 +95,13 @@ class GenreTests(TestCase):
     def test_cdd_prefix_works_outside_literature(self) -> None:
         self.assertEqual(resolve_genres([], "741.5", [], self.RULES), ["comics"])
         self.assertEqual(resolve_genres([], "920.71", [], self.RULES), ["biography"])
+
+    def test_cdd_prefix_ignores_collection_prefix(self) -> None:
+        self.assertEqual(resolve_genres([], "CE / 741.5", [], self.RULES), ["comics"])
+        self.assertIn("brazilian-classics", resolve_genres([], "B 869.3", ["ASSIS, Machado de"], self.RULES))
+
+    def test_children_cdd_is_literary(self) -> None:
+        self.assertEqual(resolve_genres(["CONTOS"], "LIJ / B028.5", [], self.RULES), ["short-stories"])
 
     def test_author_condition(self) -> None:
         self.assertIn("brazilian-classics", resolve_genres([], "B869.3", ["ASSIS, Machado de"], self.RULES))
