@@ -1,6 +1,8 @@
-"""Regras de área, curso e gênero (funções puras, sem banco)."""
+"""Regras de área, curso e gênero: funções puras e a taxonomia cadastrada."""
 
 from unittest import TestCase
+
+from django.test import TestCase as DjangoTestCase
 
 from catalog.services.classification import (
     CourseRule,
@@ -11,6 +13,7 @@ from catalog.services.classification import (
     resolve_courses,
     resolve_genres,
 )
+from catalog.services.sync import Taxonomy
 
 CNPQ = {"1": "exact-sciences", "3": "technology", "4": "health-sciences", "6": "applied-social-sciences",
         "8": "languages-arts"}
@@ -106,3 +109,26 @@ class GenreTests(TestCase):
     def test_author_condition(self) -> None:
         self.assertIn("brazilian-classics", resolve_genres([], "B869.3", ["ASSIS, Machado de"], self.RULES))
         self.assertNotIn("brazilian-classics", resolve_genres([], "B869.3", ["SILVA, Ana"], self.RULES))
+
+
+class SeededGenreTests(DjangoTestCase):
+    """Gêneros como a migração inicial e as seguintes os cadastram."""
+
+    def genres(self, subjects: list[str], cdd: str) -> list[str]:
+        return resolve_genres(subjects, cdd, [], Taxonomy.load().genres)
+
+    def test_fiction_by_literary_form(self) -> None:
+        for cdd in ("B869.33", "CE / 813", "Cb863", "843.7"):
+            with self.subTest(cdd=cdd):
+                self.assertIn("fiction", self.genres(["LITERATURA"], cdd))
+        self.assertNotIn("fiction", self.genres(["LITERATURA"], "B869.1"))
+
+    def test_fiction_by_subject(self) -> None:
+        self.assertIn("fiction", self.genres(["LITERATURA SUECA", "FICÇÃO"], "839.737"))
+
+    def test_children_youth_by_collection_cdd(self) -> None:
+        self.assertIn("children-youth", self.genres(["LITERATURA INFANTOJUVENIL"], "LIJ / B028.5"))
+        self.assertIn("children-youth", self.genres(["TEATRO INFANTIL BRASILEIRO"], "B869.2"))
+
+    def test_children_youth_ignores_early_childhood_education(self) -> None:
+        self.assertNotIn("children-youth", self.genres(["EDUCAÇÃO INFANTIL", "EDUCAÇÃO FÍSICA"], ""))

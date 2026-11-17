@@ -159,6 +159,12 @@ sincronização (`catalog/services/classification.py`) e editados no admin. Muda
 valem na próxima sincronização. Os códigos de curso foram inferidos e ficam **não
 confirmados** até a biblioteca validá-los.
 
+A área vem do código CNPq do registro, exceto nas faixas da CDD em que ele costuma
+vir errado: computação (004–006) é sempre Tecnologia, e agricultura, criação animal,
+veterinária e alimentos (630–639, 664) são sempre Ciências Agrárias. Os prefixos de
+CDD dos gêneros são comparados sem o prefixo de coleção do catálogo (`CE`, `R`,
+`LIJ`).
+
 ### IA
 
 O Gemini nunca busca no catálogo: a API seleciona candidatos do acervo local e a IA

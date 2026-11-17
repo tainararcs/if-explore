@@ -40,7 +40,7 @@ class ApiTestCase(TestCase):
 class TaxonomyTests(ApiTestCase):
     def test_lists(self) -> None:
         areas, courses, genres = self.get("/api/areas"), self.get("/api/courses"), self.get("/api/genres")
-        self.assertEqual((len(areas), len(courses), len(genres)), (8, 25, 12))
+        self.assertEqual((len(areas), len(courses), len(genres)), (8, 25, 14))
         self.assertEqual(areas[0], {"id": "exact-sciences", "name": "Ciências Exatas e da Terra"})
         nutrition = next(course for course in courses if course["id"] == "nutrition")
         self.assertEqual(nutrition, {"id": "nutrition", "name": "Bacharelado em Nutrição",
