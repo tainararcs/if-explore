@@ -12,9 +12,14 @@ from dataclasses import dataclass
 
 from phl_client.text import normalize
 
-# CDD 004–006 (computação) é sempre Tecnologia, qualquer que seja a área CNPq.
-TECHNOLOGY_CDD_PREFIXES = ("004", "005", "006")
-TECHNOLOGY_AREA = "technology"
+# Faixas da CDD que valem mais que a área CNPq do registro, que nelas costuma vir
+# errada: computação cadastrada como Engenharias ou Exatas, e criação animal,
+# veterinária e tecnologia de alimentos cadastradas como Biológicas, Saúde ou
+# Engenharias. Chave: prefixo dos dígitos da CDD; vale o prefixo mais longo.
+CDD_AREA_OVERRIDES = {
+    "004": "technology", "005": "technology", "006": "technology",
+    "63": "agricultural-sciences", "664": "agricultural-sciences",
+}
 
 # Área pela CDD quando o PHL não traz área CNPq útil (9 = "Outros", ou vazia).
 # Chave: prefixo dos dígitos da CDD; vale o prefixo mais longo.
@@ -31,6 +36,9 @@ CDD_AREA_FALLBACK = {
     "8": "languages-arts",
     "9": "humanities",
 }
+
+# Dígitos da CDD de literatura: 800–899 e a 028.5 (literatura infantojuvenil).
+LITERARY_CDD_PREFIXES = ("8", "0285")
 
 
 @dataclass(frozen=True)
@@ -56,18 +64,44 @@ class GenreRule:
     author_keywords: tuple[str, ...]
 
 
+# Primeiro número da classificação, com o "B" da tabela brasileira quando houver.
+# Letras coladas antes do número (coleção ou outra tabela, como "Cb863") ficam de fora.
+_CDD_CLASS = re.compile(r"(?:(?<![A-Z])B\s*)?\d+(?:\.\d+)?")
+
+
+def cdd_class(cdd: str) -> str:
+    """A classificação da CDD, sem prefixo de coleção nem notação de autor.
+
+    O catálogo escreve a coleção antes da CDD ("CE", "R", "LIJ") e às vezes a
+    notação de autor depois: 'CE / B 869.33' -> 'B869.33'; 'LIJ /B028.5' ->
+    'B028.5'; 'R / CE / 636 / D 569z' -> '636'; 'Cb863' -> '863'.
+    """
+    match = _CDD_CLASS.search(cdd.upper())
+    return re.sub(r"\s", "", match.group()) if match else ""
+
+
 def cdd_digits(cdd: str) -> str:
-    """Só os dígitos da CDD, sem o prefixo de letras da tabela brasileira.
+    """Só os dígitos da classificação, sem prefixos de letras.
 
     'B869.3' -> '8693'; '005.133 PYTHON' -> '005133'.
     """
-    return re.sub(r"\D", "", re.sub(r"^[A-Za-z]+", "", cdd.strip()))
+    return re.sub(r"\D", "", cdd_class(cdd))
+
+
+def _by_cdd_prefix(digits: str, table: Mapping[str, str]) -> str | None:
+    """Valor do prefixo mais longo (até 3 dígitos) de `digits` em `table`."""
+    for size in range(min(len(digits), 3), 0, -1):
+        value = table.get(digits[:size])
+        if value:
+            return value
+    return None
 
 
 def resolve_area(cnpq_code: str, cdd: str, cnpq_to_area: Mapping[str, str]) -> str | None:
     """Área do IF Explore de um livro.
 
-    Ordem: computação pela CDD; depois a área CNPq do registro; por fim a CDD.
+    Ordem: as faixas da CDD em `CDD_AREA_OVERRIDES`; depois a área CNPq do
+    registro; por fim a CDD.
 
     Args:
         cnpq_code: Código CNPq do PHL (1 a 9) ou vazio.
@@ -75,15 +109,12 @@ def resolve_area(cnpq_code: str, cdd: str, cnpq_to_area: Mapping[str, str]) -> s
         cnpq_to_area: Código CNPq -> slug da área.
     """
     digits = cdd_digits(cdd)
-    if digits.startswith(TECHNOLOGY_CDD_PREFIXES):
-        return TECHNOLOGY_AREA
+    override = _by_cdd_prefix(digits, CDD_AREA_OVERRIDES)
+    if override:
+        return override
     if cnpq_code in cnpq_to_area:
         return cnpq_to_area[cnpq_code]
-    for size in range(min(len(digits), 3), 0, -1):
-        area = CDD_AREA_FALLBACK.get(digits[:size])
-        if area:
-            return area
-    return None
+    return _by_cdd_prefix(digits, CDD_AREA_FALLBACK)
 
 
 def resolve_courses(phl_codes: Iterable[str], tcc_course: str, rules: Iterable[CourseRule]) -> list[str]:
@@ -98,16 +129,18 @@ def resolve_genres(subjects: Iterable[str], cdd: str, authors: Iterable[str],
     """Slugs dos gêneros literários de um livro.
 
     As palavras-chave de assunto só valem para CDD literária (800–899, inclusive a
-    B869 brasileira) ou ausente: assim "MEMÓRIA RAM" não vira biografia.
+    B869 brasileira, e a 028.5 da literatura infantojuvenil) ou ausente: assim
+    "MEMÓRIA RAM" não vira biografia. Os prefixos de CDD são comparados com a
+    classificação sem o prefixo de coleção (`cdd_class`).
     """
-    digits = cdd_digits(cdd)
-    literary = not digits or digits.startswith("8")
-    cdd_upper = cdd.strip().upper()
+    classification = cdd_class(cdd)
+    digits = re.sub(r"\D", "", classification)
+    literary = not digits or digits.startswith(LITERARY_CDD_PREFIXES)
     normalized_subjects = [normalize(subject) for subject in subjects]
     normalized_authors = [normalize(author) for author in authors]
     genres = []
     for rule in rules:
-        matched = any(cdd_upper.startswith(prefix) for prefix in rule.cdd_prefixes) or (
+        matched = any(classification.startswith(prefix) for prefix in rule.cdd_prefixes) or (
             literary and any(re.search(r"\b" + re.escape(keyword), subject)
                              for keyword in rule.subject_keywords for subject in normalized_subjects))
         if matched and rule.author_keywords:

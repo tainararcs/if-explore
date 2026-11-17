@@ -96,7 +96,7 @@ class Taxonomy:
                                      frozenset(normalize(name.strip()) for name in course.tcc_names))
                           for course in Course.objects.all()),
             genres=tuple(GenreRule(genre.slug, tuple(normalize(k) for k in genre.subject_keywords),
-                                   tuple(p.strip().upper() for p in genre.cdd_prefixes),
+                                   tuple("".join(p.split()).upper() for p in genre.cdd_prefixes),
                                    tuple(normalize(a) for a in genre.author_keywords))
                          for genre in LiteraryGenre.objects.all()),
         )
