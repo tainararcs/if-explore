@@ -114,6 +114,62 @@ class BookListTests(ApiTestCase):
     def test_search_text_is_not_fts_syntax(self) -> None:
         self.assertEqual(self.get('/api/books?q=%22python%22%20OR%20NEAR(')["total"], 0)
 
+    def test_equipment_is_never_listed(self) -> None:
+        Book.objects.filter(id=TCC).update(document_type="Fone de ouvido")
+        self.assertEqual(self.get("/api/books")["total"], 8)
+        self.assertNotIn(TCC, [b["id"] for b in self.get("/api/books?pageSize=100")["items"]])
+        self.assertEqual(self.get("/api/books/%s" % TCC)["id"], TCC)  # a página do item continua
+
+    def test_language_and_year_filters(self) -> None:
+        Book.objects.filter(id=PYTHON_BOOK).update(languages=["Inglês"], year=1990)
+        Book.objects.filter(id=DJANGO_BOOK).update(languages=["Português", "Inglês"], year=2015)
+        english = {b["id"] for b in self.get("/api/books?language=Ingl%C3%AAs")["items"]}
+        self.assertEqual(english, {PYTHON_BOOK, DJANGO_BOOK})
+        self.assertEqual([b["id"] for b in self.get("/api/books?language=Ingl%C3%AAs&yearTo=2000")["items"]],
+                         [PYTHON_BOOK])
+        self.assertEqual([b["id"] for b in self.get("/api/books?yearFrom=2015&yearTo=2015")["items"]], [DJANGO_BOOK])
+        self.assertEqual(self.get("/api/books?q=python&language=Ingl%C3%AAs&yearTo=2000")["total"], 1)
+        self.get("/api/books?yearFrom=-1", status=422)
+        self.get("/api/books?language=" + "x" * 41, status=422)
+
+    def test_sort_by_publication_year(self) -> None:
+        Book.objects.filter(id=PYTHON_BOOK).update(year=2030)
+        Book.objects.filter(id=DJANGO_BOOK).update(year=2029)
+        self.assertEqual([b["id"] for b in self.get("/api/books?sort=year&pageSize=2")["items"]],
+                         [PYTHON_BOOK, DJANGO_BOOK])
+        self.assertEqual(self.get("/api/books?q=python&sort=year")["items"][0]["id"], PYTHON_BOOK)
+
+
+class FacetTests(ApiTestCase):
+    def counts(self, facets: dict[str, Any], name: str) -> dict[str, int]:
+        return {item["id"]: item["count"] for item in facets[name]}
+
+    def test_counts_every_option(self) -> None:
+        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
+        facets = self.get("/api/books/facets")
+        self.assertEqual(self.counts(facets, "areas"), {"technology": 5, "health-sciences": 1})
+        self.assertEqual(self.counts(facets, "types")["thesis"], 1)
+        self.assertEqual(self.counts(facets, "courses")["nutrition"], 1)
+        self.assertEqual(facets["available"], 1)
+        self.assertEqual(facets["areas"][0]["id"], "technology")  # do maior ao menor
+
+    def test_a_filter_does_not_narrow_its_own_counts(self) -> None:
+        facets = self.get("/api/books/facets?area=technology")
+        # as outras áreas continuam com o número que trariam
+        self.assertEqual(self.counts(facets, "areas"), {"technology": 5, "health-sciences": 1})
+        # e os demais filtros contam só os livros de Tecnologia
+        self.assertNotIn("nutrition", self.counts(facets, "courses"))
+        self.assertNotIn("thesis", self.counts(facets, "types"))
+
+    def test_text_and_languages(self) -> None:
+        Book.objects.filter(id=PYTHON_BOOK).update(languages=["Inglês"])
+        self.assertEqual(self.counts(self.get("/api/books/facets?q=python"), "languages").get("Inglês"), 1)
+        # o filtro de idioma também vale dentro das contagens dos outros filtros
+        facets = self.get("/api/books/facets?language=Ingl%C3%AAs")
+        self.assertEqual(self.counts(facets, "areas"), {"technology": 1})
+        self.assertEqual(sum(self.counts(facets, "courses").values()), 2)
+        self.assertEqual(self.get("/api/books/facets?q=zzzzqwerty")["areas"], [])
+
 
 class BookDetailTests(ApiTestCase):
     def test_detail_refreshes_stale_copies(self) -> None:

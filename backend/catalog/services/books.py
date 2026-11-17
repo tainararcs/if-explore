@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 from django.db import connection
-from django.db.models import Case, Exists, F, IntegerField, OuterRef, Prefetch, QuerySet, Value, When
+from django.db.models import Case, Count, Exists, F, IntegerField, OuterRef, Prefetch, QuerySet, Value, When
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Upper
 
 from catalog.models import Book, BookAuthor, CopyStatus
 from catalog.services import search_index
 
-SortOrder = Literal["relevance", "popular", "recent", "title"]
+SortOrder = Literal["relevance", "popular", "recent", "title", "year"]
 
 # Títulos com exemplar, mas nenhum livre para empréstimo (filtro available=false).
 UNAVAILABLE_STATUSES = (CopyStatus.IN_LIBRARY_USE, CopyStatus.ON_LOAN, CopyStatus.UNAVAILABLE)
@@ -25,6 +26,9 @@ DOCUMENT_TYPES = {
     "thesis": "Teses, dissertações, monografias, tcc",
     "periodical": "Periódico",
 }
+# Equipamentos que a biblioteca empresta pelo mesmo sistema: não são acervo e
+# nunca aparecem na listagem.
+EQUIPMENT_TYPES = ("Chave", "Computador Pessoal", "Fone de ouvido")
 
 
 @dataclass(frozen=True)
@@ -39,6 +43,25 @@ class BookFilters:
     types: tuple[str, ...] = ()
     #: True: só com exemplar disponível; False: só sem; None: todos.
     available: bool | None = None
+    #: Idiomas como o catálogo grava ("Português", "Inglês").
+    languages: tuple[str, ...] = ()
+    #: Ano de publicação, inclusive; livros sem ano ficam de fora quando há limite.
+    year_from: int | None = None
+    year_to: int | None = None
+
+
+@dataclass(frozen=True)
+class Facets:
+    """Quantos livros cada opção de filtro traria, mantidos os demais filtros."""
+
+    areas: dict[str, int]
+    courses: dict[str, int]
+    genres: dict[str, int]
+    #: Chaves de DOCUMENT_TYPES.
+    types: dict[str, int]
+    languages: dict[str, int]
+    #: Com exemplar disponível para empréstimo.
+    available: int
 
 
 @dataclass(frozen=True)
@@ -60,8 +83,8 @@ def load_in_order(ids: Sequence[str]) -> list[Book]:
 
 
 def filtered(filters: BookFilters) -> QuerySet[Book]:
-    """Livros ativos que atendem aos filtros."""
-    queryset = Book.objects.filter(is_active=True)
+    """Livros ativos que atendem aos filtros, sem os equipamentos."""
+    queryset = Book.objects.filter(is_active=True).exclude(document_type__in=EQUIPMENT_TYPES)
     if filters.area_ids:
         queryset = queryset.filter(area_id__in=filters.area_ids)
     if filters.course_ids:
@@ -76,7 +99,66 @@ def filtered(filters: BookFilters) -> QuerySet[Book]:
         queryset = queryset.filter(copy_status=CopyStatus.AVAILABLE)
     elif filters.available is False:
         queryset = queryset.filter(copy_status__in=UNAVAILABLE_STATUSES)
+    if filters.languages:
+        # Subconsulta própria: não depende do apelido da tabela quando esta consulta
+        # vira subconsulta (como nas contagens dos filtros).
+        placeholders = ", ".join(["%s"] * len(filters.languages))
+        queryset = queryset.filter(id__in=RawSQL(
+            f"SELECT b.id FROM {Book._meta.db_table} b, json_each(b.languages) j WHERE j.value IN ({placeholders})",
+            filters.languages))
+    if filters.year_from is not None:
+        queryset = queryset.filter(year__gte=filters.year_from)
+    if filters.year_to is not None:
+        queryset = queryset.filter(year__lte=filters.year_to)
     return queryset
+
+
+def _matching(text: str, filters: BookFilters) -> QuerySet[Book]:
+    """Livros filtrados que também casam com o texto, quando há texto."""
+    queryset = filtered(filters)
+    match = search_index.to_match_query(text) if text.strip() else None
+    if match is None:
+        return queryset
+    fts = search_index.FTS_TABLE
+    return queryset.filter(id__in=RawSQL(f"SELECT book_id FROM {fts} WHERE {fts} MATCH %s", [match]))
+
+
+def _count_by(queryset: QuerySet[Book], field: str) -> dict[str, int]:
+    rows = queryset.order_by().values_list(field).annotate(count=Count("id"))
+    return {str(key): count for key, count in rows if key not in (None, "")}
+
+
+def _count_related(through: type, field: str, books: QuerySet[Book]) -> dict[str, int]:
+    rows = (through.objects.filter(book__in=books.values("id")).order_by()
+            .values_list(field).annotate(count=Count("book_id")))
+    return {str(key): count for key, count in rows}
+
+
+def facets(text: str, filters: BookFilters) -> Facets:
+    """Contagens dos filtros da listagem para o texto e os filtros atuais.
+
+    Cada filtro é contado sem ele mesmo (e com todos os outros): como as opções de
+    um filtro se somam, o número mostra quantos livros a opção traria. ~7 consultas.
+    """
+    def without(**changes: object) -> QuerySet[Book]:
+        return _matching(text, replace(filters, **changes))
+
+    keys = {document_type: key for key, document_type in DOCUMENT_TYPES.items()}
+    types = {keys[name]: count for name, count in _count_by(without(types=()), "document_type").items()
+             if name in keys}
+    subquery, subquery_params = without(languages=()).values("id").query.sql_with_params()
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT j.value, count(*) FROM {Book._meta.db_table} b, json_each(b.languages) j "
+                       f"WHERE b.id IN ({subquery}) GROUP BY j.value", subquery_params)
+        languages = {str(name): count for name, count in cursor.fetchall()}
+    return Facets(
+        areas=_count_by(without(area_ids=()), "area_id"),
+        courses=_count_related(Book.courses.through, "course_id", without(course_ids=())),
+        genres=_count_related(Book.genres.through, "literarygenre_id", without(genre_ids=())),
+        types=types,
+        languages=languages,
+        available=without(available=None).filter(copy_status=CopyStatus.AVAILABLE).count(),
+    )
 
 
 def search(text: str, filters: BookFilters, *, sort: SortOrder | None = None,
@@ -110,6 +192,7 @@ def _list_page(queryset: QuerySet[Book], sort: SortOrder, prefer_area_ids: Seque
         "popular": [F("copies_total").desc(nulls_last=True), Upper("title")],
         "recent": [F("cataloged_at").desc(nulls_last=True), Upper("title")],
         "title": [Upper("title"), "id"],
+        "year": [F("year").desc(nulls_last=True), Upper("title")],
     }[sort]
     if prefer_area_ids:
         queryset = queryset.annotate(preferred=Case(When(area_id__in=prefer_area_ids, then=Value(1)),
@@ -133,6 +216,7 @@ def _search_page(match: str, queryset: QuerySet[Book], sort: SortOrder, prefer_a
         "popular": "b.copies_total IS NULL, b.copies_total DESC, upper(b.title)",
         "recent": "b.cataloged_at IS NULL, b.cataloged_at DESC, upper(b.title)",
         "title": "upper(b.title)",
+        "year": "b.year IS NULL, b.year DESC, upper(b.title)",
     }[sort]
     order_params: list[object] = []
     if prefer_area_ids:
