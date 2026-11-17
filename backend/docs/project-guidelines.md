@@ -106,8 +106,9 @@ collection.
 - Popularity is the number of copies (`copies_total`), known for every title;
   loans are only known for titles someone opened.
 - The book page refreshes its copies live from the PHL (1 request) when the last
-  live check is older than `COPIES_LIVE_MAX_AGE_MINUTES`; a PHL failure keeps the
-  stored data instead of failing the page.
+  live check is older than `COPIES_LIVE_MAX_AGE_MINUTES`; a PHL failure, or the
+  database locked by a running sync, keeps the stored data instead of failing
+  the page.
 - Every sync run is recorded in `SyncRun`, and two runs of the same kind never
   overlap.
 - Count the PHL requests of any new sync step. Steps that grow with the size of
@@ -122,7 +123,9 @@ collection.
 - Ranking (search relevance, related books, recommendation shelves, onboarding
   candidates) happens in the services, never in the frontend.
 - Only recommendable document types (books, e-books, audiobooks, theses) enter
-  recommendations and related shelves.
+  recommendations, related shelves, onboarding candidates, and AI discovery, and
+  only when they can be read: titles whose copies are all unavailable, and titles
+  without copies or links, are left out (`recommendable()`).
 - Raw SQL is acceptable where the ORM cannot express the query well (FTS5,
   affinity scoring); always pass values as parameters and take table names from
   `Model._meta.db_table`.

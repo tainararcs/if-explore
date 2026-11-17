@@ -6,10 +6,12 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+from django.db import OperationalError
 from django.test import TestCase
 from django.utils import timezone
 
 from catalog.models import Book, CopyStatus
+from catalog.services import recommendations
 from catalog.services.sync import apply_snapshot
 from phl_client import LibraryConnectionError
 
@@ -144,6 +146,14 @@ class BookDetailTests(ApiTestCase):
         self.assertEqual(book["links"][0]["label"], "TCC")
         self.assertEqual(book["tccCourse"], "Nutrição")
 
+    def test_locked_database_keeps_stored_data(self) -> None:
+        # Durante a sincronização o SQLite só aceita um escritor: a página não pode quebrar.
+        locked = OperationalError("database is locked")
+        with patch("catalog.services.availability.refresh_copies", side_effect=locked), \
+                self.assertLogs("catalog.services.availability", "WARNING"):
+            book = self.get("/api/books/%s" % PYTHON_BOOK)
+        self.assertEqual(book["id"], PYTHON_BOOK)
+
     def test_missing_and_inactive_books(self) -> None:
         self.get("/api/books/naoexiste", status=404)
         Book.objects.filter(id=PYTHON_BOOK).update(is_active=False)
@@ -193,6 +203,22 @@ class RecommendationTests(ApiTestCase):
             self.assertNotIn(PYTHON_BOOK, ids)
             self.assertNotIn(SERIAL, ids)
         self.assertEqual(result["areas"], [{"id": "technology", "name": "Tecnologia e Computação"}])
+
+    def test_unreadable_titles_are_left_out(self) -> None:
+        profile = {"areaIds": ["technology"], "seedBookIds": [PYTHON_BOOK]}
+        shelf_ids = [book["id"] for book in self.post("/api/recommendations", profile)["shelves"][0]["books"]]
+        related_ids = [book["id"] for book in self.get("/api/books/%s/related" % PYTHON_BOOK)["related"]]
+        unavailable, without_copies = shelf_ids[0], related_ids[0]
+        Book.objects.filter(id=unavailable).update(copy_status=CopyStatus.UNAVAILABLE)
+        Book.objects.filter(id=without_copies).update(copy_status=CopyStatus.NO_COPIES, links=[])
+        result = self.post("/api/recommendations", profile)
+        ids = {book["id"] for shelf in result["shelves"] for book in shelf["books"]}
+        ids |= {book["id"] for book in self.get("/api/books/%s/related" % PYTHON_BOOK)["related"]}
+        self.assertFalse(ids & {unavailable, without_copies})
+
+    def test_titles_without_copies_stay_when_they_have_a_link(self) -> None:
+        Book.objects.filter(id=TCC).update(copy_status=CopyStatus.NO_COPIES)
+        self.assertTrue(recommendations.recommendable().filter(id=TCC).exists())
 
     def test_unknown_ids_are_ignored(self) -> None:
         result = self.post("/api/recommendations", {"areaIds": ["nope"], "seedBookIds": ["nope"]})

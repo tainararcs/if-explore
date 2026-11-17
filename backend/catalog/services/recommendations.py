@@ -1,8 +1,10 @@
 """Relacionados, prateleiras da home e candidatos do onboarding.
 
 Calculados no banco sobre o acervo inteiro; o frontend só exibe o resultado. Só
-entram tipos que fazem sentido recomendar (livros, e-books, audiolivros e TCCs).
-Em empates, vêm primeiro os livros com capa e os com mais exemplares.
+entram tipos que fazem sentido recomendar (livros, e-books, audiolivros e TCCs) e
+que dá para ler: ficam de fora os títulos com todos os exemplares indisponíveis e
+os sem exemplar nem link. Em empates, vêm primeiro os livros com capa e os com
+mais exemplares.
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 
-from catalog.models import Book, BookAuthor, Course, KnowledgeArea, LiteraryGenre
+from catalog.models import Book, BookAuthor, CopyStatus, Course, KnowledgeArea, LiteraryGenre
 from catalog.services.books import DOCUMENT_TYPES
 
 RECOMMENDABLE_TYPES = tuple(DOCUMENT_TYPES[key] for key in ("book", "ebook", "audiobook", "thesis"))
@@ -66,8 +68,16 @@ class Related:
 
 
 def recommendable() -> QuerySet[Book]:
-    """Livros ativos dos tipos que entram nas recomendações."""
-    return Book.objects.filter(is_active=True, document_type__in=RECOMMENDABLE_TYPES)
+    """Livros ativos dos tipos que entram nas recomendações e que dá para ler.
+
+    Saem os títulos com todos os exemplares indisponíveis (no PHL, extraviados ou
+    fora de circulação) e os sem exemplar que também não têm link, como e-books e
+    TCCs em PDF têm. Emprestados e de consulta local continuam: voltam ou podem ser
+    lidos na biblioteca.
+    """
+    return (Book.objects.filter(is_active=True, document_type__in=RECOMMENDABLE_TYPES)
+            .exclude(copy_status=CopyStatus.UNAVAILABLE)
+            .exclude(copy_status=CopyStatus.NO_COPIES, links=[]))
 
 
 def _tie_breakers() -> list[object]:
@@ -107,8 +117,10 @@ def affinity_ranking(book: Book, *, min_score: int = 1, limit: int = MAX_AFFINIT
                    + CASE WHEN b.area_id IS NOT NULL AND b.area_id = %s THEN 1 ELSE 0 END AS score
               FROM scored s JOIN {book_table} b ON b.id = s.book_id
              WHERE b.is_active AND b.document_type IN ({types})
+               AND b.copy_status <> %s AND NOT (b.copy_status = %s AND b.links = '[]')
              ORDER BY score DESC, b.cover_url = '', b.copies_total IS NULL, b.copies_total DESC, b.id
-        """, [book.id, book.id, book.id, book.id, book.area_id, *RECOMMENDABLE_TYPES])
+        """, [book.id, book.id, book.id, book.id, book.area_id, *RECOMMENDABLE_TYPES,
+              CopyStatus.UNAVAILABLE, CopyStatus.NO_COPIES])
         ranking = [(row[0], int(row[1])) for row in cursor.fetchall()]
     return [(book_id, score) for book_id, score in ranking if score > min_score][:limit]
 
