@@ -10,6 +10,7 @@ mais exemplares.
 from __future__ import annotations
 
 import math
+import random
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
@@ -36,8 +37,13 @@ from catalog.services.books import DOCUMENT_TYPES
 RECOMMENDABLE_TYPES = tuple(DOCUMENT_TYPES[key] for key in ("book", "ebook", "audiobook", "thesis"))
 SHELF_SIZE = 12
 MIN_SHELF_SIZE = 3
-MAX_SEED_SHELVES = 3
+# Títulos escolhidos que alimentam a prateleira de parecidos.
+MAX_SIMILAR_SEEDS = 3
 REQUIRED_SEED_BOOKS = 3
+# O sorteio da home escolhe a ordem entre os melhores candidatos de cada prateleira.
+SHUFFLE_WINDOW = 40
+# Candidatos lidos por prateleira, com folga para os que já estão mais acima na página.
+SHELF_CANDIDATES = 160
 # Candidatos avaliados por afinidade antes de cortar nas prateleiras.
 MAX_AFFINITY_CANDIDATES = 200
 
@@ -173,30 +179,78 @@ def profile_ranked_ids(profile: Profile, limit: int) -> list[str]:
     return list(scored.order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:limit])
 
 
-def home_shelves(profile: Profile) -> list[Shelf]:
-    """Prateleiras da home: "para você", "porque você escolheu" (até 3 títulos),
-    "mais da área" e "por prazer" (gêneros). Só ficam as com pelo menos 3 livros, e
-    os títulos escolhidos não aparecem."""
+def _ranked(queryset: QuerySet[Book]) -> list[tuple[str, float]]:
+    """(id, pontuação) dos melhores candidatos de `queryset`, já anotado com
+    `score`, do mais ao menos relevante."""
+    rows = queryset.order_by("-score", *_tie_breakers()).values_list("id", "score")[:SHELF_CANDIDATES]
+    return [(book_id, float(score)) for book_id, score in rows]
+
+
+def _arrange(ranked: Sequence[tuple[str, float]], shown: set[str], rng: random.Random | None) -> list[str]:
+    """Ids de `ranked` que ainda não estão na página, na ordem da prateleira.
+
+    Sem `rng`, a ordem de relevância. Com ele, sorteia a ordem dos
+    `SHUFFLE_WINDOW` melhores com peso pela pontuação (amostragem ponderada de
+    Efraimidis–Spirakis): os mais relevantes tendem a vir antes, mas cada semente
+    mostra outra seleção.
+    """
+    fresh = [(book_id, weight) for book_id, weight in ranked if book_id not in shown]
+    if rng is None:
+        return [book_id for book_id, _ in fresh]
+    window = fresh[:SHUFFLE_WINDOW]
+    # +1: nas prateleiras de área e de gênero há livros com pontuação 0
+    window.sort(key=lambda item: rng.random() ** (1 / (item[1] + 1)), reverse=True)
+    return [book_id for book_id, _ in window + fresh[SHUFFLE_WINDOW:]]
+
+
+def _interleave(lists: Sequence[Sequence[str]]) -> list[str]:
+    """Um de cada lista por vez, sem repetir: nenhuma lista domina a prateleira."""
+    return list(dict.fromkeys(book_id for round_ in zip_longest(*lists) for book_id in round_ if book_id))
+
+
+def home_shelves(profile: Profile, shuffle_seed: int | None = None) -> list[Shelf]:
+    """Prateleiras da home, nesta ordem: "para você"; "parecidos com os que você
+    escolheu" (mescla dos até 3 títulos escolhidos); "dos seus gêneros" (mescla,
+    só com 2 ou mais gêneros); "mais de <área>"; e uma por gênero.
+
+    Cada livro aparece uma vez só na página, na primeira prateleira que o mostra,
+    e os títulos escolhidos não aparecem. Só ficam as prateleiras com pelo menos 3
+    livros.
+
+    Args:
+        profile: Preferências do visitante.
+        shuffle_seed: Semente do sorteio entre os melhores candidatos de cada
+            prateleira; a mesma semente dá as mesmas prateleiras. None mantém a
+            ordem de relevância.
+    """
+    rng = None if shuffle_seed is None else random.Random(shuffle_seed)
     seeds = list(Book.objects.filter(is_active=True, id__in=profile.seed_book_ids))
     seeds.sort(key=lambda book: profile.seed_book_ids.index(book.id))
-    seed_subject_ids = _seed_subject_ids([book.id for book in seeds])
     pool = recommendable().exclude(id__in=profile.seed_book_ids)
-    scored = _profile_score(pool, profile, seed_subject_ids)
+    scored = _profile_score(pool, profile, _seed_subject_ids([book.id for book in seeds]))
+    genres = list(LiteraryGenre.objects.filter(slug__in=profile.genre_ids))
+    by_genre = {genre.slug: _ranked(scored.filter(genres=genre)) for genre in genres}
+    shown = set(profile.seed_book_ids)
+    shelves: list[Shelf] = []
 
-    def top(queryset: QuerySet[Book], *ordering: object) -> list[str]:
-        return list(queryset.order_by(*ordering, *_tie_breakers()).values_list("id", flat=True)[:SHELF_SIZE])
+    def add(shelf_id: str, kind: str, subject: str | None, ids: Sequence[str]) -> None:
+        picked = list(ids[:SHELF_SIZE])
+        if len(picked) >= MIN_SHELF_SIZE:
+            shelves.append(Shelf(shelf_id, kind, subject, picked))
+            shown.update(picked)
 
-    shelves = [Shelf("for-you", "forYou", None, top(scored.filter(score__gt=0), "-score"))]
-    excluded = set(profile.seed_book_ids)
-    for seed in seeds[:MAX_SEED_SHELVES]:
-        ids = [book_id for book_id, _ in affinity_ranking(seed, min_score=1) if book_id not in excluded]
-        shelves.append(Shelf("because-%s" % seed.id, "becauseYouChose", seed.title, ids[:SHELF_SIZE]))
+    add("for-you", "forYou", None, _arrange(_ranked(scored.filter(score__gt=0)), shown, rng))
+    similar = [_arrange([(book_id, float(points)) for book_id, points in affinity_ranking(seed, min_score=1)],
+                        shown, rng) for seed in seeds[:MAX_SIMILAR_SEEDS]]
+    add("from-your-books", "fromYourBooks", None, _interleave(similar))
+    if len(genres) > 1:
+        add("your-genres", "yourGenres", None,
+            _interleave([_arrange(by_genre[genre.slug], shown, rng) for genre in genres]))
     for area in KnowledgeArea.objects.filter(slug__in=profile.area_ids):
-        shelves.append(Shelf("area-%s" % area.slug, "moreFromArea", area.name,
-                             top(scored.filter(area=area), "-score")))
-    for genre in LiteraryGenre.objects.filter(slug__in=profile.genre_ids):
-        shelves.append(Shelf("genre-%s" % genre.slug, "forPleasure", genre.name, top(pool.filter(genres=genre))))
-    return [shelf for shelf in shelves if len(shelf.book_ids) >= MIN_SHELF_SIZE]
+        add("area-%s" % area.slug, "moreFromArea", area.name, _arrange(_ranked(scored.filter(area=area)), shown, rng))
+    for genre in genres:
+        add("genre-%s" % genre.slug, "forPleasure", genre.name, _arrange(by_genre[genre.slug], shown, rng))
+    return shelves
 
 
 # ---- onboarding

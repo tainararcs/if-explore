@@ -199,10 +199,12 @@ export const ptBR = {
     emptyFilter: 'Nenhuma recomendação para esta área por enquanto.',
     shelves: {
       forYou: 'Escolhidos para você',
-      becauseYouChose: 'Porque você escolheu {subject}',
+      fromYourBooks: 'Parecidos com os que você escolheu',
+      yourGenres: 'Dos seus gêneros',
       moreFromArea: 'Mais de {subject}',
-      forPleasure: 'Para ler por prazer: {subject}',
+      forPleasure: '{subject}',
     },
+    shuffle: 'Ver outras sugestões',
     search: {
       label: 'Buscar no acervo',
       placeholder: 'Título, autor ou assunto',

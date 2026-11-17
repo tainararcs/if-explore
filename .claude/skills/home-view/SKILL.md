@@ -30,9 +30,11 @@ Search bar (full width at base, max 640px at md+)
 Area filter chips (horizontal scroll at base): Todas · <selected areas>
 ── default mode ──
 Shelf: "Escolhidos para você"
-Shelf: "Porque você escolheu <título>"   (one per seed book, max 3)
-Shelf: "Mais de <área>"                  (one per selected area)
-Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
+Shelf: "Parecidos com os que você escolheu"  (the seed books' similar titles, interleaved)
+Shelf: "Dos seus gêneros"                    (chosen genres interleaved, only with 2+ genres)
+Shelf: "Mais de <área>"                      (one per selected area)
+Shelf: "<gênero>"                            (one per chosen genre)
+[Ver outras sugestões]                       (new shuffle seed, back to the top)
 ── search mode (query not empty) ──
 "<n> resultados para “<query>”" + results grid
 ```
@@ -87,8 +89,13 @@ Shelf: "Para ler por prazer: <gênero>"   (only if genres were refined)
 - `src/features/home/services/recommendation-service.ts` posts the saved
   preferences to `POST /api/recommendations` and validates the shelves it gets
   back. Ranking happens in the API over the whole collection (course > area >
-  genre > shared subjects with the seed books; seed books never come back), and
-  only shelves with at least 3 books are returned.
+  genre > shared subjects with the seed books; seed books never come back), each
+  book appears in one shelf only (the first that shows it), and only shelves with
+  at least 3 books are returned.
+- The request carries a `shuffleSeed` kept in `sessionStorage`
+  (`shuffle-seed-storage.ts`): each shelf draws from its best ~40 candidates,
+  weighted by score. The same seed gives the same shelves, so coming back from a
+  book page keeps them; a new visit or "Ver outras sugestões" draws a new seed.
 - A feature composable (`useHomeRecommendations.ts`) exposes shelves and
   loading/error state; search uses `catalog-service.ts`.
 - States: skeleton shelves while loading, error with retry (`role="alert"`).
