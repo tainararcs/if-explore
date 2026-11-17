@@ -192,17 +192,69 @@ class RecommendationTests(ApiTestCase):
     def test_home_shelves(self) -> None:
         result = self.post("/api/recommendations", {"areaIds": ["technology"], "courseIds": ["internet-systems"],
                                                     "seedBookIds": [PYTHON_BOOK], "genreIds": ["romance"]})
-        kinds = {shelf["id"]: shelf for shelf in result["shelves"]}
-        # "porque você escolheu" fica de fora: só 2 livros compartilham assuntos com o
-        # escolhido, e prateleiras com menos de 3 são descartadas; romance não tem livros.
-        self.assertEqual(list(kinds), ["for-you", "area-technology"])
-        self.assertEqual(kinds["area-technology"]["subject"], "Tecnologia e Computação")
+        # O acervo de teste cabe todo em "para você"; as demais repetiriam os mesmos
+        # livros e ficam de fora (cada livro aparece uma vez só), e romance não tem livros.
+        self.assertEqual([shelf["id"] for shelf in result["shelves"]], ["for-you"])
         for shelf in result["shelves"]:
             ids = [book["id"] for book in shelf["books"]]
             self.assertGreaterEqual(len(ids), 3)
             self.assertNotIn(PYTHON_BOOK, ids)
             self.assertNotIn(SERIAL, ids)
         self.assertEqual(result["areas"], [{"id": "technology", "name": "Tecnologia e Computação"}])
+
+    def small_shelves(self, size: int = 2) -> None:
+        """Prateleiras pequenas, para o acervo de teste render várias."""
+        for name, value in (("SHELF_SIZE", size), ("MIN_SHELF_SIZE", 1)):
+            patcher = patch.object(recommendations, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def shelf_books(self, body: dict[str, object]) -> dict[str, list[str]]:
+        result = self.post("/api/recommendations", body)
+        return {shelf["id"]: [book["id"] for book in shelf["books"]] for shelf in result["shelves"]}
+
+    def test_each_book_appears_once(self) -> None:
+        self.small_shelves()
+        shelves = self.shelf_books({"areaIds": ["technology", "health-sciences"], "courseIds": ["internet-systems"],
+                                    "seedBookIds": [PYTHON_BOOK]})
+        self.assertGreater(len(shelves), 1)
+        ids = [book_id for books in shelves.values() for book_id in books]
+        self.assertEqual(len(ids), len(set(ids)))
+
+    def test_shuffle_seed(self) -> None:
+        profile: dict[str, object] = {"areaIds": ["technology"], "seedBookIds": [PYTHON_BOOK]}
+        relevance = self.shelf_books(profile)["for-you"]
+        orders = set()
+        for seed in range(10):
+            shuffled = self.shelf_books({**profile, "shuffleSeed": seed})["for-you"]
+            self.assertEqual(shuffled, self.shelf_books({**profile, "shuffleSeed": seed})["for-you"])
+            self.assertEqual(set(shuffled), set(relevance))  # os candidatos cabem todos no sorteio
+            orders.add(tuple(shuffled))
+        self.assertGreater(len(orders), 1)
+        self.post("/api/recommendations", {**profile, "shuffleSeed": -1}, status=422)
+
+    def test_books_like_the_chosen_ones_follow_for_you(self) -> None:
+        # só 2 livros compartilham assuntos com o escolhido: um vai para "para você"
+        self.small_shelves(size=1)
+        shelves = self.shelf_books({"seedBookIds": [PYTHON_BOOK]})
+        self.assertEqual(list(shelves), ["for-you", "from-your-books"])
+
+    def test_chosen_genres_are_merged_above_each_genre(self) -> None:
+        self.small_shelves()
+        candidates = recommendations.recommendable().values_list("id", flat=True)
+        for book_id, genre in zip(candidates, ["romance", "romance", "poetry", "poetry", "romance", "poetry"]):
+            Book.objects.get(id=book_id).genres.add(genre)
+        shelves = self.shelf_books({"genreIds": ["romance", "poetry"]})
+        self.assertEqual(list(shelves), ["for-you", "your-genres", "genre-romance", "genre-poetry"])
+        self.assertNotIn("your-genres", self.shelf_books({"genreIds": ["romance"]}))
+
+    def test_genre_shelf_is_titled_by_the_genre(self) -> None:
+        self.small_shelves()
+        for book_id in recommendations.recommendable().values_list("id", flat=True):
+            Book.objects.get(id=book_id).genres.add("poetry")
+        result = self.post("/api/recommendations", {"genreIds": ["poetry"]})
+        genre = next(shelf for shelf in result["shelves"] if shelf["id"] == "genre-poetry")
+        self.assertEqual((genre["kind"], genre["subject"]), ("forPleasure", "Poesia"))
 
     def test_unreadable_titles_are_left_out(self) -> None:
         profile = {"areaIds": ["technology"], "seedBookIds": [PYTHON_BOOK]}

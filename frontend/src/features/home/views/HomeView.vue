@@ -122,6 +122,15 @@
         >
           {{ t('home.emptyFilter') }}
         </p>
+        <div>
+          <button
+            type="button"
+            class="button button--secondary"
+            @click="showOtherSuggestions"
+          >
+            {{ t('home.shuffle') }}
+          </button>
+        </div>
       </div>
     </main>
 
@@ -144,7 +153,7 @@ import type { Shelf } from '../models/recommendation'
 
 const { t } = useI18n()
 
-const { status: shelvesStatus, shelves, areas, reload } = useHomeRecommendations()
+const { status: shelvesStatus, shelves, areas, reload, shuffle } = useHomeRecommendations()
 const areaIds = computed(() => areas.value.map((area) => area.id))
 const activeAreaId = ref<string | null>(null)
 const {
@@ -188,6 +197,12 @@ const visibleShelves = computed(() =>
 
 function shelfTitle(shelf: Shelf): string {
   return t(`home.shelves.${shelf.kind}`, { subject: shelf.subject ?? '' })
+}
+
+// A lista nova começa no topo; sem isso, o visitante ficaria no fim da página.
+function showOtherSuggestions(): void {
+  window.scrollTo({ top: 0 })
+  void shuffle()
 }
 
 function retry(): void {

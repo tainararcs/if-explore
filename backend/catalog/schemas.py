@@ -16,7 +16,7 @@ from pydantic.alias_generators import to_camel
 from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
 from catalog.services.discovery import MAX_EXCLUDED, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, Source, normalize_query
 
-ShelfKind = Literal["forYou", "becauseYouChose", "moreFromArea", "forPleasure"]
+ShelfKind = Literal["forYou", "fromYourBooks", "yourGenres", "moreFromArea", "forPleasure"]
 #: Id de livro vindo do cliente: o mesmo tamanho máximo de `Book.id`.
 BookIdIn = Annotated[str, Field(max_length=Book._meta.get_field("id").max_length)]
 
@@ -195,8 +195,16 @@ class ProfileIn(CamelSchema):
     genre_ids: list[str] = Field(default_factory=list, max_length=20)
 
 
+class RecommendationsIn(ProfileIn):
+    """Preferências e a semente do sorteio das prateleiras. O frontend mantém a
+    mesma semente durante a sessão, para a home não mudar a cada volta; sem ela,
+    as prateleiras seguem a ordem de relevância."""
+
+    shuffle_seed: int | None = Field(default=None, ge=0, le=2**31 - 1)
+
+
 class ShelfOut(CamelSchema):
-    """Prateleira; `subject` completa o título (livro, área ou gênero) quando o tipo exige."""
+    """Prateleira; `subject` completa o título (área ou gênero) quando o tipo exige."""
 
     id: str
     kind: ShelfKind

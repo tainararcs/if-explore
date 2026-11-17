@@ -115,7 +115,7 @@ Respostas em camelCase, ausentes como `null`, listas paginadas como
 | `GET /api/books/{id}/related` | Mesmo autor e livros por afinidade |
 | `GET /api/books/{id}/catalog` | Redireciona para a ficha no catálogo oficial |
 | `GET /api/books/{id}/explanation` | Explicação simplificada gerada por IA |
-| `POST /api/recommendations` | Prateleiras para o perfil do visitante |
+| `POST /api/recommendations` | Prateleiras para o perfil do visitante; `shuffleSeed` sorteia entre os melhores de cada uma |
 | `GET /api/recommendations/candidates` | Títulos para o onboarding |
 | `POST /api/discovery` | Até 6 títulos para um pedido em texto livre |
 | `GET /api/status` | Tamanho do acervo e últimas sincronizações |

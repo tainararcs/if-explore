@@ -28,6 +28,7 @@ from catalog.schemas import (
     ExplanationOut,
     GenreOut,
     ProfileIn,
+    RecommendationsIn,
     RecommendationsOut,
     RelatedOut,
     SameAuthorOut,
@@ -162,12 +163,14 @@ def open_in_catalog(request: HttpRequest, book_id: str) -> HttpResponseRedirect:
 
 # ---- recomendações
 @router.post("/recommendations", response=RecommendationsOut, by_alias=True, tags=["recomendações"])
-def get_recommendations(request: HttpRequest, profile: ProfileIn) -> RecommendationsOut:
+def get_recommendations(request: HttpRequest, profile: RecommendationsIn) -> RecommendationsOut:
     """Prateleiras da home para as preferências do visitante.
 
-    É POST porque o perfil vai no corpo; não grava nada.
+    Com `shuffleSeed`, cada prateleira sorteia entre os seus melhores candidatos:
+    a mesma semente dá as mesmas prateleiras. É POST porque o perfil vai no corpo;
+    não grava nada.
     """
-    shelves = recommendations.home_shelves(_profile(profile))
+    shelves = recommendations.home_shelves(_profile(profile), profile.shuffle_seed)
     loaded = {book.id: book for book in books.load_in_order(
         list(dict.fromkeys(book_id for shelf in shelves for book_id in shelf.book_ids)))}
     return RecommendationsOut(
