@@ -21,7 +21,7 @@ list with filters; book cards open the book page.
 AppHeader (sticky): [BrandMark] IF Explore   [Para você] [Catálogo completo]   [☰ menu]
 Eyebrow + serif h1 "Catálogo completo" + short lead
 Search bar (max 640px)
-Toolbar: [Filtros (n)] · "<n> livros" · Ordenar por [select]
+Toolbar: "<n> livros" · Ordenar por [select] · [Filtros (n)]   (phone: count left, button right, sort on the next row)
 Active filters: removable pills + "Limpar filtros"
 Results grid (full width); filters open in a full-height side <dialog>
 ```

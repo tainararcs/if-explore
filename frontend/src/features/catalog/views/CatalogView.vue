@@ -24,7 +24,36 @@
         @clear="input = ''"
       />
 
+      <!--
+        Celular: contagem à esquerda e "Filtros" à direita; a ordenação desce para a
+        linha de baixo, de largura total. A partir de 600px, tudo numa linha.
+      -->
       <div class="mt-6 flex flex-wrap items-center gap-3">
+        <p class="m-0 me-auto text-small text-text-muted">
+          {{ status === 'ready' ? countLabel : '' }}
+        </p>
+        <label class="order-last flex w-full items-center gap-2 text-small sm:order-none sm:w-auto">
+          {{ t('catalog.sort.label') }}
+          <span class="relative flex min-w-0 flex-1 items-center sm:flex-initial">
+            <select
+              class="sort-select w-full"
+              :value="currentSort"
+              @change="onSortChange"
+            >
+              <option
+                v-for="order in sortOptions"
+                :key="order"
+                :value="order"
+              >
+                {{ t(`catalog.sort.${order}`) }}
+              </option>
+            </select>
+            <IconChevronDown
+              class="pointer-events-none absolute right-3 size-5 text-text-muted"
+              aria-hidden="true"
+            />
+          </span>
+        </label>
         <button
           type="button"
           class="button button--secondary button--small"
@@ -37,28 +66,6 @@
           />
           {{ activeFilterCount > 0 ? t('catalog.filters.openWithCount', { n: activeFilterCount }) : t('catalog.filters.open') }}
         </button>
-        <p
-          v-if="status === 'ready'"
-          class="m-0 text-small text-text-muted"
-        >
-          {{ countLabel }}
-        </p>
-        <label class="ms-auto flex items-center gap-2 text-small">
-          {{ t('catalog.sort.label') }}
-          <select
-            class="sort-select"
-            :value="currentSort"
-            @change="onSortChange"
-          >
-            <option
-              v-for="order in sortOptions"
-              :key="order"
-              :value="order"
-            >
-              {{ t(`catalog.sort.${order}`) }}
-            </option>
-          </select>
-        </label>
       </div>
 
       <ActiveFilters
@@ -181,6 +188,7 @@ import { useI18n } from 'vue-i18n'
 import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
 import IconAdjustments from '../../../components/icons/IconAdjustments.vue'
+import IconChevronDown from '../../../components/icons/IconChevronDown.vue'
 import IconClose from '../../../components/icons/IconClose.vue'
 import type { Course, KnowledgeArea, LiteraryGenre } from '../../../models/taxonomy'
 import {
@@ -284,14 +292,18 @@ function closeOnBackdrop(event: MouseEvent): void {
 </script>
 
 <style scoped>
+/* A seta nativa do select não aceita espaçamento: ela sai e o chevron do projeto
+   fica sobre o espaço reservado à direita. */
 .sort-select {
+  appearance: none;
   min-height: 40px;
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
-  padding: 0 var(--space-3);
+  padding: 0 calc(var(--space-3) + 20px + var(--space-2)) 0 var(--space-4);
   color: var(--color-text);
   font: inherit;
+  cursor: pointer;
 }
 
 .sort-select:hover {
