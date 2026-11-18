@@ -76,7 +76,8 @@ Shelf: "Parecidos com os que você escolheu"  (the 3 seed books' similar titles,
   the session and the ones in "Escolhidos para você" (at most 60). The answer is
   exactly 3 books, one from each shelf in the shelf order (`kind`), each with
   the AI's reason (a book the API added to complete the 3 comes without one).
-  They are shown as `AiSuggestionCard` (cover, a short label of the shelf it
+  They are shown as `AiSuggestionCard` (on phones stacked: shelf label, cover,
+  then the text at full width; from 900px the cover goes left) with a short label of the shelf it
   came from that fits one line — "Seus gêneros", "Curso e área", "Parecidos" —, title
   link, authors, area and year, availability, reason, call number with copy). Cards scroll
   horizontally below 900px and form a 3-column grid from there.
