@@ -15,8 +15,8 @@ from pydantic.alias_generators import to_camel
 
 from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
 from catalog.services.discovery import MAX_EXCLUDED, Source
+from catalog.services.recommendations import ShelfKind
 
-ShelfKind = Literal["forYou", "fromYourBooks", "yourGenres", "moreFromArea", "forPleasure"]
 #: Id de livro vindo do cliente: o mesmo tamanho máximo de `Book.id`.
 BookIdIn = Annotated[str, Field(max_length=Book._meta.get_field("id").max_length)]
 
@@ -229,7 +229,7 @@ class RecommendationsIn(ProfileIn):
 
 
 class ShelfOut(CamelSchema):
-    """Prateleira; `subject` completa o título (área ou gênero) quando o tipo exige."""
+    """Prateleira da home; `subject` completa o título quando o tipo exige (hoje, sempre null)."""
 
     id: str
     kind: ShelfKind
@@ -253,6 +253,8 @@ class DiscoveryIn(ProfileIn):
 
 class DiscoveryItemOut(CamelSchema):
     book: BookSummaryOut
+    #: Prateleira da home de onde o livro veio: a IA escolhe um de cada.
+    kind: ShelfKind
     #: Por que o livro combina com o perfil; null na seleção por regras.
     reason: str | None
 

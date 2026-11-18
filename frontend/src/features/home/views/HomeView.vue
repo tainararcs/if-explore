@@ -117,7 +117,7 @@
         >
           {{ t('home.emptyFilter') }}
         </p>
-        <div>
+        <div class="flex justify-center">
           <button
             type="button"
             class="button button--secondary"

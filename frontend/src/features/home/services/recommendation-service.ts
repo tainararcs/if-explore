@@ -9,19 +9,7 @@ import {
   parseString,
 } from '../../../services/catalog-parsers'
 import { toProfileBody, type PreferenceProfile } from '../../../models/reading-preferences'
-import type { HomeRecommendations, Shelf, ShelfKind } from '../models/recommendation'
-
-const SHELF_KINDS: readonly ShelfKind[] = [
-  'forYou',
-  'fromYourBooks',
-  'yourGenres',
-  'moreFromArea',
-  'forPleasure',
-]
-
-function isShelfKind(value: string): value is ShelfKind {
-  return SHELF_KINDS.some((kind) => kind === value)
-}
+import { isShelfKind, type HomeRecommendations, type Shelf } from '../models/recommendation'
 
 function parseShelf(value: unknown, path: string): Shelf {
   const data = parseRecord(value, path)

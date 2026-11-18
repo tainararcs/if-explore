@@ -69,7 +69,7 @@ export function useAiSuggestions(shownIds: Ref<readonly string[]>) {
         seenIds = [...new Set([...result.items.map((item) => item.book.id), ...seenIds])]
         saveAiSuggestions(profile, {
           message: result.message,
-          picks: result.items.map((item) => ({ id: item.book.id, reason: item.reason })),
+          picks: result.items.map((item) => ({ id: item.book.id, kind: item.kind, reason: item.reason })),
           seenIds,
         })
       }
@@ -102,7 +102,7 @@ export function useAiSuggestions(shownIds: Ref<readonly string[]>) {
       const books = new Map((await getBooksByIds(stored.picks.map((pick) => pick.id))).map((book) => [book.id, book]))
       items.value = stored.picks.flatMap((pick) => {
         const book = books.get(pick.id)
-        return book ? [{ book, reason: pick.reason }] : []
+        return book ? [{ book, kind: pick.kind, reason: pick.reason }] : []
       })
       message.value = stored.message
     } catch {

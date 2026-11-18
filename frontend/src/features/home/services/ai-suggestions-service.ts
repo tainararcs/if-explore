@@ -10,6 +10,7 @@ import {
   parseString,
 } from '../../../services/catalog-parsers'
 import type { AiSuggestion, AiSuggestions, AiSuggestionSource } from '../models/ai-suggestions'
+import { isShelfKind } from '../models/recommendation'
 
 /** A API recusou o pedido por excesso de pedidos em pouco tempo (HTTP 429). */
 export class RateLimitedError extends Error {
@@ -25,15 +26,20 @@ function isSource(value: string): value is AiSuggestionSource {
 
 function parseItem(value: unknown, path: string): AiSuggestion {
   const data = parseRecord(value, path)
+  const kind = parseString(data.kind, `${path}.kind`)
+  if (!isShelfKind(kind)) {
+    throw new ApiContractError(`${path}.kind`)
+  }
   return {
     book: parseBook(data.book, `${path}.book`),
+    kind,
     reason: parseNullableString(data.reason, `${path}.reason`),
   }
 }
 
 /**
- * Pede à API uma seleção de livros do acervo escolhida pela IA para o perfil, com
- * o motivo de cada um. Vai para a IA só o perfil anônimo (nomes de áreas, cursos
+ * Pede à API três livros do acervo escolhidos pela IA para o perfil, um de cada
+ * prateleira da home, com o motivo de cada um. Vai para a IA só o perfil anônimo (nomes de áreas, cursos
  * e gêneros e os títulos escolhidos); se ela falhar, a API responde com a seleção
  * por regras (`source: 'rules'`).
  *

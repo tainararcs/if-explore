@@ -16,7 +16,7 @@ from .test_sync import DJANGO_BOOK, PYTHON_BOOK, TCC
 
 # Perfil de quem estuda Sistemas para Internet e marcou o livro de Django.
 PROFILE = {"areaIds": ["technology"], "courseIds": ["internet-systems"], "seedBookIds": [DJANGO_BOOK],
-           "genreIds": []}
+           "genreIds": ["romance"]}
 
 
 class FakeGemini:
@@ -57,48 +57,57 @@ class GeminiTestCase(ApiTestCase):
 
 
 class DiscoveryApiTests(GeminiTestCase):
-    def test_ai_picks_with_reasons_in_order(self) -> None:
-        other = next(book_id for book_id in recommendations.profile_ranked_ids(
-            recommendations.Profile(area_ids=("technology",), seed_book_ids=(DJANGO_BOOK,)), 10)
-            if book_id != PYTHON_BOOK)
+    def setUp(self) -> None:
+        super().setUp()
+        # O TCC tem o gênero escolhido: é o candidato de "dos seus gêneros".
+        Book.objects.get(id=TCC).genres.add("romance")
+
+    def kinds(self, result: Any) -> list[str]:
+        return [item["kind"] for item in result["items"]]
+
+    def test_ai_picks_one_per_shelf_with_reasons(self) -> None:
         fake = self.use(FakeGemini({"mensagem": "  Boas   leituras!  ", "recomendacoes": [
-            {"id": other, "motivo": "Da sua área."},
-            {"id": PYTHON_BOOK, "motivo": "Você gostou de Django."},
+            {"grupo": "curso_area", "id": PYTHON_BOOK, "motivo": "Você estuda Sistemas para Internet."},
+            {"grupo": "generos", "id": TCC, "motivo": "Você gosta de romance."},
         ]}))
         result = self.discover()
         self.assertEqual(result["source"], "ai")
         self.assertEqual(result["message"], "Boas leituras!")
-        # a IA mandou 2: o terceiro vem do próximo candidato do perfil, sem motivo
+        # na ordem das prateleiras; sem candidatos de "parecidos", a vaga vai a outro livro
+        self.assertEqual(self.ids(result)[:2], [TCC, PYTHON_BOOK])
+        self.assertEqual(self.kinds(result)[:2], ["yourGenres", "forYou"])
+        self.assertEqual(result["items"][0]["reason"], "Você gosta de romance.")
         self.assertEqual(len(result["items"]), discovery.PICKS)
-        self.assertEqual(self.ids(result)[:2], [other, PYTHON_BOOK])
-        self.assertEqual(result["items"][1]["reason"], "Você gostou de Django.")
         self.assertIsNone(result["items"][2]["reason"])
         self.assertIn("callNumber", result["items"][0]["book"])
         self.assertEqual(len(fake.prompts), 1)
 
-    def test_ids_outside_candidates_duplicates_and_extra_items_are_dropped(self) -> None:
+    def test_pick_from_the_wrong_group_or_outside_is_dropped(self) -> None:
         self.use(FakeGemini({"mensagem": "", "recomendacoes": [
-            {"id": "999999", "motivo": "inventado"},
-            {"id": PYTHON_BOOK, "motivo": "ok"},
-            {"id": PYTHON_BOOK, "motivo": "repetido"},
+            {"grupo": "generos", "id": PYTHON_BOOK, "motivo": "grupo errado"},
+            {"grupo": "curso_area", "id": "999999", "motivo": "inventado"},
+            {"grupo": "curso_area", "id": PYTHON_BOOK, "motivo": "ok"},
+            {"grupo": "curso_area", "id": DJANGO_BOOK, "motivo": "segundo do mesmo grupo"},
         ]}))
         result = self.discover()
         ids = self.ids(result)
-        self.assertEqual((ids[0], len(ids), len(set(ids))), (PYTHON_BOOK, discovery.PICKS, discovery.PICKS))
+        self.assertEqual((ids[0], result["items"][0]["reason"]), (TCC, None))  # completado pelas regras
+        self.assertEqual((ids[1], result["items"][1]["reason"]), (PYTHON_BOOK, "ok"))
+        self.assertEqual((len(ids), len(set(ids))), (discovery.PICKS, discovery.PICKS))
         self.assertNotIn("999999", ids)
-        self.assertIsNone(result["message"])
+        self.assertNotIn(DJANGO_BOOK, ids)  # o título escolhido no perfil nunca volta
 
     def test_failures_fall_back_to_rules(self) -> None:
         for failure in (gemini.GeminiUnavailableError("timeout"), gemini.GeminiQuotaError("429"),
                         gemini.GeminiBlockedError("SAFETY"), {"sem": "formato"},
-                        {"mensagem": "x", "recomendacoes": [{"id": "999999", "motivo": "fora"}]}):
+                        {"mensagem": "x", "recomendacoes": [{"grupo": "generos", "id": "999999", "motivo": "fora"}]}):
             with self.subTest(failure=failure):
                 self.use(FakeGemini(failure))
                 result = self.discover()
                 self.assertEqual(result["source"], "rules")
                 self.assertIsNone(result["message"])
-                # os candidatos do perfil, na ordem da pontuação
-                self.assertIn(PYTHON_BOOK, self.ids(result))
+                # o primeiro de cada prateleira, completado até 3
+                self.assertEqual(self.ids(result)[0], TCC)
                 self.assertEqual(len(result["items"]), discovery.PICKS)
                 self.assertTrue(all(item["reason"] is None for item in result["items"]))
 
@@ -114,47 +123,53 @@ class DiscoveryApiTests(GeminiTestCase):
         self.assertEqual((result["source"], result["items"]), ("rules", []))
         self.assertEqual(fake.prompts, [])
 
-    def test_gemini_is_asked_for_exactly_three(self) -> None:
-        recommendations_schema = discovery.DISCOVERY_SCHEMA["properties"]
-        assert isinstance(recommendations_schema, dict)
-        self.assertEqual((recommendations_schema["recomendacoes"]["minItems"],
-                          recommendations_schema["recomendacoes"]["maxItems"]), (3, 3))
-        self.assertIn("exatamente 3 livros", discovery.DISCOVERY_SYSTEM)
-
-    def test_prompt_has_the_anonymous_profile_and_only_candidates(self) -> None:
-        fake = self.use(FakeGemini({"mensagem": "", "recomendacoes": [{"id": PYTHON_BOOK, "motivo": "ok"}]}))
+    def test_prompt_has_the_anonymous_profile_and_candidates_by_shelf(self) -> None:
+        fake = self.use(FakeGemini({"mensagem": "", "recomendacoes": [
+            {"grupo": "curso_area", "id": PYTHON_BOOK, "motivo": "ok"}]}))
         self.discover()
         prompt = json.loads(fake.prompts[0])
         profile = prompt["perfil"]
         self.assertEqual(profile["areas"], ["Tecnologia e Computação"])
         self.assertEqual(profile["cursos"], ["Tecnologia em Sistemas para Internet"])
+        self.assertEqual(profile["generos"], ["Romance"])
         self.assertEqual(len(profile["livros_escolhidos"]), 1)
-        self.assertNotIn("generos", profile)  # vazio fica de fora
         # nenhum id do perfil vai para a IA: nem slugs nem o id do livro escolhido
         self.assertNotIn("internet-systems", fake.prompts[0])
         self.assertNotIn(DJANGO_BOOK, json.dumps(profile))
-        ids = [book["id"] for book in prompt["livros"]]
-        self.assertIn(PYTHON_BOOK, ids)
-        self.assertNotIn(DJANGO_BOOK, ids)  # o título escolhido não volta como candidato
-        # só tipos recomendáveis: os fascículos do snapshot ficam de fora
+        groups = prompt["grupos"]
+        # só grupos com candidatos, e um livro não aparece em dois grupos
+        self.assertEqual(set(groups), {"generos", "curso_area"})
+        self.assertEqual([book["id"] for book in groups["generos"]], [TCC])
+        ids = [book["id"] for group in groups.values() for book in group]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertNotIn(DJANGO_BOOK, ids)
         self.assertEqual(recommendations.recommendable().filter(id__in=ids).count(), len(ids))
-        self.assertTrue(all(len(book.get("sinopse", "")) <= discovery.SYNOPSIS_CHARS + 1 for book in prompt["livros"]))
+        self.assertTrue(all(len(book.get("sinopse", "")) <= discovery.SYNOPSIS_CHARS + 1
+                            for group in groups.values() for book in group))
+
+    def test_gemini_is_asked_for_one_book_per_group(self) -> None:
+        schema = discovery.discovery_schema(["generos", "curso_area"])
+        properties = schema["properties"]
+        assert isinstance(properties, dict)
+        array = properties["recomendacoes"]
+        self.assertEqual((array["minItems"], array["maxItems"]), (2, 2))
+        self.assertEqual(array["items"]["properties"]["grupo"]["enum"], ["generos", "curso_area"])
+        self.assertIn("exatamente um livro de cada grupo", discovery.DISCOVERY_SYSTEM)
 
     def test_more_suggestions_exclude_the_ones_already_shown(self) -> None:
         fake = self.use(FakeGemini(enabled=False))
         first = self.ids(self.discover())
-        shown = first[:1]
-        second = self.ids(self.discover(excludeIds=shown))
+        second = self.ids(self.discover(excludeIds=first))
         self.assertTrue(second)
-        self.assertFalse(set(shown) & set(second))
-        # sem outros candidatos no acervo de teste, a lista vem vazia (o frontend avisa que acabou)
-        self.assertEqual(self.ids(self.discover(excludeIds=first + second)), [])
+        self.assertFalse(set(first) & set(second))
         self.assertEqual(fake.prompts, [])
 
     def test_excluded_ids_never_reach_gemini(self) -> None:
-        fake = self.use(FakeGemini({"mensagem": "", "recomendacoes": [{"id": PYTHON_BOOK, "motivo": "de novo"}]}))
+        fake = self.use(FakeGemini({"mensagem": "", "recomendacoes": [
+            {"grupo": "curso_area", "id": PYTHON_BOOK, "motivo": "de novo"}]}))
         result = self.discover(excludeIds=[PYTHON_BOOK])
-        self.assertNotIn(PYTHON_BOOK, [book["id"] for book in json.loads(fake.prompts[0])["livros"]])
+        groups = json.loads(fake.prompts[0])["grupos"]
+        self.assertNotIn(PYTHON_BOOK, [book["id"] for group in groups.values() for book in group])
         # o Gemini insistiu num livro já mostrado: a escolha é descartada e vale a seleção por regras
         self.assertEqual(result["source"], "rules")
         self.assertNotIn(PYTHON_BOOK, self.ids(result))
@@ -221,16 +236,25 @@ class ExplanationApiTests(GeminiTestCase):
 
 class PureRulesTests(SimpleTestCase):
     def test_validate_answer(self) -> None:
-        ids = [str(n) for n in range(10)]
+        groups = {"yourGenres": ["1", "2"], "forYou": ["3", "4"], "fromYourBooks": ["5"]}
         answer = {"mensagem": "  Oi  ", "recomendacoes": [
-            {"id": "1", "motivo": " a  b "}, {"id": "x", "motivo": "fora"}, "lixo", {"id": "1", "motivo": "de novo"},
-            {"id": "2"}, *({"id": str(n), "motivo": "m"} for n in range(3, 10))]}
-        message, picks = discovery.validate_answer(answer, ids)
+            {"grupo": "parecidos", "id": "5", "motivo": " a  b "}, {"grupo": "generos", "id": "3", "motivo": "grupo errado"},
+            "lixo", {"grupo": "nenhum", "id": "1"}, {"grupo": "generos", "id": "2"},
+            {"grupo": "generos", "id": "1", "motivo": "segundo do grupo"}]}
+        message, picks = discovery.validate_answer(answer, groups)
         self.assertEqual(message, "Oi")
-        self.assertEqual([pick.book_id for pick in picks], ["1", "2", "3"])
-        self.assertEqual((picks[0].reason, picks[1].reason), ("a b", None))
+        # na ordem das prateleiras; "curso_area" não veio
+        self.assertEqual([(pick.kind, pick.book_id, pick.reason) for pick in picks],
+                         [("yourGenres", "2", None), ("fromYourBooks", "5", "a b")])
         with self.assertRaises(gemini.GeminiInvalidResponseError):
-            discovery.validate_answer({"recomendacoes": "nada"}, ids)
+            discovery.validate_answer({"recomendacoes": "nada"}, groups)
+
+    def test_complete_gives_one_per_shelf_and_fills_empty_ones(self) -> None:
+        groups = {"yourGenres": [], "forYou": ["3", "4", "6"], "fromYourBooks": ["5"]}
+        picks = discovery.complete([discovery.Pick("5", "fromYourBooks", "ok")], groups)
+        self.assertEqual([(pick.kind, pick.book_id) for pick in picks],
+                         [("forYou", "3"), ("fromYourBooks", "5"), ("forYou", "4")])
+        self.assertEqual(len(discovery.complete([], {"yourGenres": ["1"], "forYou": [], "fromYourBooks": []})), 1)
 
     def test_clean_text_cuts_on_a_word(self) -> None:
         text = discovery.clean_text("palavra " * 50, 30)

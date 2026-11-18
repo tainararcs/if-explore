@@ -1,10 +1,12 @@
 import { toProfileBody, type PreferenceProfile } from '../../../models/reading-preferences'
+import { isShelfKind, type ShelfKind } from '../models/recommendation'
 
 const STORAGE_KEY = 'if-explore:home-ai-suggestions'
 
-/** Sugestão guardada: só o id do livro e o motivo; o livro é recarregado da API. */
+/** Sugestão guardada: só o id do livro, a prateleira e o motivo; o livro é recarregado da API. */
 export interface StoredPick {
   id: string
+  kind: ShelfKind
   reason: string | null
 }
 
@@ -33,7 +35,12 @@ function isPick(value: unknown): value is StoredPick {
     return false
   }
   const record: Record<string, unknown> = { ...value }
-  return typeof record.id === 'string' && (record.reason === null || typeof record.reason === 'string')
+  return (
+    typeof record.id === 'string' &&
+    typeof record.kind === 'string' &&
+    isShelfKind(record.kind) &&
+    (record.reason === null || typeof record.reason === 'string')
+  )
 }
 
 function parse(raw: string): StoredRecord | null {

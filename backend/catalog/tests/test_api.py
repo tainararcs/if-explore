@@ -270,7 +270,7 @@ class RecommendationTests(ApiTestCase):
         return {shelf["id"]: [book["id"] for book in shelf["books"]] for shelf in result["shelves"]}
 
     def test_each_book_appears_once(self) -> None:
-        self.small_shelves()
+        self.small_shelves(size=1)
         shelves = self.shelf_books({"areaIds": ["technology", "health-sciences"], "courseIds": ["internet-systems"],
                                     "seedBookIds": [PYTHON_BOOK]})
         self.assertGreater(len(shelves), 1)
@@ -289,28 +289,37 @@ class RecommendationTests(ApiTestCase):
         self.assertGreater(len(orders), 1)
         self.post("/api/recommendations", {**profile, "shuffleSeed": -1}, status=422)
 
-    def test_books_like_the_chosen_ones_follow_for_you(self) -> None:
-        # só 2 livros compartilham assuntos com o escolhido: um vai para "para você"
-        self.small_shelves(size=1)
-        shelves = self.shelf_books({"seedBookIds": [PYTHON_BOOK]})
-        self.assertEqual(list(shelves), ["for-you", "from-your-books"])
-
-    def test_chosen_genres_are_merged_above_each_genre(self) -> None:
-        self.small_shelves()
-        candidates = recommendations.recommendable().values_list("id", flat=True)
-        for book_id, genre in zip(candidates, ["romance", "romance", "poetry", "poetry", "romance", "poetry"]):
+    def give_genre(self, genre: str, *book_ids: str) -> None:
+        for book_id in book_ids:
             Book.objects.get(id=book_id).genres.add(genre)
-        shelves = self.shelf_books({"genreIds": ["romance", "poetry"]})
-        self.assertEqual(list(shelves), ["for-you", "your-genres", "genre-romance", "genre-poetry"])
-        self.assertNotIn("your-genres", self.shelf_books({"genreIds": ["romance"]}))
 
-    def test_genre_shelf_is_titled_by_the_genre(self) -> None:
+    def test_shelves_in_order_genres_for_you_then_similar(self) -> None:
+        self.small_shelves(size=1)
+        self.give_genre("romance", TCC)
+        shelves = self.shelf_books({"areaIds": ["technology"], "seedBookIds": [PYTHON_BOOK], "genreIds": ["romance"]})
+        self.assertEqual(list(shelves), ["your-genres", "for-you", "from-your-books"])
+
+    def test_chosen_genres_share_one_shelf(self) -> None:
+        self.small_shelves(size=4)
+        self.give_genre("romance", TCC, DJANGO_BOOK)
+        self.give_genre("poetry", PYTHON_BOOK)
+        shelves = self.shelf_books({"genreIds": ["romance", "poetry"]})
+        # sem área nem curso não há "para você"; os gêneros se intercalam numa prateleira só
+        self.assertEqual(list(shelves), ["your-genres"])
+        self.assertEqual(set(shelves["your-genres"]), {TCC, DJANGO_BOOK, PYTHON_BOOK})
+        self.assertEqual(list(self.shelf_books({"genreIds": ["poetry"]})), ["your-genres"])
+
+    def test_for_you_counts_only_course_and_area(self) -> None:
         self.small_shelves()
-        for book_id in recommendations.recommendable().values_list("id", flat=True):
-            Book.objects.get(id=book_id).genres.add("poetry")
-        result = self.post("/api/recommendations", {"genreIds": ["poetry"]})
-        genre = next(shelf for shelf in result["shelves"] if shelf["id"] == "genre-poetry")
-        self.assertEqual((genre["kind"], genre["subject"]), ("forPleasure", "Poesia"))
+        self.give_genre("romance", TCC)
+        # o TCC tem o gênero escolhido, mas não é da área: fica só em "dos seus gêneros"
+        shelves = self.shelf_books({"areaIds": ["technology"], "genreIds": ["romance"]})
+        self.assertEqual(shelves["your-genres"], [TCC])
+        self.assertNotIn(TCC, shelves["for-you"])
+        self.assertEqual(Book.objects.get(id=shelves["for-you"][0]).area_id, "technology")
+
+    def test_without_seed_books_there_is_no_similar_shelf(self) -> None:
+        self.assertNotIn("from-your-books", self.shelf_books({"areaIds": ["technology"]}))
 
     def test_unreadable_titles_are_left_out(self) -> None:
         profile = {"areaIds": ["technology"], "seedBookIds": [PYTHON_BOOK]}

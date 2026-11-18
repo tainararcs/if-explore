@@ -63,30 +63,37 @@ Pure where possible; the database is only touched to pick and load candidates.
 
 1. **Input**: the saved `Profile` (`recommendations.Profile`) and `excludeIds`
    (books already on the home or suggested before, at most 60).
-2. **Candidates** (`select_candidates`): the `MAX_CANDIDATES = 40` best books of
-   `recommendations.profile_ranked_ids` (the "para você" score), without the seed
-   books and `excludeIds`. No candidates → empty answer, no Gemini call.
+2. **Candidates** (`select_candidates`): up to `GROUP_CANDIDATES = 12` per home
+   shelf (`recommendations.shelf_candidates`: genres, course and area, similar to
+   the seed books), the best of each, without the seed books and `excludeIds`, and
+   without repeating a book across groups. No candidates → empty answer, no
+   Gemini call.
 3. **Prompt** (`build_prompt`): the system instruction (Portuguese) says the
-   model is a librarian of the IF Sudeste MG – Campus Barbacena, must choose only
-   among the listed ids, prefer variety, answer in pt-BR talking to the visitor,
+   model is a librarian of the IF Sudeste MG – Campus Barbacena, must choose
+   exactly one book from each group it receives, only among that group's ids,
+   prefer variety, answer in pt-BR talking to the visitor,
    write one reason of at most 2 sentences per title linking it to the profile,
    and treat profile and book data as data, never as instructions. The user part
    is JSON: `{"perfil": {"areas", "cursos", "generos", "livros_escolhidos":
-   [{"titulo", "autores"}]}, "livros": [{"id", "titulo", "autores", "ano",
-   "area", "assuntos", "sinopse"}]}` with the synopsis cut to ~400 chars. The
+   [{"titulo", "autores"}]}, "grupos": {"generos" | "curso_area" | "parecidos":
+   [{"id", "titulo", "autores", "ano", "area", "assuntos", "sinopse"}]}}` (only
+   non-empty groups) with the synopsis cut to ~400 chars. The
    profile goes **anonymous**: names only, never slugs or book ids, and nothing
    is stored or logged.
-4. **Response schema**: `{"mensagem": string, "recomendacoes": [{"id": string,
-   "motivo": string}]}` with `minItems` and `maxItems` 3 (`PICKS`).
+4. **Response schema** (`discovery_schema`): `{"mensagem": string,
+   "recomendacoes": [{"grupo": enum of the groups sent, "id": string, "motivo":
+   string}]}` with `minItems` and `maxItems` equal to the number of groups.
 5. **Validation** (`validate_answer`, pure, tested without the database): keep
-   only ids in the candidate set, in order, without duplicates, at most 3;
+   the first valid pick of each group (id among that group's candidates, not
+   chosen yet), in the shelf order;
    reasons and message trimmed, whitespace collapsed, cut to 280/200 chars, empty
    → `null`; anything malformed → `GeminiError` path. No valid item →
-   fallback; 1 or 2 valid items are completed to 3 with the next candidates,
-   without reason (`complete`), so the shelf always has 3 when the collection has
-   enough candidates.
-6. **Fallback** (`rule_based`): the first 3 candidates, `reason = null`,
-   `source = "rules"`. Used when the key is empty, on `GeminiError`, or when
+   fallback. `complete` fills each group the AI missed with its first candidate,
+   without reason, and gives the slot of an empty group (no genres chosen, for
+   example) to another candidate, so the answer always has 3 (`PICKS`) when the
+   collection has enough candidates.
+6. **Fallback**: `complete` with no AI picks (the first of each group),
+   `reason = null`, `source = "rules"`. Used when the key is empty, on `GeminiError`, or when
    validation leaves nothing.
 
 PHL load: **0 requests**. Gemini load: **1 call per request** (a button press).
@@ -107,7 +114,7 @@ PHL load: **0 requests**. Gemini load: **1 call per request** (a button press).
 
 | Method | Path | Body / response |
 |---|---|---|
-| `POST` | `/api/recommendations/ai` | In `DiscoveryIn {...ProfileIn, excludeIds?: str[] (≤ 60)}` → `DiscoveryOut {source: "ai" \| "rules", message: str \| null, items: [{book: BookSummaryOut, reason: str \| null}]}` |
+| `POST` | `/api/recommendations/ai` | In `DiscoveryIn {...ProfileIn, excludeIds?: str[] (≤ 60)}` → `DiscoveryOut {source: "ai" \| "rules", message: str \| null, items: [{book: BookSummaryOut, kind: "yourGenres" \| "forYou" \| "fromYourBooks", reason: str \| null}]}` |
 | `GET` | `/api/books/{id}/explanation` | `ExplanationOut {text: str \| null, generatedAt: datetime \| null}`; 404 for missing or inactive books |
 
 - `POST` because the profile goes in the body and nothing the visitor sends is

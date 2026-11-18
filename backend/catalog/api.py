@@ -230,7 +230,8 @@ def get_candidates(
 @router.post("/recommendations/ai", response=DiscoveryOut, by_alias=True, tags=["recomendações"],
              throttle=DiscoveryThrottle(settings.DISCOVERY_RATE))
 def post_ai_suggestions(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
-    """3 títulos do acervo escolhidos pela IA para o perfil, com o motivo de cada um.
+    """3 títulos do acervo escolhidos pela IA para o perfil, um de cada prateleira da home
+    (`kind`), com o motivo de cada um.
 
     O Gemini escolhe só entre candidatos do acervo local e recebe o perfil anônimo
     (nomes de áreas, cursos e gêneros e os títulos escolhidos). Sem chave ou se a
@@ -241,7 +242,8 @@ def post_ai_suggestions(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut
     loaded = {book.id: book for book in books.load_in_order([pick.book_id for pick in result.picks])}
     return DiscoveryOut(
         source=result.source, message=result.message,
-        items=[DiscoveryItemOut(book=BookSummaryOut.from_model(loaded[pick.book_id]), reason=pick.reason)
+        items=[DiscoveryItemOut(book=BookSummaryOut.from_model(loaded[pick.book_id]), kind=pick.kind,
+                                 reason=pick.reason)
                for pick in result.picks if pick.book_id in loaded],
     )
 

@@ -28,12 +28,10 @@ Greeting eyebrow + serif h1: "Suas recomendações"
 Short line: "Com base em <área 1>, <área 2> e nos títulos que você escolheu."
 Area filter chips (horizontal scroll at base): Todas · <selected areas>
 AI shelf: "Sugestões da IA"                  (button first; then books with reasons)
-Shelf: "Escolhidos para você"
-Shelf: "Parecidos com os que você escolheu"  (the seed books' similar titles, interleaved)
-Shelf: "Dos seus gêneros"                    (chosen genres interleaved, only with 2+ genres)
-Shelf: "Mais de <área>"                      (one per selected area)
-Shelf: "<gênero>"                            (one per chosen genre)
-[Ver outras sugestões]                       (new shuffle seed, back to the top)
+Shelf: "Dos seus gêneros"                    (chosen literary genres, interleaved)
+Shelf: "Escolhidos para você"                (course and area)
+Shelf: "Parecidos com os que você escolheu"  (the 3 seed books' similar titles, interleaved)
+        [Ver outras sugestões]               (centered; new shuffle seed, back to the top)
 ```
 
 - "Catálogo completo" is a header tab to `/catalog` (see the `catalog-view`
@@ -75,9 +73,10 @@ Shelf: "<gênero>"                            (one per chosen genre)
 - The button posts the saved preferences to `POST /api/recommendations/ai`
   (`ai-suggestions-service.ts`) with `excludeIds`: the books already suggested in
   the session and the ones in "Escolhidos para você" (at most 60). The answer is
-  exactly 3 books, each with the AI's reason (a book the API added to complete
-  the 3 comes without one), shown as `AiSuggestionCard` (cover, area and year,
-  title link, availability, reason, call number with copy). Cards scroll
+  exactly 3 books, one from each shelf in the shelf order (`kind`), each with
+  the AI's reason (a book the API added to complete the 3 comes without one).
+  They are shown as `AiSuggestionCard` (cover, the shelf it came from, title
+  link, authors, area and year, availability, reason, call number with copy). Cards scroll
   horizontally below 900px and form a 3-column grid from there.
 - Then the button becomes "Outras sugestões". `source: "rules"` (AI down) does
   not add a shelf, because it would repeat the rule-based shelves: show a short
@@ -91,10 +90,12 @@ Shelf: "<gênero>"                            (one per chosen genre)
 
 - `src/features/home/services/recommendation-service.ts` posts the saved
   preferences to `POST /api/recommendations` and validates the shelves it gets
-  back. Ranking happens in the API over the whole collection (course > area >
-  genre > shared subjects with the seed books; seed books never come back), each
-  book appears in one shelf only (the first that shows it), and only shelves with
-  at least 3 books are returned.
+  back. Ranking happens in the API over the whole collection: "Dos seus
+  gêneros" takes the books of the chosen genres (ordered by affinity with the
+  whole profile), "Escolhidos para você" scores only course (4) and area (2), and
+  "Parecidos" uses the affinity with each seed book. Seed books never come back,
+  each book appears in one shelf only (the first that shows it), and only shelves
+  with at least 3 books are returned (no genres chosen → no genre shelf).
 - The request carries a `shuffleSeed` kept in `sessionStorage`
   (`shuffle-seed-storage.ts`): each shelf draws from its best ~40 candidates,
   weighted by score. The same seed gives the same shelves, so coming back from a

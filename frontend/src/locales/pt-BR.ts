@@ -198,11 +198,9 @@ export const ptBR = {
     retry: 'Tentar novamente',
     emptyFilter: 'Nenhuma recomendação para esta área por enquanto.',
     shelves: {
+      yourGenres: 'Dos seus gêneros',
       forYou: 'Escolhidos para você',
       fromYourBooks: 'Parecidos com os que você escolheu',
-      yourGenres: 'Dos seus gêneros',
-      moreFromArea: 'Mais de {subject}',
-      forPleasure: '{subject}',
     },
     shuffle: 'Ver outras sugestões',
     ai: {

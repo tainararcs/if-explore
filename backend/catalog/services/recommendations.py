@@ -14,6 +14,7 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from itertools import zip_longest
+from typing import Literal
 
 from django.db import connection
 from django.db.models import (
@@ -31,13 +32,14 @@ from django.db.models import (
 )
 from django.db.models.functions import Coalesce
 
-from catalog.models import Book, BookAuthor, CopyStatus, Course, KnowledgeArea, LiteraryGenre
+from catalog.models import Book, BookAuthor, CopyStatus, Course, LiteraryGenre
 from catalog.services.books import DOCUMENT_TYPES
 
+ShelfKind = Literal["yourGenres", "forYou", "fromYourBooks"]
 RECOMMENDABLE_TYPES = tuple(DOCUMENT_TYPES[key] for key in ("book", "ebook", "audiobook", "thesis"))
 SHELF_SIZE = 12
 MIN_SHELF_SIZE = 3
-# Títulos escolhidos que alimentam a prateleira de parecidos.
+# Títulos escolhidos que alimentam a prateleira de parecidos (todos os do onboarding).
 MAX_SIMILAR_SEEDS = 3
 REQUIRED_SEED_BOOKS = 3
 # O sorteio da home escolhe a ordem entre os melhores candidatos de cada prateleira.
@@ -62,7 +64,8 @@ class Profile:
 @dataclass
 class Shelf:
     id: str
-    kind: str
+    kind: ShelfKind
+    #: Completa o título quando o tipo exige; nenhuma das prateleiras atuais usa.
     subject: str | None
     book_ids: list[str] = field(default_factory=list)
 
@@ -171,12 +174,13 @@ def _seed_subject_ids(seed_book_ids: Sequence[str]) -> list[int]:
                 .values_list("subject_id", flat=True).distinct())
 
 
-def profile_ranked_ids(profile: Profile, limit: int) -> list[str]:
-    """Livros recomendáveis mais próximos das preferências (mesma pontuação da
-    prateleira "para você"), sem os títulos escolhidos; vazio sem afinidade."""
-    pool = recommendable().exclude(id__in=profile.seed_book_ids)
-    scored = _profile_score(pool, profile, _seed_subject_ids(profile.seed_book_ids)).filter(score__gt=0)
-    return list(scored.order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:limit])
+def _course_area_score(queryset: QuerySet[Book], profile: Profile) -> QuerySet[Book]:
+    """Anota `score` só com o estudo do visitante: curso 4 e área 2."""
+    courses = Book.courses.through.objects.filter(book_id=OuterRef("pk"), course_id__in=profile.course_ids)
+    return queryset.annotate(score=(
+        Case(When(Exists(courses), then=Value(4.0)), default=Value(0.0), output_field=FloatField())
+        + Case(When(area_id__in=profile.area_ids, then=Value(2.0)), default=Value(0.0), output_field=FloatField())
+    ))
 
 
 def _ranked(queryset: QuerySet[Book]) -> list[tuple[str, float]]:
@@ -198,7 +202,7 @@ def _arrange(ranked: Sequence[tuple[str, float]], shown: set[str], rng: random.R
     if rng is None:
         return [book_id for book_id, _ in fresh]
     window = fresh[:SHUFFLE_WINDOW]
-    # +1: nas prateleiras de área e de gênero há livros com pontuação 0
+    # +1: há candidatos com pontuação 0 (gêneros sem curso nem área em comum)
     window.sort(key=lambda item: rng.random() ** (1 / (item[1] + 1)), reverse=True)
     return [book_id for book_id, _ in window + fresh[SHUFFLE_WINDOW:]]
 
@@ -208,14 +212,43 @@ def _interleave(lists: Sequence[Sequence[str]]) -> list[str]:
     return list(dict.fromkeys(book_id for round_ in zip_longest(*lists) for book_id in round_ if book_id))
 
 
+# Prateleiras da home, na ordem da página. A IA também escolhe um livro de cada.
+SHELF_KINDS: tuple[ShelfKind, ...] = ("yourGenres", "forYou", "fromYourBooks")
+SHELF_IDS: dict[ShelfKind, str] = {"yourGenres": "your-genres", "forYou": "for-you", "fromYourBooks": "from-your-books"}
+
+
+def _ranked_groups(profile: Profile) -> dict[ShelfKind, list[list[tuple[str, float]]]]:
+    """Candidatos de cada prateleira, em listas que se intercalam:
+
+    - "dos seus gêneros": uma lista por gênero escolhido, ordenada pela afinidade
+      com o perfil (curso, área, gênero e assuntos dos títulos escolhidos);
+    - "escolhidos para você": curso e área do visitante (curso 4, área 2);
+    - "parecidos com os que você escolheu": a afinidade de cada título escolhido
+      (até `MAX_SIMILAR_SEEDS`).
+
+    Os títulos escolhidos nunca entram.
+    """
+    seeds = list(Book.objects.filter(is_active=True, id__in=profile.seed_book_ids))
+    seeds.sort(key=lambda book: profile.seed_book_ids.index(book.id))
+    pool = recommendable().exclude(id__in=profile.seed_book_ids)
+    scored = _profile_score(pool, profile, _seed_subject_ids([book.id for book in seeds]))
+    return {
+        "yourGenres": [_ranked(scored.filter(genres=genre))
+                       for genre in LiteraryGenre.objects.filter(slug__in=profile.genre_ids)],
+        "forYou": [_ranked(_course_area_score(pool, profile).filter(score__gt=0))],
+        "fromYourBooks": [[(book_id, float(points)) for book_id, points in affinity_ranking(seed, min_score=1)]
+                          for seed in seeds[:MAX_SIMILAR_SEEDS]],
+    }
+
+
 def home_shelves(profile: Profile, shuffle_seed: int | None = None) -> list[Shelf]:
-    """Prateleiras da home, nesta ordem: "para você"; "parecidos com os que você
-    escolheu" (mescla dos até 3 títulos escolhidos); "dos seus gêneros" (mescla,
-    só com 2 ou mais gêneros); "mais de <área>"; e uma por gênero.
+    """Prateleiras da home, nesta ordem: "dos seus gêneros" (mescla dos gêneros
+    escolhidos), "escolhidos para você" (curso e área) e "parecidos com os que você
+    escolheu" (mescla dos títulos escolhidos).
 
     Cada livro aparece uma vez só na página, na primeira prateleira que o mostra,
     e os títulos escolhidos não aparecem. Só ficam as prateleiras com pelo menos 3
-    livros.
+    livros: sem gêneros escolhidos, por exemplo, a primeira não aparece.
 
     Args:
         profile: Preferências do visitante.
@@ -224,33 +257,28 @@ def home_shelves(profile: Profile, shuffle_seed: int | None = None) -> list[Shel
             ordem de relevância.
     """
     rng = None if shuffle_seed is None else random.Random(shuffle_seed)
-    seeds = list(Book.objects.filter(is_active=True, id__in=profile.seed_book_ids))
-    seeds.sort(key=lambda book: profile.seed_book_ids.index(book.id))
-    pool = recommendable().exclude(id__in=profile.seed_book_ids)
-    scored = _profile_score(pool, profile, _seed_subject_ids([book.id for book in seeds]))
-    genres = list(LiteraryGenre.objects.filter(slug__in=profile.genre_ids))
-    by_genre = {genre.slug: _ranked(scored.filter(genres=genre)) for genre in genres}
+    groups = _ranked_groups(profile)
     shown = set(profile.seed_book_ids)
     shelves: list[Shelf] = []
-
-    def add(shelf_id: str, kind: str, subject: str | None, ids: Sequence[str]) -> None:
-        picked = list(ids[:SHELF_SIZE])
+    for kind in SHELF_KINDS:
+        picked = _interleave([_arrange(ranked, shown, rng) for ranked in groups[kind]])[:SHELF_SIZE]
         if len(picked) >= MIN_SHELF_SIZE:
-            shelves.append(Shelf(shelf_id, kind, subject, picked))
+            shelves.append(Shelf(SHELF_IDS[kind], kind, None, picked))
             shown.update(picked)
-
-    add("for-you", "forYou", None, _arrange(_ranked(scored.filter(score__gt=0)), shown, rng))
-    similar = [_arrange([(book_id, float(points)) for book_id, points in affinity_ranking(seed, min_score=1)],
-                        shown, rng) for seed in seeds[:MAX_SIMILAR_SEEDS]]
-    add("from-your-books", "fromYourBooks", None, _interleave(similar))
-    if len(genres) > 1:
-        add("your-genres", "yourGenres", None,
-            _interleave([_arrange(by_genre[genre.slug], shown, rng) for genre in genres]))
-    for area in KnowledgeArea.objects.filter(slug__in=profile.area_ids):
-        add("area-%s" % area.slug, "moreFromArea", area.name, _arrange(_ranked(scored.filter(area=area)), shown, rng))
-    for genre in genres:
-        add("genre-%s" % genre.slug, "forPleasure", genre.name, _arrange(by_genre[genre.slug], shown, rng))
     return shelves
+
+
+def shelf_candidates(profile: Profile, exclude_ids: Sequence[str], limit: int) -> dict[ShelfKind, list[str]]:
+    """Até `limit` candidatos de cada prateleira da home, na ordem de relevância,
+    sem `exclude_ids` e sem repetir um livro entre prateleiras (fica na primeira).
+    Usado pela IA, que escolhe um livro de cada."""
+    groups = _ranked_groups(profile)
+    shown = set(profile.seed_book_ids) | set(exclude_ids)
+    result: dict[ShelfKind, list[str]] = {}
+    for kind in SHELF_KINDS:
+        result[kind] = _interleave([_arrange(ranked, shown, None) for ranked in groups[kind]])[:limit]
+        shown.update(result[kind])
+    return result
 
 
 # ---- onboarding

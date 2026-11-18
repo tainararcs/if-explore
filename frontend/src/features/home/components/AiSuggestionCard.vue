@@ -1,7 +1,7 @@
 <!--
-  Sugestão da IA na home: card com capa, área e ano, título (link para o livro),
-  autoria, disponibilidade, o motivo da IA e a localização na estante com botão
-  para copiar. O título cobre o card inteiro como área de clique; o botão de
+  Sugestão da IA na home: card com capa, a prateleira de onde o livro veio,
+  título (link para o livro), autoria, área e ano, disponibilidade, o motivo da IA
+  e a localização na estante com botão para copiar. O título cobre o card inteiro como área de clique; o botão de
   copiar fica acima dele, para não haver um controle dentro de outro.
 -->
 <template>
@@ -12,11 +12,8 @@
       decorative
     />
     <div class="flex min-w-0 flex-col gap-1">
-      <p
-        v-if="meta"
-        class="eyebrow m-0"
-      >
-        {{ meta }}
+      <p class="eyebrow m-0 text-primary">
+        {{ t(`home.shelves.${item.kind}`) }}
       </p>
       <h3 class="m-0 line-clamp-2 font-display text-h3">
         <RouterLink
@@ -31,6 +28,12 @@
         class="m-0 truncate text-small text-text-muted"
       >
         {{ formatAuthors(item.book.authors) }}
+      </p>
+      <p
+        v-if="meta"
+        class="m-0 text-caption text-text-muted"
+      >
+        {{ meta }}
       </p>
       <AvailabilityBadge
         class="mt-1"

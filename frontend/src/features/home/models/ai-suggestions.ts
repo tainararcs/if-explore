@@ -1,4 +1,5 @@
 import type { Book } from '../../../models/book'
+import type { ShelfKind } from './recommendation'
 
 /** Livros que um pedido de sugestões pode excluir (o mesmo limite da API). */
 export const MAX_EXCLUDED = 60
@@ -9,9 +10,13 @@ export const MAX_EXCLUDED = 60
  */
 export type AiSuggestionSource = 'ai' | 'rules'
 
-/** Livro sugerido e, nas sugestões da IA, o motivo da escolha. */
+/**
+ * Livro sugerido, a prateleira da home de onde ele veio (a IA escolhe um de cada)
+ * e, quando a IA o escolheu, o motivo.
+ */
 export interface AiSuggestion {
   book: Book
+  kind: ShelfKind
   reason: string | null
 }
 
