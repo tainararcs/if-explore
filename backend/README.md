@@ -110,14 +110,15 @@ Respostas em camelCase, ausentes como `null`, listas paginadas como
 | Rota | O que devolve |
 |---|---|
 | `GET /api/areas` · `/courses` · `/genres` | Taxonomia |
-| `GET /api/books` | Busca e filtros (`q`, `area`, `course`, `genre`, `type`, `available`, `sort`…) |
+| `GET /api/languages` | Idiomas do acervo, do mais comum ao menos (opções do filtro de idioma) |
+| `GET /api/books` | Busca e filtros (`q`, `area`, `course`, `genre`, `type`, `available`, `language`, `yearFrom`, `yearTo`, `sort`…); equipamentos nunca entram |
 | `GET /api/books/{id}` | Livro completo, com exemplares atualizados ao vivo |
 | `GET /api/books/{id}/related` | Mesmo autor e livros por afinidade |
 | `GET /api/books/{id}/catalog` | Redireciona para a ficha no catálogo oficial |
 | `GET /api/books/{id}/explanation` | Explicação simplificada gerada por IA |
-| `POST /api/recommendations` | Prateleiras para o perfil do visitante; `shuffleSeed` sorteia entre os melhores de cada uma |
+| `POST /api/recommendations` | Prateleiras da home (dos seus gêneros, escolhidos para você, parecidos com os escolhidos); `shuffleSeed` sorteia entre os melhores de cada uma |
 | `GET /api/recommendations/candidates` | Títulos para o onboarding |
-| `POST /api/discovery` | Até 6 títulos para um pedido em texto livre |
+| `POST /api/recommendations/ai` | 3 títulos escolhidos pela IA para o perfil, um de cada prateleira da home, com o motivo de cada um |
 | `GET /api/status` | Tamanho do acervo e últimas sincronizações |
 
 Listas na query string usam a chave repetida (`?area=a&area=b`).
@@ -168,6 +169,7 @@ CDD dos gêneros são comparados sem o prefixo de coleção do catálogo (`CE`, 
 ### IA
 
 O Gemini nunca busca no catálogo: a API seleciona candidatos do acervo local e a IA
-só os ordena e explica. Qualquer falha (sem chave, erro, cota) cai na seleção por
+só os ordena e explica. Do visitante, recebe só o perfil anônimo (nomes das áreas,
+cursos e gêneros escolhidos e os títulos marcados), sem nenhum id. Qualquer falha (sem chave, erro, cota) cai na seleção por
 regras. As explicações ficam em cache no banco. As rotas de IA têm limite por IP
 (429 acima dele) e os pedidos não são gravados nem logados.

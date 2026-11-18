@@ -8,12 +8,13 @@ from typing import Literal
 
 from django.db import connection
 from django.db.models import Case, Exists, F, IntegerField, OuterRef, Prefetch, QuerySet, Value, When
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Upper
 
 from catalog.models import Book, BookAuthor, CopyStatus
 from catalog.services import search_index
 
-SortOrder = Literal["relevance", "popular", "recent", "title"]
+SortOrder = Literal["relevance", "popular", "recent", "title", "year"]
 
 # Títulos com exemplar, mas nenhum livre para empréstimo (filtro available=false).
 UNAVAILABLE_STATUSES = (CopyStatus.IN_LIBRARY_USE, CopyStatus.ON_LOAN, CopyStatus.UNAVAILABLE)
@@ -25,6 +26,9 @@ DOCUMENT_TYPES = {
     "thesis": "Teses, dissertações, monografias, tcc",
     "periodical": "Periódico",
 }
+# Equipamentos que a biblioteca empresta pelo mesmo sistema: não são acervo e
+# nunca aparecem na listagem.
+EQUIPMENT_TYPES = ("Chave", "Computador Pessoal", "Fone de ouvido")
 
 
 @dataclass(frozen=True)
@@ -39,6 +43,11 @@ class BookFilters:
     types: tuple[str, ...] = ()
     #: True: só com exemplar disponível; False: só sem; None: todos.
     available: bool | None = None
+    #: Idiomas como o catálogo grava ("Português", "Inglês").
+    languages: tuple[str, ...] = ()
+    #: Ano de publicação, inclusive; livros sem ano ficam de fora quando há limite.
+    year_from: int | None = None
+    year_to: int | None = None
 
 
 @dataclass(frozen=True)
@@ -60,8 +69,8 @@ def load_in_order(ids: Sequence[str]) -> list[Book]:
 
 
 def filtered(filters: BookFilters) -> QuerySet[Book]:
-    """Livros ativos que atendem aos filtros."""
-    queryset = Book.objects.filter(is_active=True)
+    """Livros ativos que atendem aos filtros, sem os equipamentos."""
+    queryset = Book.objects.filter(is_active=True).exclude(document_type__in=EQUIPMENT_TYPES)
     if filters.area_ids:
         queryset = queryset.filter(area_id__in=filters.area_ids)
     if filters.course_ids:
@@ -76,7 +85,27 @@ def filtered(filters: BookFilters) -> QuerySet[Book]:
         queryset = queryset.filter(copy_status=CopyStatus.AVAILABLE)
     elif filters.available is False:
         queryset = queryset.filter(copy_status__in=UNAVAILABLE_STATUSES)
+    if filters.languages:
+        # Subconsulta própria: não depende do apelido da tabela quando esta consulta
+        # vira subconsulta (como nas contagens dos filtros).
+        placeholders = ", ".join(["%s"] * len(filters.languages))
+        queryset = queryset.filter(id__in=RawSQL(
+            f"SELECT b.id FROM {Book._meta.db_table} b, json_each(b.languages) j WHERE j.value IN ({placeholders})",
+            filters.languages))
+    if filters.year_from is not None:
+        queryset = queryset.filter(year__gte=filters.year_from)
+    if filters.year_to is not None:
+        queryset = queryset.filter(year__lte=filters.year_to)
     return queryset
+
+
+def languages() -> list[str]:
+    """Idiomas dos livros ativos como o catálogo grava, do com mais livros ao com
+    menos: as opções do filtro de idioma. Uma consulta de ~80 ms no acervo real."""
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT j.value FROM {Book._meta.db_table} b, json_each(b.languages) j "
+                       "WHERE b.is_active GROUP BY j.value ORDER BY count(*) DESC, j.value")
+        return [str(row[0]) for row in cursor.fetchall() if row[0]]
 
 
 def search(text: str, filters: BookFilters, *, sort: SortOrder | None = None,
@@ -110,6 +139,7 @@ def _list_page(queryset: QuerySet[Book], sort: SortOrder, prefer_area_ids: Seque
         "popular": [F("copies_total").desc(nulls_last=True), Upper("title")],
         "recent": [F("cataloged_at").desc(nulls_last=True), Upper("title")],
         "title": [Upper("title"), "id"],
+        "year": [F("year").desc(nulls_last=True), Upper("title")],
     }[sort]
     if prefer_area_ids:
         queryset = queryset.annotate(preferred=Case(When(area_id__in=prefer_area_ids, then=Value(1)),
@@ -133,6 +163,7 @@ def _search_page(match: str, queryset: QuerySet[Book], sort: SortOrder, prefer_a
         "popular": "b.copies_total IS NULL, b.copies_total DESC, upper(b.title)",
         "recent": "b.cataloged_at IS NULL, b.cataloged_at DESC, upper(b.title)",
         "title": "upper(b.title)",
+        "year": "b.year IS NULL, b.year DESC, upper(b.title)",
     }[sort]
     order_params: list[object] = []
     if prefer_area_ids:

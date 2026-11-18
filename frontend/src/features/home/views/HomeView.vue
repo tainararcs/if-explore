@@ -1,4 +1,7 @@
-<!-- Homepage: busca no acervo e prateleiras de recomendações personalizadas. -->
+<!--
+  Homepage: prateleiras de recomendações personalizadas, com a prateleira da IA em
+  destaque no topo. A busca fica no catálogo completo (/catalog).
+-->
 <template>
   <div>
     <AppHeader sticky />
@@ -19,15 +22,9 @@
         </p>
       </div>
 
-      <SearchBar
-        v-model="input"
-        class="mt-6 max-w-[640px]"
-        @clear="clear"
-      />
-
       <fieldset
         v-if="areas.length > 1"
-        class="m-0 mt-4 min-w-0 border-0 p-0"
+        class="m-0 mt-6 min-w-0 border-0 p-0"
       >
         <legend class="sr-only">
           {{ t('home.filterLegend') }}
@@ -53,8 +50,19 @@
         </div>
       </fieldset>
 
+      <AiSuggestionShelf
+        class="mt-8"
+        :status="aiStatus"
+        :items="visibleSuggestions"
+        :message="aiMessage"
+        :notice="aiNotice"
+        :is-loading-more="aiLoadingMore"
+        :area-names="areaNames"
+        @request="requestSuggestions"
+      />
+
       <div
-        v-if="hasError"
+        v-if="status === 'error'"
         class="mt-12"
         role="alert"
       >
@@ -64,14 +72,14 @@
         <button
           type="button"
           class="button button--secondary"
-          @click="retry"
+          @click="reload"
         >
           {{ t('home.retry') }}
         </button>
       </div>
 
       <div
-        v-else-if="isLoading"
+        v-else-if="status === 'loading'"
         class="mt-12 grid gap-12"
         role="status"
       >
@@ -92,19 +100,6 @@
         </div>
       </div>
 
-      <SearchResults
-        v-else-if="isSearching"
-        class="mt-12"
-        :query="query"
-        :books="results"
-        :total="total"
-        :can-load-more="canLoadMore"
-        :is-loading-more="isLoadingMore"
-        :load-more-failed="loadMoreFailed"
-        @clear="clear"
-        @load-more="loadMore"
-      />
-
       <div
         v-else
         class="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 md:gap-16"
@@ -114,7 +109,7 @@
           :key="shelf.id"
           :title="shelfTitle(shelf)"
           :books="shelf.books"
-          :featured="shelf.kind === 'forYou'"
+          featured
         />
         <p
           v-if="visibleShelves.length === 0"
@@ -122,7 +117,7 @@
         >
           {{ t('home.emptyFilter') }}
         </p>
-        <div>
+        <div class="flex justify-center">
           <button
             type="button"
             class="button button--secondary"
@@ -139,42 +134,45 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppFooter from '../../../components/AppFooter.vue'
 import AppHeader from '../../../components/AppHeader.vue'
-import SelectableChip from '../../../components/SelectableChip.vue'
 import BookShelf from '../../../components/BookShelf.vue'
-import SearchBar from '../components/SearchBar.vue'
-import SearchResults from '../components/SearchResults.vue'
-import { useCatalogSearch } from '../composables/useCatalogSearch'
+import SelectableChip from '../../../components/SelectableChip.vue'
+import { getKnowledgeAreas } from '../../../services/catalog-service'
+import AiSuggestionShelf from '../components/AiSuggestionShelf.vue'
+import { useAiSuggestions } from '../composables/useAiSuggestions'
 import { useHomeRecommendations } from '../composables/useHomeRecommendations'
 import type { Shelf } from '../models/recommendation'
 
 const { t } = useI18n()
 
-const { status: shelvesStatus, shelves, areas, reload, shuffle } = useHomeRecommendations()
-const areaIds = computed(() => areas.value.map((area) => area.id))
+const { status, shelves, areas, reload, shuffle } = useHomeRecommendations()
 const activeAreaId = ref<string | null>(null)
-const {
-  input,
-  query,
-  isSearching,
-  results,
-  total,
-  status: searchStatus,
-  canLoadMore,
-  isLoadingMore,
-  loadMoreFailed,
-  clear,
-  loadMore,
-  reload: reloadSearch,
-} = useCatalogSearch(areaIds, activeAreaId)
 
-const isLoading = computed(
-  () => shelvesStatus.value === 'loading' || searchStatus.value === 'loading',
+// A IA não repete o que já está em destaque em "Escolhidos para você".
+const forYouIds = computed(
+  () => shelves.value.find((shelf) => shelf.kind === 'forYou')?.books.map((book) => book.id) ?? [],
 )
-const hasError = computed(() => shelvesStatus.value === 'error' || searchStatus.value === 'error')
+const {
+  status: aiStatus,
+  items: aiItems,
+  message: aiMessage,
+  notice: aiNotice,
+  isLoadingMore: aiLoadingMore,
+  request: requestSuggestions,
+} = useAiSuggestions(forYouIds)
+
+// Nomes de todas as áreas, para os cards da IA (que podem sugerir fora das escolhidas).
+const areaNames = ref(new Map<string, string>())
+onMounted(async () => {
+  try {
+    areaNames.value = new Map((await getKnowledgeAreas()).map((area) => [area.id, area.name]))
+  } catch {
+    // Sem os nomes, os cards só não mostram a área.
+  }
+})
 
 const areaList = computed(() =>
   new Intl.ListFormat('pt-BR', { type: 'conjunction' }).format(
@@ -182,18 +180,16 @@ const areaList = computed(() =>
   ),
 )
 
-// O filtro por área vale para as prateleiras (aqui) e para a busca (na API); prateleiras vazias somem.
+const byActiveArea = (areaId: string | null) => activeAreaId.value === null || areaId === activeAreaId.value
+
+// O filtro por área vale para todas as prateleiras; as que ficam vazias somem.
 const visibleShelves = computed(() =>
   shelves.value
-    .map((shelf) => ({
-      ...shelf,
-      books:
-        activeAreaId.value === null
-          ? shelf.books
-          : shelf.books.filter((book) => book.areaId === activeAreaId.value),
-    }))
+    .map((shelf) => ({ ...shelf, books: shelf.books.filter((book) => byActiveArea(book.areaId)) }))
     .filter((shelf) => shelf.books.length > 0),
 )
+
+const visibleSuggestions = computed(() => aiItems.value.filter((item) => byActiveArea(item.book.areaId)))
 
 function shelfTitle(shelf: Shelf): string {
   return t(`home.shelves.${shelf.kind}`, { subject: shelf.subject ?? '' })
@@ -203,14 +199,5 @@ function shelfTitle(shelf: Shelf): string {
 function showOtherSuggestions(): void {
   window.scrollTo({ top: 0 })
   void shuffle()
-}
-
-function retry(): void {
-  if (shelvesStatus.value === 'error') {
-    void reload()
-  }
-  if (searchStatus.value === 'error') {
-    void reloadSearch()
-  }
 }
 </script>

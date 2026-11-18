@@ -1,14 +1,12 @@
-<!-- Resultados da busca em grade, com "mostrar mais", estado vazio e ação para limpar. -->
+<!-- Resultados do catálogo em grade, com "mostrar mais", estado vazio e ação para limpar tudo. -->
 <template>
-  <section
-    aria-labelledby="search-results-title"
-  >
+  <section aria-labelledby="catalog-results-title">
     <h2
-      id="search-results-title"
-      class="mb-6 text-h2"
+      id="catalog-results-title"
+      class="sr-only"
       aria-live="polite"
     >
-      {{ t('home.search.results', { query }, total) }}
+      {{ heading }}
     </h2>
 
     <template v-if="books.length > 0">
@@ -30,7 +28,7 @@
           class="text-danger"
           role="alert"
         >
-          {{ t('home.search.loadMoreError') }}
+          {{ t('catalog.results.loadMoreError') }}
         </p>
         <button
           type="button"
@@ -39,7 +37,7 @@
           :aria-busy="isLoadingMore"
           @click="emit('loadMore')"
         >
-          {{ isLoadingMore ? t('home.search.loadingMore') : t('home.search.loadMore') }}
+          {{ isLoadingMore ? t('catalog.results.loadingMore') : t('catalog.results.loadMore') }}
         </button>
       </div>
     </template>
@@ -52,31 +50,33 @@
         <IconSearch />
       </span>
       <p class="font-display text-h2 leading-[1.2]">
-        {{ t('home.search.emptyTitle') }}
+        {{ t('catalog.results.emptyTitle') }}
       </p>
       <p class="mb-2 text-text-muted">
-        {{ t('home.search.emptyText') }}
+        {{ t('catalog.results.emptyText') }}
       </p>
       <button
         type="button"
         class="button button--secondary"
-        @click="emit('clear')"
+        @click="emit('clearAll')"
       >
-        {{ t('home.search.clearAction') }}
+        {{ t('catalog.results.clearAll') }}
       </button>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BookCard from '../../../components/BookCard.vue'
 import IconSearch from '../../../components/icons/IconSearch.vue'
 import type { Book } from '../../../models/book'
 
 interface Props {
+  /** Texto buscado; vazio quando o catálogo só está filtrado. */
   query: string
-  /** Resultados já carregados, na ordem de relevância. */
+  /** Livros já carregados, na ordem escolhida. */
   books: Book[]
   /** Total encontrado no acervo, que pode ser maior que os carregados. */
   total: number
@@ -85,12 +85,19 @@ interface Props {
   loadMoreFailed: boolean
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  clear: []
+  clearAll: []
   loadMore: []
 }>()
 
 const { t } = useI18n()
+const numbers = new Intl.NumberFormat('pt-BR')
+
+const heading = computed(() =>
+  props.query
+    ? t('catalog.results.countFor', { query: props.query, n: numbers.format(props.total) }, props.total)
+    : t('catalog.results.count', { n: numbers.format(props.total) }, props.total),
+)
 </script>

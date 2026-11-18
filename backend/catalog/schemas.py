@@ -14,9 +14,9 @@ from pydantic import ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 from catalog.models import Book, CopyStatus, Course, KnowledgeArea, LiteraryGenre
-from catalog.services.discovery import MAX_EXCLUDED, MAX_QUERY_LENGTH, MIN_QUERY_LENGTH, Source, normalize_query
+from catalog.services.discovery import MAX_EXCLUDED, Source
+from catalog.services.recommendations import ShelfKind
 
-ShelfKind = Literal["forYou", "fromYourBooks", "yourGenres", "moreFromArea", "forPleasure"]
 #: Id de livro vindo do cliente: o mesmo tamanho máximo de `Book.id`.
 BookIdIn = Annotated[str, Field(max_length=Book._meta.get_field("id").max_length)]
 
@@ -204,7 +204,7 @@ class RecommendationsIn(ProfileIn):
 
 
 class ShelfOut(CamelSchema):
-    """Prateleira; `subject` completa o título (área ou gênero) quando o tipo exige."""
+    """Prateleira da home; `subject` completa o título quando o tipo exige (hoje, sempre null)."""
 
     id: str
     kind: ShelfKind
@@ -219,26 +219,18 @@ class RecommendationsOut(CamelSchema):
 
 
 # ---- descoberta com IA
-class DiscoveryIn(CamelSchema):
-    """Pedido em texto livre e, opcionalmente, as preferências salvas e os livros
-    já sugeridos (para pedir outras sugestões)."""
+class DiscoveryIn(ProfileIn):
+    """Preferências do visitante e os livros que não devem voltar: os já mostrados
+    na home e as sugestões anteriores (para pedir outras)."""
 
-    query: str = Field(min_length=MIN_QUERY_LENGTH, max_length=MAX_QUERY_LENGTH)
-    profile: ProfileIn | None = None
     exclude_ids: list[BookIdIn] = Field(default_factory=list, max_length=MAX_EXCLUDED)
-
-    @field_validator("query")
-    @classmethod
-    def _normalized_query(cls, value: str) -> str:
-        query = normalize_query(value)
-        if len(query) < MIN_QUERY_LENGTH:
-            raise ValueError("o pedido precisa ter pelo menos %d caracteres" % MIN_QUERY_LENGTH)
-        return query
 
 
 class DiscoveryItemOut(CamelSchema):
     book: BookSummaryOut
-    #: Por que o livro atende ao pedido; null na seleção por regras.
+    #: Prateleira da home de onde o livro veio: a IA escolhe um de cada.
+    kind: ShelfKind
+    #: Por que o livro combina com o perfil; null na seleção por regras.
     reason: str | None
 
 

@@ -30,7 +30,7 @@ backend/
 |---|---|
 | `phl_client/` | Talk to the PHL catalog and turn its pages into typed data. Knows nothing about Django. |
 | `catalog/models.py` | Entities, constraints, and indexes. The ORM is the data access layer. |
-| `catalog/services/` | Rules: sync, classification, copy status, search, recommendations, live availability, AI discovery. |
+| `catalog/services/` | Rules: sync, classification, copy status, search, recommendations, live availability, AI suggestions. |
 | `catalog/api.py` | Routes: validate parameters, call a service, convert to schemas. |
 | `catalog/schemas.py` | The JSON contract with the frontend. |
 | `catalog/admin.py` | Curation of the taxonomy; synced data is read-only. |
@@ -123,7 +123,7 @@ collection.
 - Ranking (search relevance, related books, recommendation shelves, onboarding
   candidates) happens in the services, never in the frontend.
 - Only recommendable document types (books, e-books, audiobooks, theses) enter
-  recommendations, related shelves, onboarding candidates, and AI discovery, and
+  recommendations, related shelves, onboarding candidates, and AI suggestions, and
   only when they can be read: titles whose copies are all unavailable, and titles
   without copies or links, are left out (`recommendable()`).
 - Raw SQL is acceptable where the ORM cannot express the query well (FTS5,
@@ -134,8 +134,10 @@ collection.
   (rules). The model only ranks and explains candidates selected from the local
   collection; ids outside them are discarded, and any failure falls back to the
   rule-based selection, so AI errors never become 5xx. Send only catalog data and
-  the visitor's request text, never preferences or identifiers; do not log
-  prompts. State the Gemini calls a change adds, like PHL requests.
+  the visitor's anonymous reading profile (names of the chosen areas, courses,
+  and genres, and the titles of the seed books), never ids or anything that
+  identifies the visitor; store and log nothing the visitor sends, and do not
+  log prompts. State the Gemini calls a change adds, like PHL requests.
 - Generated text that is expensive to repeat is cached in its own model
   (`BookExplanation`), keyed by a hash of the data sent, never in synced fields.
 
@@ -151,7 +153,7 @@ collection.
   books, 422 for invalid parameters (Ninja validation).
 - Reading endpoints are `GET`; `POST` is used only when the input needs a body
   and nothing the visitor sends is stored (`/api/recommendations`,
-  `/api/discovery`). Routes that call Gemini are throttled per IP and answer
+  `/api/recommendations/ai`). Routes that call Gemini are throttled per IP and answer
   429 above the limit.
 - CORS is off by default (frontend on the same domain). Origins come only from
   `CORS_ALLOWED_ORIGINS`, apply only to `/api/`, and never allow credentials.

@@ -44,10 +44,11 @@ BookType = Literal["book", "ebook", "audiobook", "thesis", "periodical"]
 MAX_IDS = 60
 MAX_PAGE_SIZE = 100
 MAX_QUERY_LENGTH = 200
+MAX_LANGUAGE_LENGTH = 40
 
 
 class DiscoveryThrottle(AnonRateThrottle):
-    """Limite por IP dos pedidos de descoberta, que sempre chamam o Gemini."""
+    """Limite por IP dos pedidos de sugestões da IA, que sempre chamam o Gemini."""
 
     scope = "discovery"
 
@@ -100,6 +101,12 @@ def list_genres(request: HttpRequest) -> list[GenreOut]:
     return [GenreOut.from_model(genre) for genre in LiteraryGenre.objects.all()]
 
 
+@router.get("/languages", response=list[str], tags=["taxonomia"])
+def list_languages(request: HttpRequest) -> list[str]:
+    """Idiomas do acervo, como o catálogo grava, do com mais livros ao com menos."""
+    return books.languages()
+
+
 # ---- livros
 @router.get("/books", response=BookPageOut, by_alias=True, tags=["livros"])
 def list_books(
@@ -112,6 +119,9 @@ def list_books(
     type_: list[BookType] = Query([], alias="type", description="Tipos de documento (OU)."),
     available: bool | None = Query(None, description="Só com (true) ou sem (false) exemplar livre para "
                                    "empréstimo; títulos de situação incerta ou sem exemplar ficam fora dos dois."),
+    language: list[str] = Query([], description="Idiomas como o catálogo grava, ex.: Inglês (OU)."),
+    year_from: int | None = Query(None, alias="yearFrom", ge=0, le=9999, description="Publicado a partir de."),
+    year_to: int | None = Query(None, alias="yearTo", ge=0, le=9999, description="Publicado até."),
     prefer_area: list[str] = Query([], alias="preferArea", description="Áreas que vêm primeiro."),
     sort: books.SortOrder | None = Query(None, description="Padrão: relevance com q, popular sem."),
     page: int = Query(1, ge=1),
@@ -123,10 +133,18 @@ def list_books(
             raise HttpError(422, "no máximo %d ids por consulta" % MAX_IDS)
         items = _summaries(ids)
         return BookPageOut(items=items, total=len(items), page=1, page_size=len(items))
-    filters = books.BookFilters(area_ids=tuple(area), course_ids=tuple(course), genre_ids=tuple(genre),
-                                types=tuple(type_), available=available)
+    filters = _filters(area, course, genre, type_, available, language, year_from, year_to)
     result = books.search(q, filters, sort=sort, prefer_area_ids=prefer_area, page=page, page_size=page_size)
     return BookPageOut(items=_summaries(result.ids), total=result.total, page=page, page_size=page_size)
+
+
+def _filters(area: list[str], course: list[str], genre: list[str], types: list[BookType], available: bool | None,
+             language: list[str], year_from: int | None, year_to: int | None) -> books.BookFilters:
+    if any(len(name) > MAX_LANGUAGE_LENGTH for name in language):
+        raise HttpError(422, "idioma inválido")
+    return books.BookFilters(area_ids=tuple(area), course_ids=tuple(course), genre_ids=tuple(genre),
+                             types=tuple(types), available=available, languages=tuple(language),
+                             year_from=year_from, year_to=year_to)
 
 
 @router.get("/books/{book_id}", response=BookDetailOut, by_alias=True, tags=["livros"])
@@ -193,20 +211,23 @@ def get_candidates(
 
 
 # ---- descoberta com IA
-@router.post("/discovery", response=DiscoveryOut, by_alias=True, tags=["descoberta"], throttle=DiscoveryThrottle(settings.DISCOVERY_RATE))
-def post_discovery(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
-    """Até 6 títulos do acervo para um pedido em texto livre, com o motivo de cada um.
+@router.post("/recommendations/ai", response=DiscoveryOut, by_alias=True, tags=["recomendações"],
+             throttle=DiscoveryThrottle(settings.DISCOVERY_RATE))
+def post_ai_suggestions(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
+    """3 títulos do acervo escolhidos pela IA para o perfil, um de cada prateleira da home
+    (`kind`), com o motivo de cada um.
 
-    O Gemini escolhe só entre candidatos do acervo local; sem chave ou se a IA
-    falhar, a seleção é por regras (`source="rules"`). É POST porque o pedido vai
-    no corpo; nada do que o visitante envia é gravado.
+    O Gemini escolhe só entre candidatos do acervo local e recebe o perfil anônimo
+    (nomes de áreas, cursos e gêneros e os títulos escolhidos). Sem chave ou se a
+    IA falhar, a seleção é por regras (`source="rules"`). É POST porque o perfil
+    vai no corpo; nada do que o visitante envia é gravado.
     """
-    profile = None if body.profile is None else _profile(body.profile)
-    result = discovery.discover(body.query, profile, body.exclude_ids)
+    result = discovery.discover(_profile(body), body.exclude_ids)
     loaded = {book.id: book for book in books.load_in_order([pick.book_id for pick in result.picks])}
     return DiscoveryOut(
         source=result.source, message=result.message,
-        items=[DiscoveryItemOut(book=BookSummaryOut.from_model(loaded[pick.book_id]), reason=pick.reason)
+        items=[DiscoveryItemOut(book=BookSummaryOut.from_model(loaded[pick.book_id]), kind=pick.kind,
+                                 reason=pick.reason)
                for pick in result.picks if pick.book_id in loaded],
     )
 

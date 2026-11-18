@@ -192,4 +192,9 @@ export function parseBookPage(value: unknown, path = 'page'): BookPage {
   }
 }
 
-export { nullableString as parseNullableString, record as parseRecord, string as parseString }
+export {
+  nullableString as parseNullableString,
+  number as parseNumber,
+  record as parseRecord,
+  string as parseString,
+}

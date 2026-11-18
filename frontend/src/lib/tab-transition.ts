@@ -5,14 +5,14 @@ import type { Router } from 'vue-router'
 type TabDirection = 'forward' | 'back'
 
 // "Para você" (recomendações e o onboarding, que é o começo delas) fica à esquerda;
-// "Pergunte à IA", à direita.
-const TAB_PATHS: readonly (readonly string[])[] = [['/home', '/onboarding'], ['/discover']]
+// "Catálogo completo", à direita.
+const TAB_PATHS: readonly (readonly string[])[] = [['/home', '/onboarding'], ['/catalog']]
 
 /**
  * Indica a qual aba do cabeçalho um caminho pertence.
  *
  * @param path Caminho da rota, sem query nem hash.
- * @returns Posição da aba (0 = "Para você", 1 = "Pergunte à IA") ou `null`
+ * @returns Posição da aba (0 = "Para você", 1 = "Catálogo completo") ou `null`
  * quando a tela não pertence a nenhuma aba.
  */
 export function tabIndexOf(path: string): number | null {

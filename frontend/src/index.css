@@ -392,7 +392,7 @@
 }
 
 /*
- * Troca entre as abas do cabeçalho ("Para você" e "Pergunte à IA"), animada pela
+ * Troca entre as abas do cabeçalho ("Para você" e "Catálogo completo"), animada pela
  * View Transitions API (src/lib/tab-transition.ts). O cabeçalho fica parado, o destaque
  * da aba desliza até a outra posição e o restante da tela desliza para o lado da aba
  * escolhida, conforme data-tab-direction. Os rótulos das abas têm nomes próprios para
@@ -411,8 +411,8 @@
     view-transition-name: header-tab-label-for-you;
   }
 
-  .header-tab-label--discover {
-    view-transition-name: header-tab-label-discover;
+  .header-tab-label--catalog {
+    view-transition-name: header-tab-label-catalog;
   }
 
   ::view-transition-group(*) {
@@ -435,7 +435,7 @@
   }
 
   ::view-transition-group(header-tab-label-for-you),
-  ::view-transition-group(header-tab-label-discover) {
+  ::view-transition-group(header-tab-label-catalog) {
     z-index: 2;
   }
 

@@ -39,7 +39,7 @@ function waitForScrollableHeight(top: number): Promise<void> {
 export const router = createRouter({
   history: createWebHistory(),
   // Nova página começa no topo; voltar restaura a posição. Mudanças só na query
-  // (busca, passo do onboarding) mantêm a rolagem atual.
+  // (busca e filtros do catálogo, passo do onboarding) mantêm a rolagem atual.
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return waitForScrollableHeight(savedPosition.top).then(() => savedPosition)
@@ -68,9 +68,9 @@ export const router = createRouter({
       beforeEnter: () => useReadingPreferences().hasPreferences.value || '/',
     },
     {
-      path: '/discover',
-      component: () => import('../features/discovery/views/DiscoveryView.vue'),
-      meta: { titleKey: 'routes.discover' },
+      path: '/catalog',
+      component: () => import('../features/catalog/views/CatalogView.vue'),
+      meta: { titleKey: 'routes.catalog' },
     },
     {
       path: '/books/:id',
