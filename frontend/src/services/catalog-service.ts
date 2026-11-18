@@ -9,6 +9,7 @@ import {
   parseBookPage,
   parseCourse,
   parseGenre,
+  parseString,
   type BookPage,
 } from './catalog-parsers'
 
@@ -46,6 +47,12 @@ export const getCourses = cached(async (): Promise<Course[]> => {
 export const getLiteraryGenres = cached(async (): Promise<LiteraryGenre[]> => {
   const { data } = await http.get<unknown>('/genres')
   return list(data, 'genres', parseGenre)
+})
+
+/** Idiomas do acervo, como o catálogo grava, do com mais livros ao com menos. */
+export const getLanguages = cached(async (): Promise<string[]> => {
+  const { data } = await http.get<unknown>('/languages')
+  return list(data, 'languages', parseString)
 })
 
 /** Tipos de documento aceitos pelo filtro `type` da API. */

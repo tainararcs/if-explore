@@ -7,24 +7,6 @@ import {
   type SortOrder,
 } from '../../../services/catalog-service'
 
-/** Quantos livros uma opção de filtro traria. */
-export interface FacetCount {
-  id: string
-  count: number
-}
-
-/** Contagens dos filtros do catálogo para os filtros atuais. */
-export interface CatalogFacets {
-  areas: Map<string, number>
-  courses: Map<string, number>
-  genres: Map<string, number>
-  types: Map<string, number>
-  /** Do idioma com mais livros ao com menos; só os que existem no acervo. */
-  languages: FacetCount[]
-  /** Livros com exemplar disponível para empréstimo. */
-  available: number
-}
-
 /** Filtros e ordem do catálogo, como ficam na URL. */
 export interface CatalogState extends Required<Omit<BookFilters, 'yearFrom' | 'yearTo'>> {
   yearFrom: number | null

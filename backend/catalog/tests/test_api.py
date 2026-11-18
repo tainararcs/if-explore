@@ -140,35 +140,15 @@ class BookListTests(ApiTestCase):
         self.assertEqual(self.get("/api/books?q=python&sort=year")["items"][0]["id"], PYTHON_BOOK)
 
 
-class FacetTests(ApiTestCase):
-    def counts(self, facets: dict[str, Any], name: str) -> dict[str, int]:
-        return {item["id"]: item["count"] for item in facets[name]}
-
-    def test_counts_every_option(self) -> None:
-        apply_snapshot(snapshot_records(), status_items(), min_ratio=0.9)
-        facets = self.get("/api/books/facets")
-        self.assertEqual(self.counts(facets, "areas"), {"technology": 5, "health-sciences": 1})
-        self.assertEqual(self.counts(facets, "types")["thesis"], 1)
-        self.assertEqual(self.counts(facets, "courses")["nutrition"], 1)
-        self.assertEqual(facets["available"], 1)
-        self.assertEqual(facets["areas"][0]["id"], "technology")  # do maior ao menor
-
-    def test_a_filter_does_not_narrow_its_own_counts(self) -> None:
-        facets = self.get("/api/books/facets?area=technology")
-        # as outras áreas continuam com o número que trariam
-        self.assertEqual(self.counts(facets, "areas"), {"technology": 5, "health-sciences": 1})
-        # e os demais filtros contam só os livros de Tecnologia
-        self.assertNotIn("nutrition", self.counts(facets, "courses"))
-        self.assertNotIn("thesis", self.counts(facets, "types"))
-
-    def test_text_and_languages(self) -> None:
+class LanguageTests(ApiTestCase):
+    def test_languages_of_active_books_most_common_first(self) -> None:
         Book.objects.filter(id=PYTHON_BOOK).update(languages=["Inglês"])
-        self.assertEqual(self.counts(self.get("/api/books/facets?q=python"), "languages").get("Inglês"), 1)
-        # o filtro de idioma também vale dentro das contagens dos outros filtros
-        facets = self.get("/api/books/facets?language=Ingl%C3%AAs")
-        self.assertEqual(self.counts(facets, "areas"), {"technology": 1})
-        self.assertEqual(sum(self.counts(facets, "courses").values()), 2)
-        self.assertEqual(self.get("/api/books/facets?q=zzzzqwerty")["areas"], [])
+        Book.objects.filter(id=DJANGO_BOOK).update(languages=["Inglês", "Francês"])
+        Book.objects.filter(id=TCC).update(languages=["Francês"], is_active=False)
+        languages = self.get("/api/languages")
+        self.assertEqual(languages[:2], ["Português", "Inglês"])
+        self.assertIn("Francês", languages)
+        self.get("/api/books/facets", status=404)
 
 
 class BookDetailTests(ApiTestCase):

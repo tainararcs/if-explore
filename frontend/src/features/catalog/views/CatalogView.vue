@@ -1,7 +1,7 @@
 <!--
   Catálogo completo: busca e filtros sobre todo o acervo, sem as regras das
-  recomendações. Filtros numa coluna ao lado a partir de 900px; abaixo disso, num
-  painel que abre por um botão.
+  recomendações. Os filtros abrem num painel lateral pelo botão "Filtros", em
+  qualquer tamanho de tela.
 -->
 <template>
   <div>
@@ -27,7 +27,7 @@
       <div class="mt-6 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          class="button button--secondary button--small md:hidden"
+          class="button button--secondary button--small"
           aria-haspopup="dialog"
           @click="openFilters"
         >
@@ -71,24 +71,8 @@
         @clear="clearFilters"
       />
 
-      <div class="mt-8 grid gap-10 md:grid-cols-[260px_minmax(0,1fr)]">
-        <aside
-          class="hidden md:block"
-          :aria-label="t('catalog.filters.title')"
-        >
-          <div class="sticky top-24 max-h-[calc(100dvh-7rem)] overflow-y-auto pe-2 pb-4">
-            <CatalogFilters
-              :state="state"
-              :facets="facets"
-              :areas="areas"
-              :courses="courses"
-              :genres="genres"
-              @update="update"
-            />
-          </div>
-        </aside>
-
-        <div class="min-w-0">
+      <div class="mt-8">
+        <div>
           <div
             v-if="status === 'error'"
             role="alert"
@@ -107,12 +91,12 @@
 
           <div
             v-else-if="status === 'loading'"
-            class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:gap-x-6 lg:grid-cols-4"
+            class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-5 md:gap-x-6 lg:grid-cols-6"
             role="status"
           >
             <span class="sr-only">{{ t('catalog.results.loading') }}</span>
             <span
-              v-for="item in 8"
+              v-for="item in 12"
               :key="item"
               class="skeleton aspect-[2/3] rounded-cover"
               aria-hidden="true"
@@ -160,10 +144,10 @@
         <div class="min-h-0 flex-1 overflow-y-auto px-4 py-6">
           <CatalogFilters
             :state="state"
-            :facets="facets"
             :areas="areas"
             :courses="courses"
             :genres="genres"
+            :languages="languages"
             @update="update"
           />
         </div>
@@ -202,6 +186,7 @@ import type { Course, KnowledgeArea, LiteraryGenre } from '../../../models/taxon
 import {
   getCourses,
   getKnowledgeAreas,
+  getLanguages,
   getLiteraryGenres,
   SORT_ORDERS,
   type SortOrder,
@@ -221,7 +206,6 @@ const {
   books,
   total,
   status,
-  facets,
   activeFilterCount,
   canLoadMore,
   isLoadingMore,
@@ -236,17 +220,20 @@ const {
 const areas = ref<KnowledgeArea[]>([])
 const courses = ref<Course[]>([])
 const genres = ref<LiteraryGenre[]>([])
+const languages = ref<string[]>([])
 
-// Sem a taxonomia os filtros de área, curso e gênero só não aparecem.
+// Sem a taxonomia ou os idiomas, esses filtros só não aparecem.
 onMounted(async () => {
-  const [loadedAreas, loadedCourses, loadedGenres] = await Promise.allSettled([
+  const [loadedAreas, loadedCourses, loadedGenres, loadedLanguages] = await Promise.allSettled([
     getKnowledgeAreas(),
     getCourses(),
     getLiteraryGenres(),
+    getLanguages(),
   ])
   areas.value = loadedAreas.status === 'fulfilled' ? loadedAreas.value : []
   courses.value = loadedCourses.status === 'fulfilled' ? loadedCourses.value : []
   genres.value = loadedGenres.status === 'fulfilled' ? loadedGenres.value : []
+  languages.value = loadedLanguages.status === 'fulfilled' ? loadedLanguages.value : []
 })
 
 const countLabel = computed(() =>

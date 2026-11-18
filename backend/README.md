@@ -110,8 +110,8 @@ Respostas em camelCase, ausentes como `null`, listas paginadas como
 | Rota | O que devolve |
 |---|---|
 | `GET /api/areas` · `/courses` · `/genres` | Taxonomia |
+| `GET /api/languages` | Idiomas do acervo, do mais comum ao menos (opções do filtro de idioma) |
 | `GET /api/books` | Busca e filtros (`q`, `area`, `course`, `genre`, `type`, `available`, `language`, `yearFrom`, `yearTo`, `sort`…); equipamentos nunca entram |
-| `GET /api/books/facets` | Quantos livros cada opção de filtro traria, com os mesmos parâmetros |
 | `GET /api/books/{id}` | Livro completo, com exemplares atualizados ao vivo |
 | `GET /api/books/{id}/related` | Mesmo autor e livros por afinidade |
 | `GET /api/books/{id}/catalog` | Redireciona para a ficha no catálogo oficial |

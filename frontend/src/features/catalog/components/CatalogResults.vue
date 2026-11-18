@@ -10,7 +10,7 @@
     </h2>
 
     <template v-if="books.length > 0">
-      <ul class="m-0 grid list-none grid-cols-2 gap-x-4 gap-y-8 p-0 sm:grid-cols-3 md:gap-x-6 md:gap-y-12 lg:grid-cols-4">
+      <ul class="m-0 grid list-none grid-cols-2 gap-x-4 gap-y-8 p-0 sm:grid-cols-3 md:grid-cols-5 md:gap-x-6 md:gap-y-12 lg:grid-cols-6">
         <li
           v-for="book in books"
           :key="book.id"

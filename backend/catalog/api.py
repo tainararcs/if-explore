@@ -26,7 +26,6 @@ from catalog.schemas import (
     DiscoveryItemOut,
     DiscoveryOut,
     ExplanationOut,
-    FacetsOut,
     GenreOut,
     ProfileIn,
     RecommendationsIn,
@@ -102,6 +101,12 @@ def list_genres(request: HttpRequest) -> list[GenreOut]:
     return [GenreOut.from_model(genre) for genre in LiteraryGenre.objects.all()]
 
 
+@router.get("/languages", response=list[str], tags=["taxonomia"])
+def list_languages(request: HttpRequest) -> list[str]:
+    """Idiomas do acervo, como o catálogo grava, do com mais livros ao com menos."""
+    return books.languages()
+
+
 # ---- livros
 @router.get("/books", response=BookPageOut, by_alias=True, tags=["livros"])
 def list_books(
@@ -131,27 +136,6 @@ def list_books(
     filters = _filters(area, course, genre, type_, available, language, year_from, year_to)
     result = books.search(q, filters, sort=sort, prefer_area_ids=prefer_area, page=page, page_size=page_size)
     return BookPageOut(items=_summaries(result.ids), total=result.total, page=page, page_size=page_size)
-
-
-@router.get("/books/facets", response=FacetsOut, by_alias=True, tags=["livros"])
-def book_facets(
-    request: HttpRequest,
-    q: str = Query("", max_length=MAX_QUERY_LENGTH),
-    area: list[str] = Query([]),
-    course: list[str] = Query([]),
-    genre: list[str] = Query([]),
-    type_: list[BookType] = Query([], alias="type"),
-    available: bool | None = Query(None),
-    language: list[str] = Query([]),
-    year_from: int | None = Query(None, alias="yearFrom", ge=0, le=9999),
-    year_to: int | None = Query(None, alias="yearTo", ge=0, le=9999),
-) -> FacetsOut:
-    """Contagens dos filtros para os mesmos parâmetros de `GET /books`: quantos
-    livros cada opção traria, contada sem o próprio filtro."""
-    result = books.facets(q, _filters(area, course, genre, type_, available, language, year_from, year_to))
-    return FacetsOut(areas=FacetsOut.counts(result.areas), courses=FacetsOut.counts(result.courses),
-                     genres=FacetsOut.counts(result.genres), types=FacetsOut.counts(result.types),
-                     languages=FacetsOut.counts(result.languages), available=result.available)
 
 
 def _filters(area: list[str], course: list[str], genre: list[str], types: list[BookType], available: bool | None,

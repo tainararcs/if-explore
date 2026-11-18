@@ -171,31 +171,6 @@ class BookPageOut(CamelSchema):
     page_size: int
 
 
-class FacetCountOut(CamelSchema):
-    #: Id da área, do curso ou do gênero; chave do tipo; nome do idioma.
-    id: str
-    count: int
-
-
-class FacetsOut(CamelSchema):
-    """Quantos livros cada opção de filtro traria, mantidos os demais filtros.
-    Opções sem livros ficam de fora."""
-
-    areas: list[FacetCountOut]
-    courses: list[FacetCountOut]
-    genres: list[FacetCountOut]
-    types: list[FacetCountOut]
-    languages: list[FacetCountOut]
-    #: Livros com exemplar disponível para empréstimo.
-    available: int
-
-    @staticmethod
-    def counts(values: dict[str, int]) -> list[FacetCountOut]:
-        """Do maior ao menor; empates pelo id."""
-        return [FacetCountOut(id=key, count=count)
-                for key, count in sorted(values.items(), key=lambda item: (-item[1], item[0]))]
-
-
 class SameAuthorOut(CamelSchema):
     author: str
     books: list[BookSummaryOut]

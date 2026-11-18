@@ -1,6 +1,6 @@
 ---
 name: catalog-view
-description: Implement or change the IF Explore full catalog (route `/catalog`, CatalogView.vue) — search and robust filters (type, availability, area, course, genre, language, publication year) over the whole collection, with counts per option, sort, and "Mostrar mais livros", all kept in the URL. Data comes from `GET /api/books` and `GET /api/books/facets` (`backend/`).
+description: Implement or change the IF Explore full catalog (route `/catalog`, CatalogView.vue) — search and robust filters (type, availability, area, course, genre, language, publication year) over the whole collection, in a side panel opened by a button, with sort and "Mostrar mais livros", all kept in the URL. Data comes from `GET /api/books` and `GET /api/languages` (`backend/`).
 ---
 
 # Catalog view
@@ -21,18 +21,19 @@ list with filters; book cards open the book page.
 AppHeader (sticky): [BrandMark] IF Explore   [Para você] [Catálogo completo]   [☰ menu]
 Eyebrow + serif h1 "Catálogo completo" + short lead
 Search bar (max 640px)
-Toolbar: [Filtros (n)] (below 900px) · "<n> livros" · Ordenar por [select]
+Toolbar: [Filtros (n)] · "<n> livros" · Ordenar por [select]
 Active filters: removable pills + "Limpar filtros"
-md+: filters column (260px, sticky, scrolls on its own) | results grid
-base: results grid; filters open in a full-height side <dialog>
+Results grid (full width); filters open in a full-height side <dialog>
 ```
 
-- Grid: 2 columns at base, 3 at `sm`, 4 at `lg`; 24 books at a time with
+- Grid: 2 columns at base, 3 at `sm`, 5 at `md`, 6 at `lg`; 24 books at a time with
   "Mostrar mais livros" (no infinite scroll: the footer stays reachable and
   coming back from a book keeps the place).
-- Filters dialog (below 900px): native `<dialog>` with `showModal()`, title and
-  close button on top, "Limpar filtros" and "Ver <n> resultados" at the bottom;
-  a tap on the backdrop closes it.
+- Filters dialog, on every screen size (a side column was tried and dropped):
+  native `<dialog>` with `showModal()`, full width on phones and 420px on the
+  right from there, title and close button on top, "Limpar filtros" and "Ver <n>
+  resultados" at the bottom; a tap on the backdrop closes it. Each change applies
+  at once.
 
 ## 3. Filters
 
@@ -42,14 +43,12 @@ base: results grid; filters open in a full-height side <dialog>
 | Type | `type` | Opens with book, e-book, audiobook, and thesis; periodicals are an option; `type=any` means all types. Equipment (keys, headphones, computer) never appears (API) |
 | Availability | `available=1` | Only titles with a copy available for loan |
 | Area, course, genre | `area`, `course`, `genre` | Multi-select (OR within a filter, AND between filters); courses grouped by level |
-| Language | `language` | Options come from the counts (names as the catalog writes them) |
+| Language | `language` | Options from `GET /api/languages` (names as the catalog writes them, most common first), loaded once |
 | Publication year | `yearFrom`, `yearTo` | Two number fields, applied on change; a reversed range is swapped |
 | Sort | `sort` | Relevance (only with text), most copies (default without text), recently added, publication year, title |
 
-- `GET /api/books/facets` returns how many books each option would bring,
-  counted without the filter itself. Options show "Nome (n)"; options with zero
-  books disappear unless selected. Counts load after the list (~450 ms), and the
-  filters work without them.
+- Options show no counts: counting every option on each change took ~450 ms and
+  made the filters feel slow, so it was removed.
 - The URL is the source of truth (`catalog-filters.ts`: read, write, defaults):
   reload, back/forward, and coming back from a book keep everything.
   `router.replace` keeps the scroll position.
@@ -60,8 +59,7 @@ base: results grid; filters open in a full-height side <dialog>
 ```
 src/features/catalog/
 ├── views/CatalogView.vue
-├── models/catalog-filters.ts      (URL state, defaults, counts types)
-├── services/facets-service.ts
+├── models/catalog-filters.ts      (URL state and defaults)
 ├── composables/useCatalogBrowse.ts
 └── components/
     ├── SearchBar.vue
@@ -73,10 +71,10 @@ src/features/catalog/
 ## 5. Done when
 
 - Every filter, the sort, and "Mostrar mais livros" work, and the URL restores
-  them; counts update with the other filters.
+  them.
 - Loading (skeleton grid), empty (with "Limpar busca e filtros"), and error
   (with retry) states work.
 - No horizontal page scroll at 360px; the dialog works with keyboard (Escape
-  closes it) and the filters column scrolls on its own at 1440px.
+  closes it) and scrolls on its own at 1440px.
 - No hardcoded interface text; `npm run lint`, `npm run typecheck`, and
   `npm run build` pass.

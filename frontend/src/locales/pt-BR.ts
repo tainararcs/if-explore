@@ -266,9 +266,6 @@ export const ptBR = {
       clear: 'Limpar filtros',
       active: 'Filtros aplicados',
       remove: 'Remover filtro: {name}',
-      option: '{name} ({count})',
-      showMore: 'Mostrar mais',
-      showLess: 'Mostrar menos',
       type: 'Tipo',
       types: {
         book: 'Livros',

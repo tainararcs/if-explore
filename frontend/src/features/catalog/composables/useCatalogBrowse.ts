@@ -1,5 +1,5 @@
 import { isCancel } from 'axios'
-import { computed, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useReadingPreferences } from '../../../composables/useReadingPreferences'
 import type { Book } from '../../../models/book'
@@ -9,10 +9,8 @@ import {
   countActiveFilters,
   readCatalogState,
   writeCatalogState,
-  type CatalogFacets,
   type CatalogState,
 } from '../models/catalog-filters'
-import { getCatalogFacets } from '../services/facets-service'
 
 const DEBOUNCE_MS = 250
 const PAGE_SIZE = 24
@@ -23,12 +21,10 @@ type LoadStatus = 'loading' | 'ready' | 'error'
  * Listagem do catálogo completo com busca, filtros e ordem guardados na URL:
  * recarregar a página ou voltar de um livro mantém tudo como estava.
  *
- * A lista vem da API, 24 livros por vez; as contagens de cada filtro chegam numa
- * consulta à parte, para não atrasar os resultados. Cada nova consulta cancela a
- * anterior, para que uma resposta atrasada não substitua a mais recente. As áreas
+ * A lista vem da API, 24 livros por vez. Cada nova consulta cancela a anterior, para que uma resposta atrasada não substitua a mais recente. As áreas
  * do visitante, quando há preferências, vêm primeiro na ordem.
  *
- * @returns Filtros atuais, texto digitado, resultados, contagens e ações.
+ * @returns Filtros atuais, texto digitado, resultados e ações.
  */
 export function useCatalogBrowse() {
   const route = useRoute()
@@ -42,11 +38,9 @@ export function useCatalogBrowse() {
   const status = ref<LoadStatus>('loading')
   const isLoadingMore = ref(false)
   const loadMoreFailed = ref(false)
-  const facets = shallowRef<CatalogFacets | null>(null)
 
   let page = 1
   let listController: AbortController | null = null
-  let facetsController: AbortController | null = null
 
   const activeFilterCount = computed(() => countActiveFilters(state.value))
   const canLoadMore = computed(() => status.value === 'ready' && books.value.length < total.value)
@@ -95,16 +89,6 @@ export function useCatalogBrowse() {
     }
   }
 
-  async function loadFacets(): Promise<void> {
-    facetsController?.abort()
-    facetsController = new AbortController()
-    try {
-      facets.value = await getCatalogFacets(state.value, facetsController.signal)
-    } catch {
-      // Sem contagens os filtros continuam funcionando, só sem os números.
-    }
-  }
-
   /** Acrescenta a próxima página aos resultados. */
   async function loadMore(): Promise<void> {
     if (!canLoadMore.value || isLoadingMore.value) {
@@ -143,7 +127,7 @@ export function useCatalogBrowse() {
     },
   )
 
-  // A URL é a fonte dos filtros: qualquer mudança nela recarrega lista e contagens.
+  // A URL é a fonte dos filtros: qualquer mudança nela recarrega a lista.
   // Ao sair para outra tela a query muda também; ali não há o que carregar.
   const catalogPath = route.path
   watch(
@@ -151,16 +135,12 @@ export function useCatalogBrowse() {
     (key) => {
       if (key !== null) {
         void load()
-        void loadFacets()
       }
     },
     { immediate: true },
   )
 
-  onUnmounted(() => {
-    listController?.abort()
-    facetsController?.abort()
-  })
+  onUnmounted(() => listController?.abort())
 
   return {
     state,
@@ -168,7 +148,6 @@ export function useCatalogBrowse() {
     books,
     total,
     status,
-    facets,
     activeFilterCount,
     canLoadMore,
     isLoadingMore,

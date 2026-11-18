@@ -1,7 +1,6 @@
 <!--
   Filtros do catálogo: tipo, disponibilidade, área, curso (por nível), gênero,
-  idioma e ano de publicação. Mostra quantos livros cada opção traria; opções sem
-  livros somem, a não ser que estejam marcadas.
+  idioma e ano de publicação. Cada mudança vale na hora.
 -->
 <template>
   <div class="flex flex-col gap-8">
@@ -17,7 +16,7 @@
           :selected="state.types.includes(type)"
           @toggle="emit('update', { types: toggled(state.types, type) })"
         >
-          {{ label(t(`catalog.filters.types.${type}`), countOf(facets?.types, type)) }}
+          {{ t(`catalog.filters.types.${type}`) }}
         </SelectableChip>
       </div>
     </fieldset>
@@ -32,13 +31,13 @@
           :selected="state.availableOnly"
           @toggle="emit('update', { availableOnly: !state.availableOnly })"
         >
-          {{ label(t('catalog.filters.availableOnly'), facets?.available) }}
+          {{ t('catalog.filters.availableOnly') }}
         </SelectableChip>
       </div>
     </fieldset>
 
     <fieldset
-      v-if="visibleAreas.length > 0"
+      v-if="areas.length > 0"
       class="filter-group"
     >
       <legend class="filter-legend">
@@ -46,13 +45,13 @@
       </legend>
       <div class="flex flex-wrap gap-2">
         <SelectableChip
-          v-for="area in visibleAreas"
+          v-for="area in areas"
           :key="area.id"
           size="small"
           :selected="state.areaIds.includes(area.id)"
           @toggle="emit('update', { areaIds: toggled(state.areaIds, area.id) })"
         >
-          {{ label(area.name, countOf(facets?.areas, area.id)) }}
+          {{ area.name }}
         </SelectableChip>
       </div>
     </fieldset>
@@ -80,14 +79,14 @@
             :selected="state.courseIds.includes(course.id)"
             @toggle="emit('update', { courseIds: toggled(state.courseIds, course.id) })"
           >
-            {{ label(course.name, countOf(facets?.courses, course.id)) }}
+            {{ course.name }}
           </SelectableChip>
         </div>
       </div>
     </fieldset>
 
     <fieldset
-      v-if="visibleGenres.length > 0"
+      v-if="genres.length > 0"
       class="filter-group"
     >
       <legend class="filter-legend">
@@ -95,19 +94,19 @@
       </legend>
       <div class="flex flex-wrap gap-2">
         <SelectableChip
-          v-for="genre in visibleGenres"
+          v-for="genre in genres"
           :key="genre.id"
           size="small"
           :selected="state.genreIds.includes(genre.id)"
           @toggle="emit('update', { genreIds: toggled(state.genreIds, genre.id) })"
         >
-          {{ label(genre.name, countOf(facets?.genres, genre.id)) }}
+          {{ genre.name }}
         </SelectableChip>
       </div>
     </fieldset>
 
     <fieldset
-      v-if="languages.length > 0"
+      v-if="languageOptions.length > 0"
       class="filter-group"
     >
       <legend class="filter-legend">
@@ -115,13 +114,13 @@
       </legend>
       <div class="flex flex-wrap gap-2">
         <SelectableChip
-          v-for="language in languages"
-          :key="language.id"
+          v-for="language in languageOptions"
+          :key="language"
           size="small"
-          :selected="state.languages.includes(language.id)"
-          @toggle="emit('update', { languages: toggled(state.languages, language.id) })"
+          :selected="state.languages.includes(language)"
+          @toggle="emit('update', { languages: toggled(state.languages, language) })"
         >
-          {{ label(language.id, language.count) }}
+          {{ language }}
         </SelectableChip>
       </div>
     </fieldset>
@@ -171,15 +170,15 @@ import { useI18n } from 'vue-i18n'
 import SelectableChip from '../../../components/SelectableChip.vue'
 import { COURSE_LEVELS, type Course, type KnowledgeArea, type LiteraryGenre } from '../../../models/taxonomy'
 import { BOOK_TYPES } from '../../../services/catalog-service'
-import type { CatalogFacets, CatalogState, FacetCount } from '../models/catalog-filters'
+import type { CatalogState } from '../models/catalog-filters'
 
 interface Props {
   state: CatalogState
-  /** Contagens dos filtros; `null` enquanto carregam (as opções aparecem sem números). */
-  facets: CatalogFacets | null
   areas: KnowledgeArea[]
   courses: Course[]
   genres: LiteraryGenre[]
+  /** Idiomas do acervo, do com mais livros ao com menos. */
+  languages: string[]
 }
 
 const props = defineProps<Props>()
@@ -189,7 +188,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const numbers = new Intl.NumberFormat('pt-BR')
 
 // O acervo tem títulos do século XVIII; o campo aceita qualquer ano até o atual.
 const MIN_YEAR = 1700
@@ -199,46 +197,18 @@ function toggled<T extends string>(items: readonly T[], item: T): T[] {
   return items.includes(item) ? items.filter((value) => value !== item) : [...items, item]
 }
 
-/** Com as contagens carregadas, opção ausente nelas traria 0 livros. */
-function countOf(counts: Map<string, number> | undefined, id: string): number | undefined {
-  return counts === undefined ? undefined : (counts.get(id) ?? 0)
-}
-
-function label(name: string, count: number | undefined): string {
-  return count === undefined ? name : t('catalog.filters.option', { name, count: numbers.format(count) })
-}
-
-/** Com contagens, some a opção que não traria livros, a não ser que esteja marcada. */
-function isVisible(id: string, counts: Map<string, number> | undefined, selected: readonly string[]): boolean {
-  return counts === undefined || (counts.get(id) ?? 0) > 0 || selected.includes(id)
-}
-
-const visibleAreas = computed(() =>
-  props.areas.filter((area) => isVisible(area.id, props.facets?.areas, props.state.areaIds)),
-)
-
-const visibleGenres = computed(() =>
-  props.genres.filter((genre) => isVisible(genre.id, props.facets?.genres, props.state.genreIds)),
-)
-
 const courseGroups = computed(() =>
   COURSE_LEVELS.map((level) => ({
     level,
-    courses: props.courses.filter(
-      (course) =>
-        course.level === level && isVisible(course.id, props.facets?.courses, props.state.courseIds),
-    ),
+    courses: props.courses.filter((course) => course.level === level),
   })).filter((group) => group.courses.length > 0),
 )
 
-/** Idiomas do acervo e, se um marcado não tiver livros agora, ele também. */
-const languages = computed<FacetCount[]>(() => {
-  const known = props.facets?.languages ?? []
-  const missing = props.state.languages
-    .filter((language) => !known.some((item) => item.id === language))
-    .map((language) => ({ id: language, count: 0 }))
-  return [...known, ...missing]
-})
+/** Idiomas do acervo e, se a URL trouxer um que não está entre eles, ele também. */
+const languageOptions = computed(() => [
+  ...props.languages,
+  ...props.state.languages.filter((language) => !props.languages.includes(language)),
+])
 
 // O v-model de um campo numérico entrega número quando o texto é um número válido.
 const yearFrom = ref<string | number>(props.state.yearFrom ?? '')

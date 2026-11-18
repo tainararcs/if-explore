@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Literal
 
 from django.db import connection
-from django.db.models import Case, Count, Exists, F, IntegerField, OuterRef, Prefetch, QuerySet, Value, When
+from django.db.models import Case, Exists, F, IntegerField, OuterRef, Prefetch, QuerySet, Value, When
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Upper
 
@@ -48,20 +48,6 @@ class BookFilters:
     #: Ano de publicação, inclusive; livros sem ano ficam de fora quando há limite.
     year_from: int | None = None
     year_to: int | None = None
-
-
-@dataclass(frozen=True)
-class Facets:
-    """Quantos livros cada opção de filtro traria, mantidos os demais filtros."""
-
-    areas: dict[str, int]
-    courses: dict[str, int]
-    genres: dict[str, int]
-    #: Chaves de DOCUMENT_TYPES.
-    types: dict[str, int]
-    languages: dict[str, int]
-    #: Com exemplar disponível para empréstimo.
-    available: int
 
 
 @dataclass(frozen=True)
@@ -113,52 +99,13 @@ def filtered(filters: BookFilters) -> QuerySet[Book]:
     return queryset
 
 
-def _matching(text: str, filters: BookFilters) -> QuerySet[Book]:
-    """Livros filtrados que também casam com o texto, quando há texto."""
-    queryset = filtered(filters)
-    match = search_index.to_match_query(text) if text.strip() else None
-    if match is None:
-        return queryset
-    fts = search_index.FTS_TABLE
-    return queryset.filter(id__in=RawSQL(f"SELECT book_id FROM {fts} WHERE {fts} MATCH %s", [match]))
-
-
-def _count_by(queryset: QuerySet[Book], field: str) -> dict[str, int]:
-    rows = queryset.order_by().values_list(field).annotate(count=Count("id"))
-    return {str(key): count for key, count in rows if key not in (None, "")}
-
-
-def _count_related(through: type, field: str, books: QuerySet[Book]) -> dict[str, int]:
-    rows = (through.objects.filter(book__in=books.values("id")).order_by()
-            .values_list(field).annotate(count=Count("book_id")))
-    return {str(key): count for key, count in rows}
-
-
-def facets(text: str, filters: BookFilters) -> Facets:
-    """Contagens dos filtros da listagem para o texto e os filtros atuais.
-
-    Cada filtro é contado sem ele mesmo (e com todos os outros): como as opções de
-    um filtro se somam, o número mostra quantos livros a opção traria. ~7 consultas.
-    """
-    def without(**changes: object) -> QuerySet[Book]:
-        return _matching(text, replace(filters, **changes))
-
-    keys = {document_type: key for key, document_type in DOCUMENT_TYPES.items()}
-    types = {keys[name]: count for name, count in _count_by(without(types=()), "document_type").items()
-             if name in keys}
-    subquery, subquery_params = without(languages=()).values("id").query.sql_with_params()
+def languages() -> list[str]:
+    """Idiomas dos livros ativos como o catálogo grava, do com mais livros ao com
+    menos: as opções do filtro de idioma. Uma consulta de ~80 ms no acervo real."""
     with connection.cursor() as cursor:
-        cursor.execute(f"SELECT j.value, count(*) FROM {Book._meta.db_table} b, json_each(b.languages) j "
-                       f"WHERE b.id IN ({subquery}) GROUP BY j.value", subquery_params)
-        languages = {str(name): count for name, count in cursor.fetchall()}
-    return Facets(
-        areas=_count_by(without(area_ids=()), "area_id"),
-        courses=_count_related(Book.courses.through, "course_id", without(course_ids=())),
-        genres=_count_related(Book.genres.through, "literarygenre_id", without(genre_ids=())),
-        types=types,
-        languages=languages,
-        available=without(available=None).filter(copy_status=CopyStatus.AVAILABLE).count(),
-    )
+        cursor.execute(f"SELECT j.value FROM {Book._meta.db_table} b, json_each(b.languages) j "
+                       "WHERE b.is_active GROUP BY j.value ORDER BY count(*) DESC, j.value")
+        return [str(row[0]) for row in cursor.fetchall() if row[0]]
 
 
 def search(text: str, filters: BookFilters, *, sort: SortOrder | None = None,
