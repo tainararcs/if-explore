@@ -109,7 +109,7 @@
           :key="shelf.id"
           :title="shelfTitle(shelf)"
           :books="shelf.books"
-          :featured="shelf.kind === 'forYou'"
+          featured
         />
         <p
           v-if="visibleShelves.length === 0"

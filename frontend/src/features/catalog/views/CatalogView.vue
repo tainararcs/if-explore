@@ -25,14 +25,14 @@
       />
 
       <!--
-        Celular: contagem à esquerda e "Filtros" à direita; a ordenação desce para a
-        linha de baixo, de largura total. A partir de 600px, tudo numa linha.
+        Celular: uma linha para cada, na ordem contagem, ordenação e "Filtros", os
+        dois últimos de largura total. A partir de 600px, tudo numa linha.
       -->
       <div class="mt-6 flex flex-wrap items-center gap-3">
-        <p class="m-0 me-auto text-small text-text-muted">
+        <p class="m-0 w-full text-small text-text-muted sm:me-auto sm:w-auto">
           {{ status === 'ready' ? countLabel : '' }}
         </p>
-        <label class="order-last flex w-full items-center gap-2 text-small sm:order-none sm:w-auto">
+        <label class="flex w-full items-center gap-2 text-small sm:w-auto">
           {{ t('catalog.sort.label') }}
           <span class="relative flex min-w-0 flex-1 items-center sm:flex-initial">
             <select
@@ -56,7 +56,7 @@
         </label>
         <button
           type="button"
-          class="button button--secondary button--small"
+          class="button button--secondary button--small w-full sm:w-auto"
           aria-haspopup="dialog"
           @click="openFilters"
         >

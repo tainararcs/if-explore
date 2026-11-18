@@ -54,13 +54,14 @@ Shelf: "Parecidos com os que você escolheu"  (the 3 seed books' similar titles,
   one page, and dot pagination below shows and selects the current page
   (`aria-current`, accessible "Página X de Y" labels). A shelf that fits in one
   page is centered and shows no arrows or dots.
-- "Escolhidos para você" on mobile only (below 900px): one featured book at a
+- Every home shelf on mobile only (below 900px): one featured book at a
   time, centered (`scroll-snap-align: center`, ~62vw wide), with the previous
   and next books peeking at the edges, plus one dot per book. Neighbors are always
   scaled to ~0.88 with faded covers only (text keeps its contrast), including
   with reduced motion. With motion allowed, the change transitions, and where
   supported a scroll-driven animation (`animation-timeline: view(inline)`)
-  makes it follow the finger. Other shelves keep the free scroll on mobile.
+  makes it follow the finger. Other shelves (related books on the book page)
+  keep the free scroll on mobile.
 - Each item is a book card linking to the book page: cover (catalog image, or the
   generated one when missing), title, authors (`formatAuthors`), and availability
   badge (label from `copies.status`; "Consulte na biblioteca" while `copies` is `null`).
@@ -75,7 +76,8 @@ Shelf: "Parecidos com os que você escolheu"  (the 3 seed books' similar titles,
   the session and the ones in "Escolhidos para você" (at most 60). The answer is
   exactly 3 books, one from each shelf in the shelf order (`kind`), each with
   the AI's reason (a book the API added to complete the 3 comes without one).
-  They are shown as `AiSuggestionCard` (cover, the shelf it came from, title
+  They are shown as `AiSuggestionCard` (cover, a short label of the shelf it
+  came from that fits one line — "Seus gêneros", "Curso e área", "Parecidos" —, title
   link, authors, area and year, availability, reason, call number with copy). Cards scroll
   horizontally below 900px and form a 3-column grid from there.
 - Then the button becomes "Outras sugestões". `source: "rules"` (AI down) does

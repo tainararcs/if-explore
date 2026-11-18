@@ -212,6 +212,12 @@ export const ptBR = {
       more: 'Outras sugestões',
       loadingMore: 'Buscando outras sugestões…',
       listLabel: 'Sugestões da IA',
+      // Versões curtas dos títulos das prateleiras, que cabem numa linha do card.
+      kinds: {
+        yourGenres: 'Seus gêneros',
+        forYou: 'Curso e área',
+        fromYourBooks: 'Parecidos',
+      },
       reasonLabel: 'Por que esta leitura',
       location: 'Na estante',
       copy: 'Copiar',

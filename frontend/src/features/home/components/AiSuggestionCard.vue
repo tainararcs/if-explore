@@ -13,7 +13,7 @@
     />
     <div class="flex min-w-0 flex-col gap-1">
       <p class="eyebrow m-0 text-primary">
-        {{ t(`home.shelves.${item.kind}`) }}
+        {{ t(`home.ai.kinds.${item.kind}`) }}
       </p>
       <h3 class="m-0 line-clamp-2 font-display text-h3">
         <RouterLink
