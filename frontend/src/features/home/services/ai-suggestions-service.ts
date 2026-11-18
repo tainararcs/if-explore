@@ -40,7 +40,8 @@ function parseItem(value: unknown, path: string): AiSuggestion {
  * @param profile - Preferências salvas do visitante.
  * @param excludeIds - Livros que não devem voltar (já mostrados na home ou sugeridos).
  * @param signal - Cancela a requisição quando a tela é fechada.
- * @returns Origem, mensagem e até seis livros com o motivo de cada um.
+ * @returns Origem, mensagem e três livros com o motivo de cada um (menos só quando
+ * o acervo não tem candidatos suficientes).
  * @throws RateLimitedError quando a API recusa por excesso de pedidos.
  * @throws ApiContractError quando a resposta sai do contrato.
  */

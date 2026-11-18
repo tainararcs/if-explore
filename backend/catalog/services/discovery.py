@@ -32,7 +32,8 @@ logger = logging.getLogger(__name__)
 Source = Literal["ai", "rules"]
 
 MAX_CANDIDATES = 40
-MAX_PICKS = 6
+# A prateleira da IA tem sempre este número de livros quando o acervo tem candidatos suficientes.
+PICKS = 3
 # Livros já mostrados que um novo pedido ("outras sugestões") pode excluir.
 MAX_EXCLUDED = 60
 MAX_SUBJECTS = 8
@@ -47,9 +48,9 @@ Recebe um JSON com o perfil de leitura anônimo de um visitante ("perfil": área
 gêneros que ele escolheu e os títulos que marcou como do seu gosto) e uma lista de livros do
 acervo ("livros").
 Regras:
-- Escolha de 1 a 6 livros, apenas entre os da lista, usando exatamente o "id" informado.
-- Ordene do mais ao menos adequado ao perfil. Prefira variedade: evite vários do mesmo autor
-  ou do mesmo assunto. Se nenhum servir, devolva a lista vazia.
+- Escolha exatamente 3 livros, apenas entre os da lista, usando exatamente o "id" informado.
+- Ordene do mais ao menos adequado ao perfil. Prefira variedade: evite mais de um do mesmo
+  autor ou do mesmo assunto.
 - Para cada livro, escreva em "motivo" até duas frases curtas, em português do Brasil e falando
   com o visitante ("você"), ligando o livro ao perfil. Baseie-se só nos dados do livro e do
   perfil; não invente fatos.
@@ -64,6 +65,8 @@ DISCOVERY_SCHEMA: dict[str, object] = {
         "mensagem": {"type": "STRING"},
         "recomendacoes": {
             "type": "ARRAY",
+            "minItems": PICKS,
+            "maxItems": PICKS,
             "items": {
                 "type": "OBJECT",
                 "properties": {"id": {"type": "STRING"}, "motivo": {"type": "STRING"}},
@@ -182,7 +185,7 @@ def validate_answer(answer: object, candidate_ids: Sequence[str]) -> tuple[str |
     """Confere a resposta do Gemini contra os candidatos.
 
     Mantém só ids que estão entre os candidatos, na ordem dada, sem repetição e no
-    máximo `MAX_PICKS`; motivos e mensagem passam por `clean_text`.
+    máximo `PICKS`; motivos e mensagem passam por `clean_text`.
 
     Returns:
         A mensagem e as escolhas válidas (pode ser vazia).
@@ -200,14 +203,26 @@ def validate_answer(answer: object, candidate_ids: Sequence[str]) -> tuple[str |
         book_id = item.get("id")
         if isinstance(book_id, str) and book_id in allowed and book_id not in picks:
             picks[book_id] = Pick(book_id, clean_text(item.get("motivo"), REASON_CHARS))
-        if len(picks) == MAX_PICKS:
+        if len(picks) == PICKS:
             break
     return clean_text(answer.get("mensagem"), MESSAGE_CHARS), list(picks.values())
 
 
 def rule_based(candidates: Sequence[Book]) -> Discovery:
     """Seleção sem IA: os primeiros candidatos, sem motivo."""
-    return Discovery("rules", None, [Pick(book.id, None) for book in candidates[:MAX_PICKS]])
+    return Discovery("rules", None, [Pick(book.id, None) for book in candidates[:PICKS]])
+
+
+def complete(picks: Sequence[Pick], candidates: Sequence[Book]) -> list[Pick]:
+    """Completa as escolhas da IA até `PICKS` com os próximos candidatos, sem motivo.
+
+    O schema pede exatamente `PICKS`, mas a IA pode errar ids ou repetir livros, e
+    as escolhas inválidas são descartadas. Só fica com menos quando o acervo não
+    tem candidatos suficientes.
+    """
+    chosen = {pick.book_id for pick in picks}
+    extra = [Pick(book.id, None) for book in candidates if book.id not in chosen]
+    return [*picks, *extra][:PICKS]
 
 
 def discover(profile: Profile, exclude_ids: Sequence[str] = ()) -> Discovery:
@@ -219,9 +234,11 @@ def discover(profile: Profile, exclude_ids: Sequence[str] = ()) -> Discovery:
             sugestões anteriores (até `MAX_EXCLUDED`).
 
     Returns:
-        As escolhas do Gemini (`source="ai"`) ou, sem chave, em qualquer falha ou
-        sem escolha válida, a seleção por regras (`source="rules"`). Sem
-        candidatos no acervo, a lista vem vazia e o Gemini não é chamado.
+        Exatamente `PICKS` livros (menos só quando o acervo não tem candidatos
+        suficientes): as escolhas do Gemini (`source="ai"`), completadas sem
+        motivo se vierem menos válidas; ou, sem chave, em qualquer falha ou sem
+        escolha válida, a seleção por regras (`source="rules"`). Sem candidatos no
+        acervo, a lista vem vazia e o Gemini não é chamado.
     """
     candidates = select_candidates(profile, exclude_ids)
     if not candidates:
@@ -232,7 +249,7 @@ def discover(profile: Profile, exclude_ids: Sequence[str] = ()) -> Discovery:
             answer = ai.generate_json(DISCOVERY_SYSTEM, build_prompt(profile, candidates), DISCOVERY_SCHEMA)
             message, picks = validate_answer(answer, [book.id for book in candidates])
             if picks:
-                return Discovery("ai", message, picks)
+                return Discovery("ai", message, complete(picks, candidates))
             logger.info("descoberta: nenhuma escolha válida do gemini; usando regras")
         except gemini.GeminiError as error:
             logger.info("descoberta sem IA (%s): %s", type(error).__name__, error)

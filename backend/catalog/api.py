@@ -230,7 +230,7 @@ def get_candidates(
 @router.post("/recommendations/ai", response=DiscoveryOut, by_alias=True, tags=["recomendações"],
              throttle=DiscoveryThrottle(settings.DISCOVERY_RATE))
 def post_ai_suggestions(request: HttpRequest, body: DiscoveryIn) -> DiscoveryOut:
-    """Até 6 títulos do acervo escolhidos pela IA para o perfil, com o motivo de cada um.
+    """3 títulos do acervo escolhidos pela IA para o perfil, com o motivo de cada um.
 
     O Gemini escolhe só entre candidatos do acervo local e recebe o perfil anônimo
     (nomes de áreas, cursos e gêneros e os títulos escolhidos). Sem chave ou se a

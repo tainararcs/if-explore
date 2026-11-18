@@ -118,7 +118,7 @@ Respostas em camelCase, ausentes como `null`, listas paginadas como
 | `GET /api/books/{id}/explanation` | Explicação simplificada gerada por IA |
 | `POST /api/recommendations` | Prateleiras para o perfil do visitante; `shuffleSeed` sorteia entre os melhores de cada uma |
 | `GET /api/recommendations/candidates` | Títulos para o onboarding |
-| `POST /api/recommendations/ai` | Até 6 títulos escolhidos pela IA para o perfil, com o motivo de cada um |
+| `POST /api/recommendations/ai` | 3 títulos escolhidos pela IA para o perfil, com o motivo de cada um |
 | `GET /api/status` | Tamanho do acervo e últimas sincronizações |
 
 Listas na query string usam a chave repetida (`?area=a&area=b`).

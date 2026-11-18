@@ -68,8 +68,11 @@ class DiscoveryApiTests(GeminiTestCase):
         result = self.discover()
         self.assertEqual(result["source"], "ai")
         self.assertEqual(result["message"], "Boas leituras!")
-        self.assertEqual(self.ids(result), [other, PYTHON_BOOK])
+        # a IA mandou 2: o terceiro vem do próximo candidato do perfil, sem motivo
+        self.assertEqual(len(result["items"]), discovery.PICKS)
+        self.assertEqual(self.ids(result)[:2], [other, PYTHON_BOOK])
         self.assertEqual(result["items"][1]["reason"], "Você gostou de Django.")
+        self.assertIsNone(result["items"][2]["reason"])
         self.assertIn("callNumber", result["items"][0]["book"])
         self.assertEqual(len(fake.prompts), 1)
 
@@ -80,7 +83,9 @@ class DiscoveryApiTests(GeminiTestCase):
             {"id": PYTHON_BOOK, "motivo": "repetido"},
         ]}))
         result = self.discover()
-        self.assertEqual(self.ids(result), [PYTHON_BOOK])
+        ids = self.ids(result)
+        self.assertEqual((ids[0], len(ids), len(set(ids))), (PYTHON_BOOK, discovery.PICKS, discovery.PICKS))
+        self.assertNotIn("999999", ids)
         self.assertIsNone(result["message"])
 
     def test_failures_fall_back_to_rules(self) -> None:
@@ -94,7 +99,7 @@ class DiscoveryApiTests(GeminiTestCase):
                 self.assertIsNone(result["message"])
                 # os candidatos do perfil, na ordem da pontuação
                 self.assertIn(PYTHON_BOOK, self.ids(result))
-                self.assertLessEqual(len(result["items"]), discovery.MAX_PICKS)
+                self.assertEqual(len(result["items"]), discovery.PICKS)
                 self.assertTrue(all(item["reason"] is None for item in result["items"]))
 
     def test_without_key_gemini_is_not_called(self) -> None:
@@ -108,6 +113,13 @@ class DiscoveryApiTests(GeminiTestCase):
         result = self.post("/api/recommendations/ai", {"areaIds": ["nope"]})
         self.assertEqual((result["source"], result["items"]), ("rules", []))
         self.assertEqual(fake.prompts, [])
+
+    def test_gemini_is_asked_for_exactly_three(self) -> None:
+        recommendations_schema = discovery.DISCOVERY_SCHEMA["properties"]
+        assert isinstance(recommendations_schema, dict)
+        self.assertEqual((recommendations_schema["recomendacoes"]["minItems"],
+                          recommendations_schema["recomendacoes"]["maxItems"]), (3, 3))
+        self.assertIn("exatamente 3 livros", discovery.DISCOVERY_SYSTEM)
 
     def test_prompt_has_the_anonymous_profile_and_only_candidates(self) -> None:
         fake = self.use(FakeGemini({"mensagem": "", "recomendacoes": [{"id": PYTHON_BOOK, "motivo": "ok"}]}))
@@ -215,7 +227,7 @@ class PureRulesTests(SimpleTestCase):
             {"id": "2"}, *({"id": str(n), "motivo": "m"} for n in range(3, 10))]}
         message, picks = discovery.validate_answer(answer, ids)
         self.assertEqual(message, "Oi")
-        self.assertEqual([pick.book_id for pick in picks], ["1", "2", "3", "4", "5", "6"])
+        self.assertEqual([pick.book_id for pick in picks], ["1", "2", "3"])
         self.assertEqual((picks[0].reason, picks[1].reason), ("a b", None))
         with self.assertRaises(gemini.GeminiInvalidResponseError):
             discovery.validate_answer({"recomendacoes": "nada"}, ids)

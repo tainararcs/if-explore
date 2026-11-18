@@ -75,9 +75,10 @@ Shelf: "<gênero>"                            (one per chosen genre)
 - The button posts the saved preferences to `POST /api/recommendations/ai`
   (`ai-suggestions-service.ts`) with `excludeIds`: the books already suggested in
   the session and the ones in "Escolhidos para você" (at most 60). The answer is
-  up to 6 books, each with the AI's reason, shown as `AiSuggestionCard` (cover,
-  area and year, title link, availability, reason, call number with copy). Cards
-  scroll horizontally below 900px and form a grid from there.
+  exactly 3 books, each with the AI's reason (a book the API added to complete
+  the 3 comes without one), shown as `AiSuggestionCard` (cover, area and year,
+  title link, availability, reason, call number with copy). Cards scroll
+  horizontally below 900px and form a 3-column grid from there.
 - Then the button becomes "Outras sugestões". `source: "rules"` (AI down) does
   not add a shelf, because it would repeat the rule-based shelves: show a short
   notice instead. Empty answer and 429 also become short notices.

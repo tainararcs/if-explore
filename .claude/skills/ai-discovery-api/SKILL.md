@@ -12,7 +12,7 @@ sides in the same change (guidelines §7).
 
 ## 1. Goal
 
-The visitor presses one button on the home and gets up to 6 titles **from the
+The visitor presses one button on the home and gets exactly 3 titles **from the
 campus collection** chosen for their saved reading profile, each with a short
 reason. There is no free-text request. The flow is fixed:
 
@@ -77,13 +77,15 @@ Pure where possible; the database is only touched to pick and load candidates.
    profile goes **anonymous**: names only, never slugs or book ids, and nothing
    is stored or logged.
 4. **Response schema**: `{"mensagem": string, "recomendacoes": [{"id": string,
-   "motivo": string}]}` (max 6 items).
+   "motivo": string}]}` with `minItems` and `maxItems` 3 (`PICKS`).
 5. **Validation** (`validate_answer`, pure, tested without the database): keep
-   only ids in the candidate set, in order, without duplicates, at most 6;
+   only ids in the candidate set, in order, without duplicates, at most 3;
    reasons and message trimmed, whitespace collapsed, cut to 280/200 chars, empty
-   → `null`; anything malformed → `GeminiError` path. Fewer than 1 valid item →
-   fallback.
-6. **Fallback** (`rule_based`): the first 6 candidates, `reason = null`,
+   → `null`; anything malformed → `GeminiError` path. No valid item →
+   fallback; 1 or 2 valid items are completed to 3 with the next candidates,
+   without reason (`complete`), so the shelf always has 3 when the collection has
+   enough candidates.
+6. **Fallback** (`rule_based`): the first 3 candidates, `reason = null`,
    `source = "rules"`. Used when the key is empty, on `GeminiError`, or when
    validation leaves nothing.
 

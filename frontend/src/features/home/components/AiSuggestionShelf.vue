@@ -1,6 +1,6 @@
 <!--
   Prateleira especial da IA, em destaque no topo da home. Antes do pedido mostra o
-  convite e o botão; depois, até seis livros com o motivo de cada escolha. No
+  convite e o botão; depois, três livros com o motivo de cada escolha. No
   celular os cards rolam na horizontal; a partir de 900px ficam em grade.
 -->
 <template>
@@ -71,7 +71,7 @@
         {{ t('home.ai.loading') }}
       </p>
       <div
-        class="flex gap-4 overflow-hidden md:grid md:grid-cols-2 lg:grid-cols-3"
+        class="flex gap-4 overflow-hidden md:grid md:grid-cols-3"
         aria-hidden="true"
       >
         <span
@@ -102,7 +102,7 @@
     <template v-else>
       <ul
         v-if="items.length > 0"
-        class="ai-list m-0 mt-4 flex list-none gap-4 overflow-x-auto p-0 md:grid md:grid-cols-2 md:overflow-visible lg:grid-cols-3"
+        class="ai-list m-0 mt-4 flex list-none gap-4 overflow-x-auto p-0 md:grid md:grid-cols-3 md:overflow-visible"
         tabindex="0"
         :aria-label="t('home.ai.listLabel')"
       >
