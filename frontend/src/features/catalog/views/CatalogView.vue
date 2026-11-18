@@ -25,14 +25,15 @@
       />
 
       <!--
-        Celular: uma linha para cada, na ordem contagem, ordenação e "Filtros", os
-        dois últimos de largura total. A partir de 600px, tudo numa linha.
+        Celular: a ordenação no topo, de largura total; abaixo, a contagem à esquerda
+        e "Filtros" à direita. A partir de 600px, tudo numa linha: contagem,
+        ordenação e "Filtros".
       -->
       <div class="mt-6 flex flex-wrap items-center gap-3">
-        <p class="m-0 w-full text-small text-text-muted sm:me-auto sm:w-auto">
+        <p class="m-0 me-auto text-small text-text-muted">
           {{ status === 'ready' ? countLabel : '' }}
         </p>
-        <label class="flex w-full items-center gap-2 text-small sm:w-auto">
+        <label class="order-first flex w-full items-center gap-2 text-small sm:order-none sm:w-auto">
           {{ t('catalog.sort.label') }}
           <span class="relative flex min-w-0 flex-1 items-center sm:flex-initial">
             <select
@@ -56,7 +57,7 @@
         </label>
         <button
           type="button"
-          class="button button--secondary button--small w-full sm:w-auto"
+          class="button button--secondary button--small"
           aria-haspopup="dialog"
           @click="openFilters"
         >
@@ -296,7 +297,8 @@ function closeOnBackdrop(event: MouseEvent): void {
    fica sobre o espaço reservado à direita. */
 .sort-select {
   appearance: none;
-  min-height: 40px;
+  /* A mesma altura do botão "Filtros" (.button--small), que é o alvo de toque mínimo. */
+  min-height: 44px;
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-pill);
   background: var(--color-surface);
