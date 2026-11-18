@@ -57,7 +57,7 @@ sticky cover on desktop, swipeable shelf).
 Mobile (base):
 
 ```
-AppHeader: [BrandMark] IF Explore   [Para você] [✦ Pergunte à IA]   [☰ menu]
+AppHeader: [BrandMark] IF Explore   [Para você] [Catálogo completo]   [☰ menu]
 [← Voltar]
 ┌ band tinted with the cover color (full bleed) ┐
 │        Cover (~144px, centered, shadow)        │
@@ -126,7 +126,7 @@ is hidden without `callNumber`.
   link points to `GET /api/books/{id}/catalog`, which opens a session on click
   and redirects to the book's record (catalog home when the PHL fails).
 - Secondary "Compartilhar" (shared `src/components/ShareButton.vue`, also used
-  by the discovery results): native Web Share when
+  by the AI suggestions): native Web Share when
   available, otherwise copies the link, with the same temporary label feedback
   as "Copiar localização" (`useClipboardFeedback`).
 - Mobile only: once the actions scroll out of view (`useScrolledPast`), a fixed

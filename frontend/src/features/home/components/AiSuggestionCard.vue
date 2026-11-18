@@ -1,5 +1,5 @@
 <!--
-  Sugestão da descoberta: card com capa, área e ano, título (link para o livro),
+  Sugestão da IA na home: card com capa, área e ano, título (link para o livro),
   autoria, disponibilidade, o motivo da IA e a localização na estante com botão
   para copiar. O título cobre o card inteiro como área de clique; o botão de
   copiar fica acima dele, para não haver um controle dentro de outro.
@@ -42,7 +42,7 @@
         class="mt-3"
       >
         <p class="eyebrow m-0 text-primary">
-          {{ t('discovery.reasonLabel') }}
+          {{ t('home.ai.reasonLabel') }}
         </p>
         <p class="m-0 mt-1 max-w-[65ch] text-small">
           {{ item.reason }}
@@ -52,15 +52,15 @@
         v-if="item.book.callNumber"
         class="relative z-10 mt-auto flex flex-wrap items-center gap-x-2 pt-3"
       >
-        <span class="text-caption text-text-muted">{{ t('discovery.location') }}</span>
+        <span class="text-caption text-text-muted">{{ t('home.ai.location') }}</span>
         <span class="font-display text-body">{{ item.book.callNumber }}</span>
         <CopyButton
           class="-ms-1 px-2"
           :text="item.book.callNumber"
-          :label="t('discovery.copy')"
-          :copied-label="t('discovery.copied')"
-          :failed-label="t('discovery.copyFailed')"
-          :accessible-label="t('discovery.copyLocation', { title: item.book.title })"
+          :label="t('home.ai.copy')"
+          :copied-label="t('home.ai.copied')"
+          :failed-label="t('home.ai.copyFailed')"
+          :accessible-label="t('home.ai.copyLocation', { title: item.book.title })"
         />
       </div>
     </div>
@@ -74,10 +74,10 @@ import AvailabilityBadge from '../../../components/AvailabilityBadge.vue'
 import BookCover from '../../../components/BookCover.vue'
 import CopyButton from '../../../components/CopyButton.vue'
 import { formatAuthors } from '../../../lib/catalog-format'
-import type { DiscoveryItem } from '../models/discovery'
+import type { AiSuggestion } from '../models/ai-suggestions'
 
 interface Props {
-  item: DiscoveryItem
+  item: AiSuggestion
   /** Nome da área do livro, quando conhecido. */
   areaName?: string
 }

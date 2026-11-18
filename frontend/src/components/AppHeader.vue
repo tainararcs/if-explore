@@ -1,7 +1,7 @@
 <!--
   Cabeçalho da aplicação: a marca leva às boas-vindas; a navegação principal mostra
-  as duas formas de achar um livro, "Para você" (recomendações) e "Pergunte à IA",
-  como abas; o menu de três linhas reúne preferências, tema e "Sobre".
+  as duas formas de achar um livro, "Para você" (recomendações) e "Catálogo completo"
+  (todo o acervo, com busca e filtros), como abas; o menu de três linhas reúne preferências, tema e "Sobre".
   A partir de 600px as abas ficam centralizadas na mesma linha; abaixo disso ocupam
   uma segunda linha, de largura total, sempre visível.
 -->
@@ -91,7 +91,7 @@ import { tabIndexOf } from '../lib/tab-transition'
 import BrandMark from './BrandMark.vue'
 import HeaderMenu from './HeaderMenu.vue'
 import IconLibrary from './icons/IconLibrary.vue'
-import IconSparkle from './icons/IconSparkle.vue'
+import IconSearch from './icons/IconSearch.vue'
 
 interface Props {
   /** Mantém o cabeçalho fixo no topo durante a rolagem. */
@@ -119,7 +119,6 @@ const { hasPreferences } = useReadingPreferences()
  * compara ao marcar o link exato), por isso os links são `custom`.
  */
 const tabs = computed<HeaderTab[]>(() => {
-  const { q } = route.query
   return [
     {
       id: 'for-you',
@@ -131,14 +130,10 @@ const tabs = computed<HeaderTab[]>(() => {
       isCurrent: tabIndexOf(route.path) === 0,
     },
     {
-      id: 'discover',
-      label: t('common.nav.discover'),
-      icon: IconSparkle,
-      // Na home, o texto da busca vai junto como ponto de partida do pedido.
-      to: {
-        path: '/discover',
-        query: route.path === '/home' && typeof q === 'string' && q ? { q } : {},
-      },
+      id: 'catalog',
+      label: t('common.nav.catalog'),
+      icon: IconSearch,
+      to: '/catalog',
       isCurrent: tabIndexOf(route.path) === 1,
     },
   ]

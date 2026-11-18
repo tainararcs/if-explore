@@ -48,14 +48,35 @@ export const getLiteraryGenres = cached(async (): Promise<LiteraryGenre[]> => {
   return list(data, 'genres', parseGenre)
 })
 
-/** Parâmetros da busca no acervo. */
-export interface BookSearchParams {
+/** Tipos de documento aceitos pelo filtro `type` da API. */
+export const BOOK_TYPES = ['book', 'ebook', 'audiobook', 'thesis', 'periodical'] as const
+export type BookType = (typeof BOOK_TYPES)[number]
+
+/** Ordens aceitas pela API; sem ordem, relevância com texto e mais exemplares sem. */
+export const SORT_ORDERS = ['relevance', 'popular', 'recent', 'year', 'title'] as const
+export type SortOrder = (typeof SORT_ORDERS)[number]
+
+/** Filtros da listagem do acervo. Valores do mesmo filtro se somam (OU). */
+export interface BookFilters {
   /** Texto livre: título, autores, assuntos, sinopse. */
   query: string
-  /** Restringe a estas áreas. */
   areaIds?: readonly string[]
+  courseIds?: readonly string[]
+  genreIds?: readonly string[]
+  types?: readonly BookType[]
+  /** Só títulos com exemplar disponível para empréstimo. */
+  availableOnly?: boolean
+  /** Idiomas como o catálogo grava ("Português", "Inglês"). */
+  languages?: readonly string[]
+  yearFrom?: number | null
+  yearTo?: number | null
+}
+
+/** Parâmetros da busca no acervo: filtros, ordem e página. */
+export interface BookSearchParams extends BookFilters {
   /** Áreas cujos livros vêm primeiro (as do visitante). */
   preferredAreaIds?: readonly string[]
+  sort?: SortOrder
   page?: number
   pageSize?: number
   /** Cancela a requisição, por exemplo quando o visitante continua digitando. */
@@ -63,17 +84,38 @@ export interface BookSearchParams {
 }
 
 /**
- * Busca no acervo, do mais ao menos relevante.
+ * Converte os filtros nos parâmetros de consulta da API (`GET /books` e
+ * `GET /books/facets`), omitindo os vazios.
  *
- * @param params - Texto, filtros e página.
+ * @param filters - Filtros da listagem.
+ * @returns Parâmetros prontos para o cliente HTTP.
+ */
+export function toFilterParams(filters: BookFilters): Record<string, unknown> {
+  return {
+    q: filters.query || undefined,
+    area: filters.areaIds,
+    course: filters.courseIds,
+    genre: filters.genreIds,
+    type: filters.types,
+    available: filters.availableOnly ? true : undefined,
+    language: filters.languages,
+    yearFrom: filters.yearFrom ?? undefined,
+    yearTo: filters.yearTo ?? undefined,
+  }
+}
+
+/**
+ * Busca e lista o acervo, paginado.
+ *
+ * @param params - Texto, filtros, ordem e página.
  * @returns Uma página de resultados com o total encontrado.
  */
 export async function searchBooks(params: BookSearchParams): Promise<BookPage> {
   const { data } = await http.get<unknown>('/books', {
     params: {
-      q: params.query,
-      area: params.areaIds,
+      ...toFilterParams(params),
       preferArea: params.preferredAreaIds,
+      sort: params.sort,
       page: params.page,
       pageSize: params.pageSize,
     },

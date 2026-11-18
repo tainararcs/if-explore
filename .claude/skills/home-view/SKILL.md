@@ -1,6 +1,6 @@
 ---
 name: home-view
-description: Implement or change the IF Explore homepage (route `/home`, HomeView.vue) — search bar plus personalized recommendation shelves built from saved reading preferences, switching to a results grid while searching. Search and shelves come from the project API (`backend/`).
+description: Implement or change the IF Explore homepage (route `/home`, HomeView.vue) — personalized recommendation shelves built from saved reading preferences, with an AI shelf at the top that the visitor requests with one button (books plus the reason for each). Shelves and AI suggestions come from the project API (`backend/`). Search lives in the catalog (`catalog-view` skill).
 ---
 
 # Home view
@@ -12,8 +12,8 @@ reuse them, never duplicate them.
 
 ## 1. Goal
 
-Simple, intuitive discovery: search the library collection and browse personalized
-shelves, Play Books/Netflix style. Book cards open the book page (`/books/:id`).
+Simple, intuitive discovery: browse personalized shelves, Play Books/Netflix
+style, and ask the AI for a few more picks with the reason for each. Book cards open the book page (`/books/:id`).
 
 ## 2. Access
 
@@ -23,28 +23,25 @@ placeholder `HomeView.vue`.
 ## 3. Layout
 
 ```
-AppHeader (sticky): [BrandMark] IF Explore   [Para você] [✦ Pergunte à IA]   [☰ menu]
+AppHeader (sticky): [BrandMark] IF Explore   [Para você] [Catálogo completo]   [☰ menu]
 Greeting eyebrow + serif h1: "Suas recomendações"
 Short line: "Com base em <área 1>, <área 2> e nos títulos que você escolheu."
-Search bar (full width at base, max 640px at md+)
 Area filter chips (horizontal scroll at base): Todas · <selected areas>
-── default mode ──
+AI shelf: "Sugestões da IA"                  (button first; then books with reasons)
 Shelf: "Escolhidos para você"
 Shelf: "Parecidos com os que você escolheu"  (the seed books' similar titles, interleaved)
 Shelf: "Dos seus gêneros"                    (chosen genres interleaved, only with 2+ genres)
 Shelf: "Mais de <área>"                      (one per selected area)
 Shelf: "<gênero>"                            (one per chosen genre)
 [Ver outras sugestões]                       (new shuffle seed, back to the top)
-── search mode (query not empty) ──
-"<n> resultados para “<query>”" + results grid
 ```
 
-- "Pergunte à IA" is a header tab to `/discover` (see the `discovery-view`
-  skill); on the home it carries the search text as `?q=`.
+- "Catálogo completo" is a header tab to `/catalog` (see the `catalog-view`
+  skill), where the search and the filters live.
 - Preferences are adjusted from the header menu ("Ajustar preferências",
   `/onboarding?step=areas`, pre-filled) or from the welcome view; the home has
   no link of its own.
-- Area filter chips narrow every shelf and the results; "Todas" is the default.
+- Area filter chips narrow every shelf, the AI shelf included; "Todas" is the default.
 - Do not show shelves that end up empty after filtering.
 
 ## 4. Shelves
@@ -70,19 +67,24 @@ Shelf: "<gênero>"                            (one per chosen genre)
   generated one when missing), title, authors (`formatAuthors`), and availability
   badge (label from `copies.status`; "Consulte na biblioteca" while `copies` is `null`).
 
-## 5. Search
+## 5. AI shelf ("Sugestões da IA")
 
-- Searches the whole collection through `searchBooks` (`GET /api/books?q=`):
-  title, authors, subjects, and synopsis, case- and accent-insensitive, ranked by
-  relevance with the visitor's areas first (`preferArea`). Debounced ~250ms; a
-  new query cancels the previous request.
-- The area filter applies to the search on the API (`area`) and to the shelves
-  locally.
-- Query synced to the URL (`?q=`) with `router.replace`, so reload keeps it.
-- Results grid: 2 columns at base, 3 at `sm`, 5 at `md`, 6 at `lg`. 24 results at
-  a time with a "Mostrar mais livros" button; the heading shows the total found.
-- Empty result: empty state with a suggestion to check spelling or clear the
-  filter, plus a "Limpar busca" action.
+- Featured panel at the top, before the shelves. Before any request it shows a
+  short invitation, the primary button "Pedir sugestões à IA", and a note on
+  what is sent (the anonymous profile only).
+- The button posts the saved preferences to `POST /api/recommendations/ai`
+  (`ai-suggestions-service.ts`) with `excludeIds`: the books already suggested in
+  the session and the ones in "Escolhidos para você" (at most 60). The answer is
+  up to 6 books, each with the AI's reason, shown as `AiSuggestionCard` (cover,
+  area and year, title link, availability, reason, call number with copy). Cards
+  scroll horizontally below 900px and form a grid from there.
+- Then the button becomes "Outras sugestões". `source: "rules"` (AI down) does
+  not add a shelf, because it would repeat the rule-based shelves: show a short
+  notice instead. Empty answer and 429 also become short notices.
+- The shelf is kept in `sessionStorage` (`ai-suggestions-storage.ts`, ids and
+  reasons, keyed by the profile): coming back to the home reloads the books (1
+  request) without a new Gemini call. Changing preferences discards it.
+- The area filter chips also narrow the AI shelf.
 
 ## 6. Data
 
@@ -96,8 +98,8 @@ Shelf: "<gênero>"                            (one per chosen genre)
   (`shuffle-seed-storage.ts`): each shelf draws from its best ~40 candidates,
   weighted by score. The same seed gives the same shelves, so coming back from a
   book page keeps them; a new visit or "Ver outras sugestões" draws a new seed.
-- A feature composable (`useHomeRecommendations.ts`) exposes shelves and
-  loading/error state; search uses `catalog-service.ts`.
+- Feature composables expose the state: `useHomeRecommendations.ts` (shelves)
+  and `useAiSuggestions.ts` (AI shelf).
 - States: skeleton shelves while loading, error with retry (`role="alert"`).
 
 ## 7. Structure
@@ -106,17 +108,19 @@ Shelf: "<gênero>"                            (one per chosen genre)
 src/features/home/
 ├── views/HomeView.vue
 ├── services/recommendation-service.ts
-├── composables/useHomeRecommendations.ts
-├── composables/useCatalogSearch.ts
+├── models/ai-suggestions.ts
+├── services/ai-suggestions-service.ts · ai-suggestions-storage.ts · shuffle-seed-storage.ts
+├── composables/useHomeRecommendations.ts · useAiSuggestions.ts
 └── components/            (BookShelf and BookCard are shared, in src/components/)
-    ├── SearchBar.vue
-    └── SearchResults.vue
+    ├── AiSuggestionShelf.vue
+    └── AiSuggestionCard.vue
 ```
 
 ## 8. Done when
 
 - Shelves reflect the saved areas, courses, seed books, and genres.
-- Search, filter, and empty/loading/error states work; `?q=` survives reload.
+- Filter and empty/loading/error states work; the AI shelf survives a reload
+  without a new Gemini call.
 - Shelves are keyboard reachable; no horizontal page scroll at 360px; correct at
   1440px; light and dark themes pass contrast.
 - No hardcoded interface text; `npm run lint`, `npm run typecheck`, and

@@ -1,4 +1,4 @@
-<!-- Campo de busca do acervo com ícone e botão para limpar. -->
+<!-- Campo de busca do catálogo com ícone e botão para limpar. -->
 <template>
   <div
     class="relative flex items-center"
@@ -8,7 +8,7 @@
       :for="inputId"
       class="sr-only"
     >
-      {{ t('home.search.label') }}
+      {{ t('catalog.search.label') }}
     </label>
     <IconSearch class="pointer-events-none absolute left-4 size-5 text-text-muted" />
     <input
@@ -18,13 +18,13 @@
       type="search"
       enterkeyhint="search"
       autocomplete="off"
-      :placeholder="t('home.search.placeholder')"
+      :placeholder="t('catalog.search.placeholder')"
     >
     <button
       v-if="model"
       type="button"
       class="absolute right-1 grid size-11 cursor-pointer place-items-center rounded-[50%] border-0 bg-transparent p-0 text-text-muted hover:bg-surface-muted hover:text-text"
-      :aria-label="t('home.search.clear')"
+      :aria-label="t('catalog.search.clear')"
       @click="emit('clear')"
     >
       <IconClose class="size-5" />

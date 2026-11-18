@@ -289,11 +289,10 @@ as peers and keeps everything else in one menu.
 
 - Left: brand mark + "IF Explore", always a link to the welcome view (`/`).
 - Main navigation (`<nav>`): two tabs, "Para você" (library icon) and
-  "Pergunte à IA" (✦ sparkle icon, in `--color-primary`). "Para você" links to
-  `/home` with saved preferences and to `/onboarding` without them (`/home`
-  redirects visitors without preferences); it is current on `/home` and
-  `/onboarding`. "Pergunte à IA" links to `/discover` (on the home it carries the
-  search text as `?q=`) and is current there. The current tab gets
+  "Catálogo completo" (search icon), both icons in `--color-primary`. "Para você"
+  links to `/home` with saved preferences and to `/onboarding` without them
+  (`/home` redirects visitors without preferences); it is current on `/home` and
+  `/onboarding`. "Catálogo completo" links to `/catalog` and is current there. The current tab gets
   `aria-current="page"` and a `--color-primary-soft` pill with
   `--color-on-primary-soft` text; other views (welcome, book) have no current
   tab. Current state follows the path, not the query (custom `RouterLink`s).
@@ -310,16 +309,16 @@ as peers and keeps everything else in one menu.
   the button), a tap outside, or focus leaving the panel.
 - Switching tabs is animated with the View Transitions API
   (`src/lib/tab-transition.ts`, CSS at the end of `src/index.css`), only between
-  the two tabs' views (`/home` or `/onboarding` and `/discover`): the header stays
+  the two tabs' views (`/home` or `/onboarding` and `/catalog`): the header stays
   still, the current-tab pill slides to the other tab under the labels, and the
-  page slides toward the chosen tab ("Para você" is left, "Pergunte à IA" right;
+  page slides toward the chosen tab ("Para você" is left, "Catálogo completo" right;
   browser back/forward follow the same direction). Duration `--duration-page`
   (350ms) with `--ease-standard`. With `prefers-reduced-motion: reduce` the page
   only crossfades and the pill jumps. Browsers without the API, and every other
   navigation, stay instant.
 
 Height 64px from `sm` (two rows below it), `--color-surface` with no border,
-always above page content (`z-20`), sticky on the home, discovery, and book
+always above page content (`z-20`), sticky on the home, catalog, and book
 pages, static elsewhere.
 
 ### 7.7.1 Footer (`AppFooter.vue`)
@@ -448,8 +447,9 @@ the neutral "Consulte na biblioteca" badge, not "Emprestado". Otherwise
 disponibilidade", "Sem exemplar físico"). `copies.available` (the exact free
 count) is `null` except right after the live check of the book page.
 
-Search, related books, recommendation shelves, and onboarding candidates are
-computed by the API over the whole collection; the frontend does not rank books.
+Search, related books, recommendation shelves, AI suggestions, and onboarding
+candidates are computed by the API over the whole collection; the frontend does
+not rank books.
 
 ### 10.3 Preferences persistence
 
@@ -470,6 +470,7 @@ computed by the API over the whole collection; the frontend does not rank books.
 | `/` | `features/welcome/views/WelcomeView.vue` | Entry point |
 | `/onboarding` | `features/onboarding/views/TasteOnboardingView.vue` | `?step=areas\|books\|genres` |
 | `/home` | `features/home/views/HomeView.vue` | Guard: redirect to `/` without preferences |
+| `/catalog` | `features/catalog/views/CatalogView.vue` | No guard; search, filters, and sort live in the query |
 | `/books/:id` | `features/book-detail/views/BookDetailView.vue` | No guard; unknown ids show a not-found state |
 
 Flow: welcome → onboarding (areas → books → [optional genres]) → home. Returning
