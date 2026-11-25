@@ -338,14 +338,22 @@ class RecommendationTests(ApiTestCase):
         # sem área nem curso, completa com os demais títulos recomendáveis
         self.assertEqual(len(self.get("/api/recommendations/candidates?limit=4")), 4)
 
-    def test_candidates_start_with_chosen_genres(self) -> None:
-        self.give_genre("romance", TCC)
+    def test_candidates_alternate_genres_and_areas(self) -> None:
+        self.give_genre("romance", PYTHON_BOOK)
         self.give_genre("poetry", DJANGO_BOOK)
-        candidates = [b["id"] for b in self.get("/api/recommendations/candidates"
-                                                 "?genre=romance&genre=poetry&area=technology&genre=nope")]
-        # os gêneros abrem a lista, intercalados com a área; o desconhecido é ignorado
-        self.assertEqual(candidates[:2], [TCC, DJANGO_BOOK])
-        self.assertNotIn(SERIAL, candidates)
+        ids = [b["id"] for b in self.get("/api/recommendations/candidates"
+                                          "?genre=romance&genre=poetry&area=health-sciences&genre=nope")]
+        # um gênero abre a lista, depois a área, depois o outro gênero; o desconhecido é ignorado
+        self.assertEqual(ids[:3], [PYTHON_BOOK, TCC, DJANGO_BOOK])
+        self.assertNotIn(SERIAL, ids)
+
+    def test_chosen_area_fits_when_there_are_more_groups_than_titles(self) -> None:
+        technology = Book.objects.filter(area_id="technology").values_list("id", flat=True)
+        for genre, book_id in zip(("romance", "poetry", "horror"), technology):
+            self.give_genre(genre, book_id)
+        candidates = self.get("/api/recommendations/candidates"
+                              "?genre=romance&genre=poetry&genre=horror&area=health-sciences&limit=3")
+        self.assertEqual(candidates[1]["id"], TCC)
 
 
 class StatusTests(ApiTestCase):

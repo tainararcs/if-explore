@@ -287,10 +287,10 @@ def onboarding_candidates(area_ids: Sequence[str], course_ids: Sequence[str], li
     """Títulos para o visitante escolher no onboarding.
 
     O limite é dividido entre os gêneros escolhidos, as áreas escolhidas e as dos
-    cursos marcados, e os grupos se intercalam na lista, gêneros primeiro: assim
-    nenhum gênero ou área fica sem títulos quando o visitante filtra por ele. Dentro
-    de cada área, vêm primeiro os livros dos cursos marcados. Se sobrarem menos de
-    3, completa com os demais.
+    cursos marcados, e os grupos se intercalam na lista. Gêneros e áreas se
+    alternam, começando por um gênero, para que as áreas apareçam logo mesmo
+    quando há mais grupos que títulos. Dentro de cada área, vêm primeiro os livros
+    dos cursos marcados. Se sobrarem menos de 3, completa com os demais.
     """
     genres = list(LiteraryGenre.objects.filter(slug__in=genre_ids).values_list("slug", flat=True))
     course_areas = Course.objects.filter(slug__in=course_ids).values_list("area_id", flat=True)
@@ -299,17 +299,19 @@ def onboarding_candidates(area_ids: Sequence[str], course_ids: Sequence[str], li
     if genres or areas:
         per_group = math.ceil(limit / (len(genres) + len(areas)))
         courses = Book.courses.through.objects.filter(book_id=OuterRef("pk"), course_id__in=course_ids)
-        by_group = [
+        by_genre = [
             list(recommendable().filter(genres=genre)
                  .order_by(*_tie_breakers()).values_list("id", flat=True)[:per_group])
             for genre in genres
-        ] + [
+        ]
+        by_area = [
             list(recommendable().filter(area_id=area)
                  .annotate(score=Case(When(Exists(courses), then=Value(1)), default=Value(0),
                                       output_field=IntegerField()))
                  .order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:per_group])
             for area in areas
         ]
+        by_group = [group for pair in zip_longest(by_genre, by_area) for group in pair if group is not None]
         ids = list(dict.fromkeys(book_id for round_ in zip_longest(*by_group) for book_id in round_ if book_id))
         ids = ids[:limit]
     if len(ids) >= REQUIRED_SEED_BOOKS:
