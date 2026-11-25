@@ -204,10 +204,11 @@ def get_candidates(
     request: HttpRequest,
     area: list[str] = Query([], description="Áreas escolhidas."),
     course: list[str] = Query([], description="Cursos escolhidos; seus livros vêm primeiro dentro de cada área."),
+    genre: list[str] = Query([], description="Gêneros literários escolhidos; vêm antes das áreas."),
     limit: int = Query(48, ge=1, le=MAX_PAGE_SIZE),
 ) -> list[BookSummaryOut]:
     """Títulos para o visitante escolher no onboarding."""
-    return _summaries(recommendations.onboarding_candidates(area, course, limit))
+    return _summaries(recommendations.onboarding_candidates(area, course, limit, genre))
 
 
 # ---- descoberta com IA

@@ -7,6 +7,8 @@ declare module 'vue-router' {
   interface RouteMeta {
     /** Chave de tradução usada no título do documento. */
     titleKey?: string
+    /** Tela de tarefa única (onboarding): sem o botão flutuante de voltar ao topo. */
+    focusMode?: boolean
   }
 }
 
@@ -58,7 +60,7 @@ export const router = createRouter({
     {
       path: '/onboarding',
       component: () => import('../features/onboarding/views/TasteOnboardingView.vue'),
-      meta: { titleKey: 'routes.onboarding' },
+      meta: { titleKey: 'routes.onboarding', focusMode: true },
     },
     {
       path: '/home',

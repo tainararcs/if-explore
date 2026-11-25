@@ -46,12 +46,8 @@ export function toProfileBody(profile: PreferenceProfile): PreferenceProfile {
  * Indica se as preferências bastam para gerar recomendações.
  *
  * @param preferences - Preferências salvas, se houver.
- * @returns `true` quando há ao menos uma área e os títulos obrigatórios.
+ * @returns `true` quando há os títulos obrigatórios; gêneros, áreas e cursos são opcionais.
  */
 export function isCompletePreferences(preferences: ReadingPreferences | null): boolean {
-  return (
-    preferences !== null &&
-    preferences.areaIds.length > 0 &&
-    preferences.seedBookIds.length === REQUIRED_SEED_BOOKS
-  )
+  return preferences !== null && preferences.seedBookIds.length === REQUIRED_SEED_BOOKS
 }

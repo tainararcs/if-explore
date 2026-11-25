@@ -117,7 +117,7 @@ Respostas em camelCase, ausentes como `null`, listas paginadas como
 | `GET /api/books/{id}/catalog` | Redireciona para a ficha no catálogo oficial |
 | `GET /api/books/{id}/explanation` | Explicação simplificada gerada por IA |
 | `POST /api/recommendations` | Prateleiras da home (dos seus gêneros, escolhidos para você, parecidos com os escolhidos); `shuffleSeed` sorteia entre os melhores de cada uma |
-| `GET /api/recommendations/candidates` | Títulos para o onboarding |
+| `GET /api/recommendations/candidates` | Títulos para o onboarding (`genre`, `area`, `course`, `limit`): gêneros e áreas alternados, começando por um gênero |
 | `POST /api/recommendations/ai` | 3 títulos escolhidos pela IA para o perfil, um de cada prateleira da home, com o motivo de cada um |
 | `GET /api/status` | Tamanho do acervo e últimas sincronizações |
 

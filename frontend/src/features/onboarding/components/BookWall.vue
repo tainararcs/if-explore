@@ -1,35 +1,12 @@
-<!-- Passo 2 do onboarding: escolha de exatamente três títulos entre os candidatos das áreas escolhidas. -->
+<!--
+  Mural de capas do onboarding: até 12 títulos, para a pessoa tocar em exatamente
+  três. 12 fecha as linhas em todas as larguras: 3 colunas no celular (4 linhas),
+  4 a partir de sm (3 linhas) e 6 a partir de md (2 linhas).
+-->
 <template>
   <div>
-    <fieldset
-      v-if="areas.length > 1"
-      class="m-0 mb-6 min-w-0 border-0 p-0"
-    >
-      <legend class="sr-only">
-        {{ t('onboarding.books.filterLegend') }}
-      </legend>
-      <div class="flex flex-wrap gap-2">
-        <SelectableChip
-          size="small"
-          :selected="activeAreaId === null"
-          @toggle="activeAreaId = null"
-        >
-          {{ t('onboarding.books.allAreas') }}
-        </SelectableChip>
-        <SelectableChip
-          v-for="area in areas"
-          :key="area.id"
-          size="small"
-          :selected="activeAreaId === area.id"
-          @toggle="activeAreaId = area.id"
-        >
-          {{ area.name }}
-        </SelectableChip>
-      </div>
-    </fieldset>
-
     <div
-      v-if="status === 'error'"
+      v-if="status === 'error' && books.length === 0"
       class="py-8"
       role="alert"
     >
@@ -45,13 +22,19 @@
       </button>
     </div>
 
-    <p
+    <ul
       v-else-if="status === 'loading' && books.length === 0"
-      class="py-8 text-text-muted"
+      class="m-0 grid list-none grid-cols-3 gap-x-3 gap-y-6 p-0 sm:grid-cols-4 sm:gap-x-4 md:grid-cols-6"
       role="status"
+      :aria-label="t('onboarding.books.loading')"
     >
-      {{ t('onboarding.books.loading') }}
-    </p>
+      <li
+        v-for="index in CANDIDATE_LIMIT"
+        :key="index"
+        class="skeleton aspect-[2/3] rounded-cover"
+        aria-hidden="true"
+      />
+    </ul>
 
     <ul
       v-else
@@ -60,7 +43,7 @@
       :aria-busy="status === 'loading'"
     >
       <li
-        v-for="book in visibleBooks"
+        v-for="book in books"
         :key="book.id"
       >
         <button
@@ -104,24 +87,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BookCover from '../../../components/BookCover.vue'
 import IconCheck from '../../../components/icons/IconCheck.vue'
-import SelectableChip from '../../../components/SelectableChip.vue'
 import { formatAuthors } from '../../../lib/catalog-format'
 import type { Book } from '../../../models/book'
-import type { KnowledgeArea } from '../../../models/taxonomy'
+import { CANDIDATE_LIMIT } from '../services/onboarding-service'
 
 interface Props {
-  /** Candidatos já ordenados por relevância. */
+  /** Títulos visíveis do recorte atual, com os já escolhidos primeiro. */
   books: Book[]
-  /** Áreas escolhidas, usadas como filtro quando há mais de uma. */
-  areas: KnowledgeArea[]
   selectedIds: string[]
   /** Indica que o limite de títulos foi atingido. */
   limitReached: boolean
-  /** Carregamento dos candidatos; ao recarregar, a lista anterior continua visível. */
+  /** Carregamento do recorte; sem títulos ainda, mostra capas de espera. */
   status: 'loading' | 'ready' | 'error'
 }
 
@@ -133,14 +112,6 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-
-const activeAreaId = ref<string | null>(null)
-
-const visibleBooks = computed(() =>
-  activeAreaId.value === null
-    ? props.books
-    : props.books.filter((book) => book.areaId === activeAreaId.value),
-)
 
 function isSelected(bookId: string): boolean {
   return props.selectedIds.includes(bookId)

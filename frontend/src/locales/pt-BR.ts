@@ -113,12 +113,12 @@ export const ptBR = {
     howItWorks: {
       title: 'Como funciona',
       areas: {
-        title: 'Escolha suas áreas',
-        text: 'Conte o que você estuda ou quer estudar.',
+        title: 'Explore por gênero',
+        text: 'Veja capas do acervo, de romance a quadrinhos.',
       },
       books: {
         title: 'Marque três títulos',
-        text: 'Escolha livros que chamam sua atenção.',
+        text: 'Toque nos livros que você leria.',
       },
       recommendations: {
         title: 'Receba recomendações',
@@ -149,42 +149,32 @@ export const ptBR = {
     error: 'Não foi possível carregar as opções do acervo.',
     retry: 'Tentar novamente',
     recommend: 'Me recomende',
-    progress: {
-      step: 'Passo {current} de {total}',
+    title: 'Escolha 3 livros que você leria',
+    helper: 'Filtre por gênero para ver mais de cada estilo.',
+    filters: {
+      legend: 'Mostrar livros de',
+      all: 'Todos',
     },
-    areas: {
-      title: 'O que você estuda ou quer estudar?',
-      helper: 'Escolha uma ou mais áreas. Se fizer um curso do campus, marque-o também.',
-      legend: 'Áreas do conhecimento',
-      coursesTitle: 'Cursos do Campus Barbacena (opcional)',
-      coursesHelper: 'Faz algum destes cursos? Ao marcar um curso, a área dele também é escolhida.',
+    study: {
+      title: 'Curso ou área de estudo',
+      summaryEmpty: 'Opcional',
+      helper: 'Marque seu curso no IF ou as áreas que te interessam.',
+      close: 'Fechar',
       levels: {
         integrated: 'Técnico integrado ao ensino médio',
         technical: 'Técnico concomitante e subsequente',
         undergraduate: 'Graduação',
         graduate: 'Pós-graduação',
       },
-      hint: 'Escolha pelo menos uma área para continuar.',
-      selected: 'Nenhuma área escolhida | 1 área escolhida | {n} áreas escolhidas',
-      continue: 'Continuar',
+      areasTitle: 'Áreas do conhecimento',
+      done: 'Concluir',
     },
     books: {
-      title: 'Escolha três títulos que chamam sua atenção.',
-      helper: 'Eles serão o ponto de partida das suas recomendações.',
-      filterLegend: 'Filtrar títulos por área',
-      allAreas: 'Todas',
       missing: 'Escolha mais títulos | Falta 1 título | Faltam {n} títulos',
-      complete: 'Boa escolha! Falta só mais um passo.',
-      continue: 'Continuar',
+      complete: '3 títulos escolhidos',
       loading: 'Carregando títulos…',
       error: 'Não foi possível carregar os títulos.',
       retry: 'Tentar novamente',
-    },
-    genres: {
-      title: 'E fora da sala de aula, o que você gosta de ler?',
-      helper: 'Opcional: escolha quantos gêneros quiser para deixar suas recomendações mais certeiras.',
-      legend: 'Gêneros literários',
-      selected: 'Nenhum gênero escolhido | 1 gênero escolhido | {n} gêneros escolhidos',
     },
   },
   home: {

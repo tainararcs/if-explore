@@ -16,29 +16,33 @@ import {
   getLiteraryGenres,
 } from '../../../services/catalog-service'
 import {
-  canCompleteAreas,
-  canCompleteBooks,
-  furthestReachableStep,
+  ALL_CANDIDATES,
+  canFinish,
+  filterKey,
+  inferGenreIds,
   toggleValue,
+  type CandidateFilter,
   type OnboardingDraft,
 } from '../models/onboarding-draft'
-import { getOnboardingCandidates } from '../services/onboarding-service'
+import {
+  CANDIDATE_LIMIT,
+  getOnboardingCandidates,
+  type CandidateInterests,
+} from '../services/onboarding-service'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
 
-// Espera a pessoa terminar de marcar áreas e cursos antes de buscar os candidatos.
-const CANDIDATES_DEBOUNCE_MS = 300
-
 /**
- * Concentra o estado do onboarding: opções do acervo, rascunho das escolhas,
- * regras de cada passo e a gravação final das preferências.
+ * Concentra o estado do onboarding em uma tela: opções do acervo, mural de
+ * títulos por recorte (todos os gêneros, um gênero ou uma área), escolhas e a
+ * gravação final das preferências.
  *
- * Os títulos candidatos vêm da API e são recarregados quando mudam as áreas ou
- * os cursos. Títulos já escolhidos continuam selecionados e visíveis mesmo que
- * deixem de ser candidatos.
+ * Cada recorte é buscado uma vez e guardado; mudar áreas ou cursos descarta a
+ * mistura "Todos", que os inclui. Títulos já escolhidos continuam à vista,
+ * mesmo fora do recorte atual.
  *
- * O rascunho só vira preferência salva em `finish()`; sair no meio do fluxo
- * não altera as preferências existentes.
+ * O rascunho só vira preferência salva em `finish()`, que deduz os gêneros dos
+ * títulos escolhidos; sair no meio do fluxo não altera as preferências existentes.
  */
 export function useTasteOnboarding() {
   const { preferences, save } = useReadingPreferences()
@@ -47,30 +51,24 @@ export function useTasteOnboarding() {
   const areas = ref<KnowledgeArea[]>([])
   const courses = ref<Course[]>([])
   const genres = ref<LiteraryGenre[]>([])
-  const candidates = ref<Book[]>([])
-  const candidatesStatus = ref<LoadStatus>('loading')
-  // Livros já escolhidos, para que continuem visíveis fora dos candidatos atuais.
+  // Livros já escolhidos, para que continuem visíveis fora do recorte atual.
   const selectedBooks = ref<Book[]>([])
 
-  const draft = ref<OnboardingDraft>({
-    areaIds: [],
-    courseIds: [],
-    seedBookIds: [],
-    genreIds: [],
-  })
+  const draft = ref<OnboardingDraft>({ areaIds: [], courseIds: [], seedBookIds: [] })
 
-  /** Escolhidos que não estão entre os candidatos vêm primeiro; depois, os candidatos. */
-  const candidateBooks = computed(() => {
-    const candidateIds = new Set(candidates.value.map((book) => book.id))
-    const kept = selectedBooks.value.filter(
-      (book) => draft.value.seedBookIds.includes(book.id) && !candidateIds.has(book.id),
-    )
-    return [...kept, ...candidates.value]
-  })
-  const canLeaveAreas = computed(() => canCompleteAreas(draft.value))
-  const isBooksComplete = computed(() => canCompleteBooks(draft.value))
-  const furthestStep = computed(() => furthestReachableStep(draft.value))
+  const activeFilter = ref<CandidateFilter>(ALL_CANDIDATES)
+  const candidatesByFilter = ref(new Map<string, Book[]>())
+  const candidatesStatus = ref<LoadStatus>('loading')
+
+  const isComplete = computed(() => canFinish(draft.value))
   const missingBooks = computed(() => REQUIRED_SEED_BOOKS - draft.value.seedBookIds.length)
+
+  const selectedAreas = computed(() =>
+    areas.value.filter((area) => draft.value.areaIds.includes(area.id)),
+  )
+  const selectedCourses = computed(() =>
+    courses.value.filter((course) => draft.value.courseIds.includes(course.id)),
+  )
 
   /** Todos os cursos do campus agrupados por nível de ensino, sem níveis vazios. */
   const coursesByLevel = computed(() =>
@@ -79,6 +77,23 @@ export function useTasteOnboarding() {
       courses: courses.value.filter((course) => course.level === level),
     })).filter((group) => group.courses.length > 0),
   )
+
+  const candidates = computed(
+    () => candidatesByFilter.value.get(filterKey(activeFilter.value)) ?? [],
+  )
+
+  /**
+   * Títulos do mural, no máximo `CANDIDATE_LIMIT`. Escolhidos de outro recorte vêm
+   * primeiro e ocupam o lugar dos últimos candidatos, para continuarem à vista; os
+   * que já estão no recorte ficam no lugar, sem pular para o topo ao serem tocados.
+   */
+  const visibleBooks = computed(() => {
+    const candidateIds = new Set(candidates.value.map((book) => book.id))
+    const kept = selectedBooks.value.filter(
+      (book) => draft.value.seedBookIds.includes(book.id) && !candidateIds.has(book.id),
+    )
+    return [...kept, ...candidates.value].slice(0, CANDIDATE_LIMIT)
+  })
 
   // Pré-preenche com as preferências salvas, ignorando ids que saíram do acervo.
   function prefillFromPreferences(seedBooks: Book[]): void {
@@ -89,13 +104,11 @@ export function useTasteOnboarding() {
     const keep = (ids: readonly string[], valid: { id: string }[]) =>
       ids.filter((id) => valid.some((item) => item.id === id))
 
-    const seedBookIds = keep(saved.seedBookIds, seedBooks)
     selectedBooks.value = seedBooks
     draft.value = {
       areaIds: keep(saved.areaIds, areas.value),
       courseIds: keep(saved.courseIds, courses.value),
-      seedBookIds: seedBookIds.slice(0, REQUIRED_SEED_BOOKS),
-      genreIds: keep(saved.genreIds, genres.value),
+      seedBookIds: keep(saved.seedBookIds, seedBooks).slice(0, REQUIRED_SEED_BOOKS),
     }
   }
 
@@ -118,12 +131,65 @@ export function useTasteOnboarding() {
     }
   }
 
+  /** O que a API recebe para cada recorte. */
+  function interestsFor(filter: CandidateFilter): CandidateInterests {
+    if (filter.kind === 'genre') {
+      return { genreIds: [filter.id], areaIds: [], courseIds: [] }
+    }
+    if (filter.kind === 'area') {
+      return { genreIds: [], areaIds: [filter.id], courseIds: draft.value.courseIds }
+    }
+    return {
+      genreIds: genres.value.map((genre) => genre.id),
+      areaIds: draft.value.areaIds,
+      courseIds: draft.value.courseIds,
+    }
+  }
+
+  let candidatesController: AbortController | null = null
+
+  async function loadCandidates(): Promise<void> {
+    const filter = activeFilter.value
+    const key = filterKey(filter)
+    if (candidatesByFilter.value.has(key)) {
+      candidatesStatus.value = 'ready'
+      return
+    }
+    candidatesController?.abort()
+    candidatesController = new AbortController()
+    candidatesStatus.value = 'loading'
+    try {
+      const loaded = await getOnboardingCandidates(interestsFor(filter), candidatesController.signal)
+      candidatesByFilter.value = new Map(candidatesByFilter.value).set(key, loaded)
+      candidatesStatus.value = 'ready'
+    } catch (error) {
+      if (!isCancel(error)) {
+        candidatesStatus.value = 'error'
+      }
+    }
+  }
+
+  function selectFilter(filter: CandidateFilter): void {
+    activeFilter.value = filter
+  }
+
+  /** Esquece a mistura "Todos", que depende das áreas e dos cursos escolhidos. */
+  function forgetMixedCandidates(): void {
+    const next = new Map(candidatesByFilter.value)
+    next.delete(filterKey(ALL_CANDIDATES))
+    candidatesByFilter.value = next
+  }
+
   function toggleArea(areaId: string): void {
     const areaIds = toggleValue(draft.value.areaIds, areaId)
     const courseIds = draft.value.courseIds.filter((courseId) =>
       courses.value.some((course) => course.id === courseId && areaIds.includes(course.areaId)),
     )
     draft.value = { ...draft.value, areaIds, courseIds }
+    // Sai do recorte de uma área que deixou de ser escolhida.
+    if (activeFilter.value.kind === 'area' && !areaIds.includes(activeFilter.value.id)) {
+      selectFilter(ALL_CANDIDATES)
+    }
   }
 
   /** Alterna um curso; ao marcá-lo, também marca a área a que ele pertence. */
@@ -140,82 +206,62 @@ export function useTasteOnboarding() {
   /** Alterna um título; ignora novas escolhas quando o limite já foi atingido. */
   function toggleBook(bookId: string): void {
     const isSelected = draft.value.seedBookIds.includes(bookId)
-    if (!isSelected && isBooksComplete.value) {
+    if (!isSelected && isComplete.value) {
       return
     }
-    const book = candidateBooks.value.find((item) => item.id === bookId)
+    const book = visibleBooks.value.find((item) => item.id === bookId)
     if (!isSelected && book && !selectedBooks.value.some((item) => item.id === bookId)) {
       selectedBooks.value = [...selectedBooks.value, book]
     }
     draft.value = { ...draft.value, seedBookIds: toggleValue(draft.value.seedBookIds, bookId) }
   }
 
-  function toggleGenre(genreId: string): void {
-    draft.value = { ...draft.value, genreIds: toggleValue(draft.value.genreIds, genreId) }
-  }
-
-  /** Salva o rascunho como preferências; exige os passos obrigatórios completos. */
+  /** Salva o rascunho como preferências, com os gêneros deduzidos dos títulos. */
   function finish(): boolean {
-    if (!canLeaveAreas.value || !isBooksComplete.value) {
+    if (!isComplete.value) {
       return false
     }
-    save({ ...draft.value })
+    const chosen = selectedBooks.value.filter((book) => draft.value.seedBookIds.includes(book.id))
+    const genreIds = inferGenreIds(chosen, genres.value.map((genre) => genre.id))
+    save({ ...draft.value, genreIds })
     return true
   }
 
-  let candidatesController: AbortController | null = null
+  // Áreas e cursos que compõem a mistura "Todos".
+  const mixKey = computed(() => `${draft.value.areaIds.join(',')}|${draft.value.courseIds.join(',')}`)
 
-  async function loadCandidates(): Promise<void> {
-    candidatesController?.abort()
-    candidatesController = new AbortController()
-    candidatesStatus.value = 'loading'
-    try {
-      candidates.value = await getOnboardingCandidates(
-        draft.value.areaIds,
-        draft.value.courseIds,
-        candidatesController.signal,
-      )
-      candidatesStatus.value = 'ready'
-    } catch (error) {
-      if (!isCancel(error)) {
-        candidatesStatus.value = 'error'
-      }
+  // Busca o recorte atual quando as opções terminam de carregar, a cada troca de
+  // recorte e quando áreas ou cursos mudam (a mistura guardada deixa de valer).
+  watch([status, activeFilter, mixKey], ([loadStatus, , mix], [, , previousMix]) => {
+    if (mix !== previousMix) {
+      forgetMixedCandidates()
     }
-  }
-
-  // Recarrega os candidatos quando mudam as áreas ou os cursos, depois de carregar as
-  // opções. Sem área escolhida não há passo de títulos, então não há o que buscar.
-  watch(
-    [status, () => draft.value.areaIds, () => draft.value.courseIds],
-    ([loadStatus, areaIds], _previous, onCleanup) => {
-      if (loadStatus !== 'ready' || areaIds.length === 0) {
-        return
-      }
-      const timer = window.setTimeout(() => void loadCandidates(), CANDIDATES_DEBOUNCE_MS)
-      onCleanup(() => window.clearTimeout(timer))
-    },
-  )
+    if (loadStatus === 'ready') {
+      void loadCandidates()
+    }
+  })
 
   onUnmounted(() => candidatesController?.abort())
 
   return {
     status,
-    areas,
     genres,
-    draft,
-    candidateBooks,
-    candidatesStatus,
-    loadCandidates,
+    areas,
     coursesByLevel,
-    canLeaveAreas,
-    isBooksComplete,
-    furthestStep,
+    selectedAreas,
+    selectedCourses,
+    draft,
+    activeFilter,
+    visibleBooks,
+    candidatesStatus,
+    isComplete,
     missingBooks,
     load,
+    loadCandidates,
+    selectFilter,
     toggleArea,
     toggleCourse,
     toggleBook,
-    toggleGenre,
     finish,
   }
 }
