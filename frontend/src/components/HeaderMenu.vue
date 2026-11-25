@@ -39,7 +39,7 @@
       <ul class="m-0 flex list-none flex-col p-0">
         <li>
           <RouterLink
-            :to="{ path: '/onboarding', query: { step: 'areas' } }"
+            to="/onboarding"
             class="flex min-h-11 items-center gap-3 rounded-sm px-3 text-small font-semibold text-text no-underline hover:bg-surface-muted hover:text-text"
             @click="isOpen = false"
           >
