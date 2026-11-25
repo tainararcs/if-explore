@@ -1,6 +1,6 @@
 ---
 name: taste-onboarding-view
-description: Implement or change the IF Explore taste onboarding (route `/onboarding`, TasteOnboardingView.vue) — the short "Descobrir minhas leituras" flow where the visitor picks study areas (optional campus courses), chooses three titles, optionally picks literary genres, and saves preferences before going to the home.
+description: Implement or change the IF Explore taste onboarding (route `/onboarding`, TasteOnboardingView.vue) — the one-screen "Descobrir minhas leituras" flow where the visitor taps three titles on a wall of covers filterable by literary genre, optionally adds a campus course or study areas, and saves preferences before going to the home.
 ---
 
 # Taste onboarding view
@@ -12,95 +12,80 @@ reuse them, never duplicate them.
 
 ## 1. Goal
 
-Netflix/Spotify-like taste picking: visual, fast, and inviting. Three steps in
-one linear flow: the first two are mandatory and the last accepts zero choices,
-so every visitor sees it. A visitor should finish in about a minute.
+Pick books, not categories: one screen with a wall of covers, like the
+Netflix/Pinterest taste pickers. Literary genres lead, as filters of the wall;
+the academic profile (course and areas) stays available but optional and out
+of the way. A visitor should finish in under a minute, with about 5 taps.
 
-## 2. Steps
+Modern, simple UX, but the UI stays within the project's visual standard: no
+decorative icons or emojis, no slogans, plain copy.
 
-The current step lives in the route query (`?step=areas|books|genres`) so the
-browser back button works. Invalid or unreachable steps (for example `books`
-without an area) redirect to the first incomplete step with `router.replace`.
+## 2. The screen
 
-### Step 1 — `areas` (mandatory)
-
-- Title (serif): "O que você estuda ou quer estudar?"
-- Helper: "Escolha uma ou mais áreas."
-- `fieldset` of `SelectableChip`s with the knowledge areas (multi-select, min 1).
-  Each area chip can carry a small line icon.
-- Below the areas, all campus courses are always listed as smaller chips,
-  grouped by level (técnico integrado, técnico concomitante/subsequente,
-  graduação, pós-graduação) under "Cursos do Campus Barbacena (opcional)".
-  Selecting a course also selects its area; deselecting an area removes its
-  selected courses.
-- Continue enabled only with ≥ 1 area; otherwise show the reason next to the
-  button.
-
-### Step 2 — `books` (mandatory, exactly 3)
-
-- Title: "Escolha três títulos que chamam sua atenção."
-- Live counter: "1 de 3 escolhidos" (`aria-live="polite"`) with three dots/slots
-  that fill as books are picked.
-- Grid of selectable book cards (cover + title + author) from
-  `getOnboardingCandidates` (`GET /api/recommendations/candidates`), reloaded
-  with a short debounce when areas or courses change (a new request cancels the
-  previous one). The API splits the titles among the chosen areas (and the areas
-  of the chosen courses), course books first in each, so every area filter has
-  titles. With more than one area, show area filter chips above the grid
-  ("Todas" + each area).
-- Picked titles stay picked and visible (first in the grid) even when an area
-  change drops them from the candidates.
-- Candidates have their own loading and error (with retry) states; while
-  reloading, the previous grid stays visible and dimmed.
-- Grid: 3 columns at base, 4 at `sm`, 5–6 at `md`+.
-- When 3 are selected, the remaining cards become `aria-disabled` and visually
-  dimmed; deselecting one re-enables them. Do not silently replace a selection.
-- If the selected areas have fewer than 3 titles, the API completes the list
-  with other titles so the step can always be completed.
-- Primary: "Continuar" → step 3, enabled only with 3 books. Do not offer a
-  shortcut to `/home` here: testers overlooked genres when they were a
-  secondary action.
-
-### Step 3 — `genres` (optional choices)
-
-- Title: "E fora da sala de aula, o que você gosta de ler?"
-- Multi-select chips with the literary genres; zero is allowed.
-- Primary: "Me recomende" → save and go to `/home`. Ghost: "Voltar".
+- Title (serif, h1): "Escolha 3 livros que você leria". Helper: "Filtre por
+  gênero para ver mais de cada estilo."
+- Filter chips (`CandidateFilters.vue`): "Todos", each literary genre, then the
+  areas the visitor chose. One active at a time. They scroll horizontally on
+  mobile and wrap at `md`+.
+  - "Todos" mixes every genre plus the chosen areas and courses.
+  - A genre or an area shows only its titles.
+  - All come from `getOnboardingCandidates` (`GET /api/recommendations/candidates`
+    with `genre`, `area`, `course`). The API interleaves the groups, genres
+    first, so every group appears near the top.
+  - Each filter is fetched once and kept; changing areas or courses drops the
+    stored "Todos" mix. A new request cancels the previous one.
+- "Estuda no IF?" row below the filters: shows the chosen courses (or areas)
+  or "Opcional: adicione seu curso", and opens `StudyDialog.vue`, a side
+  `<dialog>` like the catalog filters, with an accent-insensitive course search,
+  courses grouped by level (técnico integrado, técnico concomitante/subsequente,
+  graduação, pós-graduação), and the knowledge areas. Selecting a course also
+  selects its area; deselecting an area removes its selected courses.
+- Wall of covers (`BookWall.vue`): cover, title, and author; 3 columns at base,
+  4 at `sm`, 6 at `md`+. Shows 24 titles and "Mostrar mais livros" for the rest
+  of the filter (up to 60).
+  - Picked titles that are not in the visible part (from another filter or
+    further down) come first, so they stay in view; picked titles already
+    visible stay in place.
+  - When 3 are picked, the other cards become `aria-disabled` and dimmed;
+    deselecting one re-enables them. Never replace a pick silently.
+  - Loading without titles shows cover skeletons; errors have a retry.
+  - If a filter has fewer than 3 titles, the API completes the list with other
+    titles.
+- Sticky action bar: three dots and "Faltam N títulos" / "3 títulos escolhidos"
+  (`aria-live`), and "Me recomende". The button stays enabled; tapping it before
+  3 picks turns the hint red instead of saving.
 
 ## 3. Layout
 
-Focus mode: no app navigation, minimal header.
+Focus mode: `AppHeader` with `focus` (brand and menu, no tabs), and the route
+meta `focusMode` hides the floating "back to top" button.
 
 ```
-AppHeader: [BrandMark] IF Explore   [Para você] [Catálogo completo]   [☰ menu]
-[← Voltar]  [progress bar]  "Passo 1 de 3"
-Step title (serif, h1 — focus moves here on step change)
-Helper text
-Step content (chips / grid)            ← scrolls
+AppHeader focus: [BrandMark] IF Explore                    [☰ menu]
+[← Voltar]
+Title (serif, h1) · helper
+[Todos] [Romance] [Aventura] …           ← scrolls sideways on mobile
+[Estuda no IF? · Opcional: adicione seu curso   →]
+Wall of covers                           ← scrolls
 ───────────────────────────────────────
-Sticky action bar: hint/counter · [Primary]   (safe-area aware)
+Sticky action bar: ●○○ Faltam 2 títulos · [Me recomende]
 ```
-
-- Progress: segmented bar with 3 segments (areas, books, genres); also text
-  "Passo 1 de 3" for screen readers and users who do not read the bar.
-- Content column max 720px for chips; the book grid may use up to 1200px.
-- At `md`+, the action bar can stay sticky at the bottom of the content column
-  instead of the viewport, with the primary button auto-width aligned right.
-- Step transitions: fade + 12px horizontal slide in the navigation direction,
-  only with `prefers-reduced-motion: no-preference`.
 
 ## 4. State and persistence
 
-- Keep draft selections in a feature composable (`useTasteOnboarding.ts`) that
-  owns the step logic, validation (`canContinue`), and the final payload.
-- Pre-fill the draft from saved preferences when they exist (returning visitor,
-  or "Ajustar preferências" from the header, which links to `?step=areas`). Saved
-  seed books are loaded with `getBooksByIds`; ids that left the collection are
-  dropped.
+- `useTasteOnboarding.ts` owns the draft (`areaIds`, `courseIds`,
+  `seedBookIds`), the active filter, the stored candidates, and the final
+  payload.
+- Pre-fill from saved preferences (returning visitor, or "Ajustar preferências"
+  in the header menu, which links to `/onboarding`). Saved seed books are loaded
+  with `getBooksByIds`; ids that left the collection are dropped.
 - Save only on "Me recomende", through `useReadingPreferences()`; abandoning the
   flow must not overwrite existing preferences.
-- Validation of counts (≥ 1 area, exactly 3 books) is a pure function, testable
-  without Vue.
+- `genreIds` are not picked directly: `inferGenreIds` derives them from the
+  genres of the 3 chosen titles, most frequent first.
+- Preferences are complete with exactly 3 seed books (`isCompletePreferences`);
+  genres, areas, and courses are optional. Count rules are pure functions in
+  `models/onboarding-draft.ts`.
 
 ## 5. Structure
 
@@ -108,12 +93,12 @@ Sticky action bar: hint/counter · [Primary]   (safe-area aware)
 src/features/onboarding/
 ├── views/TasteOnboardingView.vue
 ├── composables/useTasteOnboarding.ts
+├── models/onboarding-draft.ts       (draft, filters, pure rules)
 ├── services/onboarding-service.ts   (candidates from the API)
 └── components/
-    ├── OnboardingProgress.vue
-    ├── AreaStep.vue
-    ├── BookPickStep.vue
-    ├── GenreStep.vue
+    ├── CandidateFilters.vue
+    ├── BookWall.vue
+    ├── StudyDialog.vue
     └── OnboardingActionBar.vue
 ```
 
@@ -121,11 +106,10 @@ Shared pieces (`SelectableChip`, `BookCover`, icons) come from `src/components/`
 
 ## 6. Done when
 
-- Full flow works with keyboard only, focus moving to each step heading.
-- Back button and page reload keep a coherent step (draft may reset on reload,
-  but the URL must never show an impossible step).
-- Exactly 3 books are enforced; genres optional; preferences saved with the
-  shape in design guidelines §10.3.
+- Full flow works with keyboard only, including the dialog (Esc closes it).
+- Exactly 3 books are enforced; preferences saved with the shape in design
+  guidelines §10.3, with genres inferred from the books.
+- One candidates request on load; switching back to a filter does not refetch.
 - Works at 360px (sticky bar does not cover the last grid row) and at 1440px, in
   light and dark themes.
 - No hardcoded interface text; `npm run lint`, `npm run typecheck`, and

@@ -178,7 +178,7 @@ widths above and keep this table as the single source. The Tailwind `sm:`,
 
 - `.container`: `width: min(100% - 2 * var(--gutter), 1200px); margin-inline: auto;`
   with `--gutter` 16px → 24px (`sm`) → 32px (`lg`).
-- Narrow reading/focus content (welcome text, onboarding steps): max 720px.
+- Narrow reading/focus content (welcome text): max 720px.
 - Horizontal page scroll is never allowed. Shelves scroll inside themselves.
 - Use `min-height: 100dvh` for full-screen views and respect safe areas
   (`env(safe-area-inset-bottom)`) on sticky bottom bars.
@@ -200,7 +200,7 @@ widths above and keep this table as the single source. The Tailwind `sm:`,
 
 In dark mode shadows lose meaning; rely on `--color-border` and surface contrast.
 
-Motion is functional and short: fades/slides of 8–16px between onboarding steps,
+Motion is functional and short: fades/slides of 8–16px for panels and dialogs,
 a slight lift on hover (`translateY(-2px)`) for covers, a scale press (`0.97`)
 on buttons. Wrap all non-essential motion in
 `@media (prefers-reduced-motion: no-preference)`.
@@ -285,7 +285,8 @@ Small pill with a dot plus text, `--text-caption` without uppercase:
 ### 7.7 Header (`AppHeader.vue`)
 
 Single header, no bottom navigation bar. It shows the two ways to find a book
-as peers and keeps everything else in one menu.
+as peers and keeps everything else in one menu. In focus mode (`focus` prop, used
+by the onboarding) the tabs are hidden and only the brand and the menu remain.
 
 - Left: brand mark + "IF Explore", always a link to the welcome view (`/`).
 - Main navigation (`<nav>`): two tabs, "Para você" (library icon) and
@@ -303,7 +304,7 @@ as peers and keeps everything else in one menu.
   `aria-controls`), a disclosure, not an ARIA menu. Its panel drops below the
   button (`--color-surface`, border, `--shadow-md`, max 18rem wide) and holds:
   "Ajustar preferências" ("Definir preferências" without saved preferences, link
-  to `/onboarding?step=areas`), "Tema escuro" (`ThemeToggle.vue`, a
+  to `/onboarding`), "Tema escuro" (`ThemeToggle.vue`, a
   `role="switch"` row with an on/off track), and, after a divider, "Sobre o IF
   Explore" (`/#about-section`). It closes on navigation, Escape (focus returns to
   the button), a tap outside, or focus leaving the panel.
@@ -377,7 +378,7 @@ area.
   `:focus-visible`. The search field is the exception: its focus state is
   described in §7.3.
 - Touch targets ≥ 44×44px.
-- Moving between onboarding steps moves focus to the new step's heading.
+- Closing a dialog returns focus to the control that opened it.
 - Live counters (for example "2 de 3 escolhidos") use `aria-live="polite"`.
 - Horizontal shelves are keyboard reachable (`tabindex="0"` on the scroll region
   with an accessible name, or focusable items inside) and have arrow buttons at
@@ -429,7 +430,7 @@ directories (see `docs/project-guidelines.md`):
     Turismo (presencial e EaD), Sistemas para Internet.
   - Pós-graduação: Especialização em Planejamento e Gestão de Áreas Naturais
     Protegidas.
-- **Literary genres (optional step):** Romance, Aventura, Suspense e mistério,
+- **Literary genres (filters of the onboarding wall of covers):** Romance, Aventura, Suspense e mistério,
   Fantasia, Ficção científica, Terror, Poesia, Clássicos brasileiros, Biografias e
   memórias, Quadrinhos, Humor, Crônicas e contos.
 
@@ -468,12 +469,12 @@ not rank books.
 | Path | View | Notes |
 |---|---|---|
 | `/` | `features/welcome/views/WelcomeView.vue` | Entry point |
-| `/onboarding` | `features/onboarding/views/TasteOnboardingView.vue` | `?step=areas\|books\|genres` |
+| `/onboarding` | `features/onboarding/views/TasteOnboardingView.vue` | One screen, focus mode |
 | `/home` | `features/home/views/HomeView.vue` | Guard: redirect to `/` without preferences |
 | `/catalog` | `features/catalog/views/CatalogView.vue` | No guard; search, filters, and sort live in the query |
 | `/books/:id` | `features/book-detail/views/BookDetailView.vue` | No guard; unknown ids show a not-found state |
 
-Flow: welcome → onboarding (areas → books → [optional genres]) → home. Returning
+Flow: welcome → onboarding (3 titles from a wall of covers filtered by genre, optional course or areas) → home. Returning
 visitors with saved preferences can go straight from the welcome to the home or
 restart the flow, with previous answers pre-filled. From any book card, the
 visitor opens the book page, whose related shelf leads to other books.
