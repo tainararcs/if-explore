@@ -338,6 +338,15 @@ class RecommendationTests(ApiTestCase):
         # sem área nem curso, completa com os demais títulos recomendáveis
         self.assertEqual(len(self.get("/api/recommendations/candidates?limit=4")), 4)
 
+    def test_candidates_start_with_chosen_genres(self) -> None:
+        self.give_genre("romance", TCC)
+        self.give_genre("poetry", DJANGO_BOOK)
+        candidates = [b["id"] for b in self.get("/api/recommendations/candidates"
+                                                 "?genre=romance&genre=poetry&area=technology&genre=nope")]
+        # os gêneros abrem a lista, intercalados com a área; o desconhecido é ignorado
+        self.assertEqual(candidates[:2], [TCC, DJANGO_BOOK])
+        self.assertNotIn(SERIAL, candidates)
+
 
 class StatusTests(ApiTestCase):
     def test_status(self) -> None:

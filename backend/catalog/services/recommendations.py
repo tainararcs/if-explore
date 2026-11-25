@@ -282,26 +282,33 @@ def shelf_candidates(profile: Profile, exclude_ids: Sequence[str], limit: int) -
 
 
 # ---- onboarding
-def onboarding_candidates(area_ids: Sequence[str], course_ids: Sequence[str], limit: int) -> list[str]:
+def onboarding_candidates(area_ids: Sequence[str], course_ids: Sequence[str], limit: int,
+                          genre_ids: Sequence[str] = ()) -> list[str]:
     """Títulos para o visitante escolher no onboarding.
 
-    O limite é dividido entre as áreas escolhidas e as dos cursos marcados, e as
-    áreas se intercalam na lista: assim nenhuma área fica sem títulos quando o
-    visitante filtra por ela. Dentro de cada área, vêm primeiro os livros dos
-    cursos marcados. Se sobrarem menos de 3, completa com os demais.
+    O limite é dividido entre os gêneros escolhidos, as áreas escolhidas e as dos
+    cursos marcados, e os grupos se intercalam na lista, gêneros primeiro: assim
+    nenhum gênero ou área fica sem títulos quando o visitante filtra por ele. Dentro
+    de cada área, vêm primeiro os livros dos cursos marcados. Se sobrarem menos de
+    3, completa com os demais.
     """
+    genres = list(LiteraryGenre.objects.filter(slug__in=genre_ids).values_list("slug", flat=True))
     course_areas = Course.objects.filter(slug__in=course_ids).values_list("area_id", flat=True)
-    groups = list(dict.fromkeys([*area_ids, *course_areas]))
+    areas = list(dict.fromkeys([*area_ids, *course_areas]))
     ids: list[str] = []
-    if groups:
-        per_group = math.ceil(limit / len(groups))
+    if genres or areas:
+        per_group = math.ceil(limit / (len(genres) + len(areas)))
         courses = Book.courses.through.objects.filter(book_id=OuterRef("pk"), course_id__in=course_ids)
         by_group = [
+            list(recommendable().filter(genres=genre)
+                 .order_by(*_tie_breakers()).values_list("id", flat=True)[:per_group])
+            for genre in genres
+        ] + [
             list(recommendable().filter(area_id=area)
                  .annotate(score=Case(When(Exists(courses), then=Value(1)), default=Value(0),
                                       output_field=IntegerField()))
                  .order_by("-score", *_tie_breakers()).values_list("id", flat=True)[:per_group])
-            for area in groups
+            for area in areas
         ]
         ids = list(dict.fromkeys(book_id for round_ in zip_longest(*by_group) for book_id in round_ if book_id))
         ids = ids[:limit]
