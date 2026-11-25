@@ -91,10 +91,8 @@
           :selected-ids="draft.seedBookIds"
           :limit-reached="isComplete"
           :status="candidatesStatus"
-          :has-more="hasMoreBooks"
           @toggle-book="toggleBook"
           @retry="loadCandidates"
-          @show-more="showMore"
         />
       </section>
     </main>
@@ -169,14 +167,12 @@ const {
   draft,
   activeFilter,
   visibleBooks,
-  hasMoreBooks,
   candidatesStatus,
   isComplete,
   missingBooks,
   load,
   loadCandidates,
   selectFilter,
-  showMore,
   toggleArea,
   toggleCourse,
   toggleBook,

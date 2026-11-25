@@ -24,12 +24,13 @@ import {
   type CandidateFilter,
   type OnboardingDraft,
 } from '../models/onboarding-draft'
-import { getOnboardingCandidates, type CandidateInterests } from '../services/onboarding-service'
+import {
+  CANDIDATE_LIMIT,
+  getOnboardingCandidates,
+  type CandidateInterests,
+} from '../services/onboarding-service'
 
 type LoadStatus = 'loading' | 'ready' | 'error'
-
-/** Títulos mostrados de início e a cada "Mostrar mais livros". */
-const PAGE_SIZE = 24
 
 /**
  * Concentra o estado do onboarding em uma tela: opções do acervo, mural de
@@ -58,7 +59,6 @@ export function useTasteOnboarding() {
   const activeFilter = ref<CandidateFilter>(ALL_CANDIDATES)
   const candidatesByFilter = ref(new Map<string, Book[]>())
   const candidatesStatus = ref<LoadStatus>('loading')
-  const visibleCount = ref(PAGE_SIZE)
 
   const isComplete = computed(() => canFinish(draft.value))
   const missingBooks = computed(() => REQUIRED_SEED_BOOKS - draft.value.seedBookIds.length)
@@ -83,19 +83,17 @@ export function useTasteOnboarding() {
   )
 
   /**
-   * Parte visível do recorte. Escolhidos que não estão nela (de outro recorte ou
-   * mais abaixo na lista) vêm primeiro, para continuarem à vista; os que já estão
-   * visíveis ficam no lugar, sem pular para o topo ao serem tocados.
+   * Títulos do mural, no máximo `CANDIDATE_LIMIT`. Escolhidos de outro recorte vêm
+   * primeiro e ocupam o lugar dos últimos candidatos, para continuarem à vista; os
+   * que já estão no recorte ficam no lugar, sem pular para o topo ao serem tocados.
    */
   const visibleBooks = computed(() => {
-    const page = candidates.value.slice(0, visibleCount.value)
-    const pageIds = new Set(page.map((book) => book.id))
+    const candidateIds = new Set(candidates.value.map((book) => book.id))
     const kept = selectedBooks.value.filter(
-      (book) => draft.value.seedBookIds.includes(book.id) && !pageIds.has(book.id),
+      (book) => draft.value.seedBookIds.includes(book.id) && !candidateIds.has(book.id),
     )
-    return [...kept, ...page]
+    return [...kept, ...candidates.value].slice(0, CANDIDATE_LIMIT)
   })
-  const hasMoreBooks = computed(() => candidates.value.length > visibleCount.value)
 
   // Pré-preenche com as preferências salvas, ignorando ids que saíram do acervo.
   function prefillFromPreferences(seedBooks: Book[]): void {
@@ -173,11 +171,6 @@ export function useTasteOnboarding() {
 
   function selectFilter(filter: CandidateFilter): void {
     activeFilter.value = filter
-    visibleCount.value = PAGE_SIZE
-  }
-
-  function showMore(): void {
-    visibleCount.value += PAGE_SIZE
   }
 
   /** Esquece a mistura "Todos", que depende das áreas e dos cursos escolhidos. */
@@ -260,14 +253,12 @@ export function useTasteOnboarding() {
     draft,
     activeFilter,
     visibleBooks,
-    hasMoreBooks,
     candidatesStatus,
     isComplete,
     missingBooks,
     load,
     loadCandidates,
     selectFilter,
-    showMore,
     toggleArea,
     toggleCourse,
     toggleBook,

@@ -179,7 +179,6 @@ export const ptBR = {
       loading: 'Carregando títulos…',
       error: 'Não foi possível carregar os títulos.',
       retry: 'Tentar novamente',
-      showMore: 'Mostrar mais livros',
     },
   },
   home: {

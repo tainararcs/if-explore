@@ -2,8 +2,8 @@ import { http } from '../../../lib/http-client'
 import type { Book } from '../../../models/book'
 import { list, parseBook } from '../../../services/catalog-parsers'
 
-/** Quantos títulos o visitante vê para escolher. */
-const CANDIDATE_LIMIT = 60
+/** Quantos títulos o visitante vê para escolher em cada recorte. */
+export const CANDIDATE_LIMIT = 12
 
 /** Escolhas do primeiro passo que definem os candidatos. */
 export interface CandidateInterests {
