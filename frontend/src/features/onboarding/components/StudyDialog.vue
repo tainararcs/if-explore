@@ -1,6 +1,7 @@
 <!--
-  Painel opcional "Estuda no IF?" do onboarding: busca de curso do campus e áreas
-  do conhecimento. Abre como `<dialog>` modal, lateral como os filtros do catálogo.
+  Painel opcional de curso ou área de estudo do onboarding: cursos do campus por
+  nível e áreas do conhecimento, para quem estuda no IF ou não. Abre como
+  `<dialog>` modal, lateral como os filtros do catálogo.
 -->
 <template>
   <dialog
@@ -32,26 +33,8 @@
           {{ t('onboarding.study.helper') }}
         </p>
 
-        <div class="relative flex items-center">
-          <label
-            for="study-dialog-search"
-            class="sr-only"
-          >
-            {{ t('onboarding.study.searchLabel') }}
-          </label>
-          <IconSearch class="pointer-events-none absolute left-4 size-5 text-text-muted" />
-          <input
-            id="study-dialog-search"
-            v-model="query"
-            class="min-h-12 w-full appearance-none rounded-pill border-[1.5px] border-border-strong bg-surface py-0 pr-4 pl-12 text-text [font:inherit] placeholder:text-text-muted hover:border-primary-hover focus-visible:border-primary focus-visible:outline-3 focus-visible:outline-offset-0 focus-visible:outline-primary/30 [&::-webkit-search-cancel-button]:hidden"
-            type="search"
-            autocomplete="off"
-            :placeholder="t('onboarding.study.searchPlaceholder')"
-          >
-        </div>
-
         <fieldset
-          v-for="group in visibleGroups"
+          v-for="group in coursesByLevel"
           :key="group.level"
           class="m-0 min-w-0 border-0 p-0"
         >
@@ -70,22 +53,11 @@
             </SelectableChip>
           </div>
         </fieldset>
-        <p
-          v-if="visibleGroups.length === 0"
-          class="m-0 text-small text-text-muted"
-          role="status"
-        >
-          {{ t('onboarding.study.noCourses') }}
-        </p>
-
         <fieldset class="m-0 min-w-0 border-0 border-t border-border p-0 pt-6">
-          <legend class="float-left mb-1 w-full p-0 text-body font-semibold">
+          <legend class="eyebrow float-left mb-3 w-full p-0">
             {{ t('onboarding.study.areasTitle') }}
           </legend>
-          <p class="clear-both mb-3 text-small text-text-muted">
-            {{ t('onboarding.study.areasHelper') }}
-          </p>
-          <div class="flex flex-wrap gap-2">
+          <div class="clear-both flex flex-wrap gap-2">
             <SelectableChip
               v-for="area in areas"
               :key="area.id"
@@ -113,10 +85,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue'
+import { useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import IconClose from '../../../components/icons/IconClose.vue'
-import IconSearch from '../../../components/icons/IconSearch.vue'
 import SelectableChip from '../../../components/SelectableChip.vue'
 import type { Course, CourseLevel, KnowledgeArea } from '../../../models/taxonomy'
 
@@ -128,7 +99,7 @@ interface Props {
   selectedCourseIds: string[]
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const emit = defineEmits<{
   toggleArea: [areaId: string]
@@ -138,29 +109,8 @@ const emit = defineEmits<{
 const { t } = useI18n()
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog')
-const query = ref('')
-
-// Compara sem acentos e sem diferenciar maiúsculas ("informatica" acha "Informática").
-function normalize(text: string): string {
-  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
-}
-
-/** Cursos que contêm o texto buscado, sem níveis vazios. */
-const visibleGroups = computed(() => {
-  const term = normalize(query.value.trim())
-  if (!term) {
-    return props.coursesByLevel
-  }
-  return props.coursesByLevel
-    .map((group) => ({
-      ...group,
-      courses: group.courses.filter((course) => normalize(course.name).includes(term)),
-    }))
-    .filter((group) => group.courses.length > 0)
-})
 
 function open(): void {
-  query.value = ''
   dialog.value?.showModal()
 }
 

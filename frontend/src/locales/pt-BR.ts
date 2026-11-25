@@ -156,13 +156,10 @@ export const ptBR = {
       all: 'Todos',
     },
     study: {
-      title: 'Estuda no IF?',
-      summaryEmpty: 'Opcional: adicione seu curso',
-      helper: 'Opcional. Ao marcar um curso, a área dele também é escolhida.',
+      title: 'Curso ou área de estudo',
+      summaryEmpty: 'Opcional',
+      helper: 'Marque seu curso no IF ou as áreas que te interessam.',
       close: 'Fechar',
-      searchLabel: 'Buscar curso',
-      searchPlaceholder: 'Buscar curso',
-      noCourses: 'Nenhum curso encontrado.',
       levels: {
         integrated: 'Técnico integrado ao ensino médio',
         technical: 'Técnico concomitante e subsequente',
@@ -170,7 +167,6 @@ export const ptBR = {
         graduate: 'Pós-graduação',
       },
       areasTitle: 'Áreas do conhecimento',
-      areasHelper: 'Não faz um curso do campus? Escolha as áreas que você estuda ou quer estudar.',
       done: 'Concluir',
     },
     books: {

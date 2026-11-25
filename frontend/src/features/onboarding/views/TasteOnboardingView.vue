@@ -183,7 +183,7 @@ const studyDialog = useTemplateRef<InstanceType<typeof StudyDialog>>('studyDialo
 // Marca que a pessoa tentou concluir sem os três títulos, para destacar o que falta.
 const attempted = ref(false)
 
-/** O que foi escolhido no painel "Estuda no IF?": cursos, ou áreas sem curso. */
+/** O que foi escolhido no painel de curso ou área: cursos, ou áreas sem curso. */
 const studySummary = computed(() => {
   const names =
     selectedCourses.value.length > 0
