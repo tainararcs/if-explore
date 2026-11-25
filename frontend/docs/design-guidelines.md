@@ -428,8 +428,7 @@ directories (see `docs/project-guidelines.md`):
     Ambiental, Nutrição, Sistemas de Informação; Licenciaturas em Ciências
     Biológicas, Educação Física, Química; Tecnologias em Alimentos, Gestão de
     Turismo (presencial e EaD), Sistemas para Internet.
-  - Pós-graduação: Especialização em Planejamento e Gestão de Áreas Naturais
-    Protegidas.
+  - Pós-graduação: Especialização em Áreas Naturais Protegidas.
 - **Literary genres (filters of the onboarding wall of covers):** Romance, Aventura, Suspense e mistério,
   Fantasia, Ficção científica, Terror, Poesia, Clássicos brasileiros, Biografias e
   memórias, Quadrinhos, Humor, Crônicas e contos.
