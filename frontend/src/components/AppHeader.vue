@@ -3,7 +3,8 @@
   as duas formas de achar um livro, "Para você" (recomendações) e "Catálogo completo"
   (todo o acervo, com busca e filtros), como abas; o menu de três linhas reúne preferências, tema e "Sobre".
   A partir de 600px as abas ficam centralizadas na mesma linha; abaixo disso ocupam
-  uma segunda linha, de largura total, sempre visível.
+  uma segunda linha, de largura total, sempre visível. Em modo foco (onboarding) as
+  abas saem e ficam só a marca e o menu.
 -->
 <template>
   <header
@@ -25,6 +26,7 @@
       </RouterLink>
 
       <nav
+        v-if="!focus"
         :aria-label="t('common.nav.label')"
         class="col-span-2 row-start-2 pb-3 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:pb-0"
       >
@@ -96,6 +98,8 @@ import IconSearch from './icons/IconSearch.vue'
 interface Props {
   /** Mantém o cabeçalho fixo no topo durante a rolagem. */
   sticky?: boolean
+  /** Modo foco: esconde as abas de navegação para a pessoa concluir uma tarefa. */
+  focus?: boolean
 }
 
 interface HeaderTab {
@@ -108,6 +112,7 @@ interface HeaderTab {
 
 withDefaults(defineProps<Props>(), {
   sticky: false,
+  focus: false,
 })
 
 const { t } = useI18n()
