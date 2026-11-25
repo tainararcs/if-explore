@@ -30,22 +30,24 @@ decorative icons or emojis, no slogans, plain copy.
   - "Todos" mixes every genre plus the chosen areas and courses.
   - A genre or an area shows only its titles.
   - All come from `getOnboardingCandidates` (`GET /api/recommendations/candidates`
-    with `genre`, `area`, `course`). The API interleaves the groups, genres
-    first, so every group appears near the top.
+    with `genre`, `area`, `course`, `limit=12`). The API alternates genres and
+    areas, starting with a genre, so a chosen area is in "Todos" even with more
+    groups than titles.
   - Each filter is fetched once and kept; changing areas or courses drops the
     stored "Todos" mix. A new request cancels the previous one.
-- "Estuda no IF?" row below the filters: shows the chosen courses (or areas)
-  or "Opcional: adicione seu curso", and opens `StudyDialog.vue`, a side
-  `<dialog>` like the catalog filters, with an accent-insensitive course search,
-  courses grouped by level (técnico integrado, técnico concomitante/subsequente,
-  graduação, pós-graduação), and the knowledge areas. Selecting a course also
+- "Curso ou área de estudo" row below the filters (not "Estuda no IF?": areas
+  are for anyone): shows the chosen courses (or areas) or "Opcional", and opens
+  `StudyDialog.vue`, a side `<dialog>` like the catalog filters, with the courses
+  grouped by level (técnico integrado, técnico concomitante/subsequente,
+  graduação, pós-graduação) and the knowledge areas. No search: the list is
+  short. Selecting a course also
   selects its area; deselecting an area removes its selected courses.
-- Wall of covers (`BookWall.vue`): cover, title, and author; 3 columns at base,
-  4 at `sm`, 6 at `md`+. Shows 24 titles and "Mostrar mais livros" for the rest
-  of the filter (up to 60).
-  - Picked titles that are not in the visible part (from another filter or
-    further down) come first, so they stay in view; picked titles already
-    visible stay in place.
+- Wall of covers (`BookWall.vue`): cover, title, and author; at most 12 titles,
+  which close every row: 3 columns at base (4 rows), 4 at `sm` (3 rows), 6 at
+  `md`+ (2 rows). No "show more": the filters are how to see other titles.
+  - Picked titles from another filter come first and take the place of the
+    last candidates, so they stay in view; picked titles already in the filter
+    stay in place.
   - When 3 are picked, the other cards become `aria-disabled` and dimmed;
     deselecting one re-enables them. Never replace a pick silently.
   - Loading without titles shows cover skeletons; errors have a retry.
@@ -65,7 +67,7 @@ AppHeader focus: [BrandMark] IF Explore                    [☰ menu]
 [← Voltar]
 Title (serif, h1) · helper
 [Todos] [Romance] [Aventura] …           ← scrolls sideways on mobile
-[Estuda no IF? · Opcional: adicione seu curso   →]
+[Curso ou área de estudo · Opcional            →]
 Wall of covers                           ← scrolls
 ───────────────────────────────────────
 Sticky action bar: ●○○ Faltam 2 títulos · [Me recomende]
